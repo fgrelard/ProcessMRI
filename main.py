@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import progressbar
 import time
 import argparse
-import Tkinter as tk
+import tkinter as tk
+import src.main_controller as controller
 
 def plot_fit(x, y, func_fit):
     x_fit = np.array(range(0, int(max(x))))
@@ -18,13 +19,21 @@ def plot_fit(x, y, func_fit):
 # parser.add_argument("-t", "--threshold", help="Threshold for noise")
 # args = parser.parse_args()
 
-# window = tk.Tk()
-# window.title("MRI")
+window = tk.Tk()
+window.title("ProcessMRI")
 
 lbl = tk.Label(window, text="Choose a MRI image file before going further")
-open_button = tk.Button(window, text="Open...").pack(side=tk.TOP, expand=tk.YES)
-tpc_button = tk.Button(window, text="Correct phase").pack(side=tk.TOP, expand=tk.YES)
-density_button = tk.Button(window, text="Exponential fitting").pack(side=tk.TOP, expand=tk.YES)
+lbl.pack(side=tk.BOTTOM)
+
+open_button = tk.Button(window, text="Open...")
+open_button.pack(side=tk.TOP, expand=tk.YES)
+
+tpc_button = tk.Button(window, text="Correct phase")
+tpc_button.pack(side=tk.TOP, expand=tk.YES)
+
+density_button = tk.Button(window, text="Exponential fitting")
+density_button.pack(side=tk.TOP, expand=tk.YES)
+
 window.geometry('350x200')
 
 menu = tk.Menu(window)
@@ -35,8 +44,10 @@ process_item.add_command(label='Correct phase')
 process_item.add_command(label='Exponential fitting')
 menu.add_cascade(label='File', menu=file_item)
 menu.add_cascade(label='Process', menu=process_item)
-
 window.config(menu=menu)
+
+controller = controller.MainController(lbl, open_button, tpc_button, density_button, menu)
+
 window.mainloop()
 
 # input = args.input
