@@ -18,7 +18,7 @@ class TestTemporalPhaseCorrection(unittest.TestCase):
         self.echotime = [item for sublist in data['EchoTime'] for item in sublist]
 
     def test_estimation_2D_density_image(self):
-        out_img_data = ef.estimation_density_image(self.echotime, self.image[:,:,5,:], 1000)
+        out_img_data = ef.estimation_density_image(self.echotime, self.image[:,:,5,:])
         out_img = nib.Nifti1Image(out_img_data, np.eye(4))
         out_img.to_filename("/mnt/d/IRM/nifti/1/BLE RECITAL/1_BLE 250DJ/50_1_MGE/correction_test.nii")
 
