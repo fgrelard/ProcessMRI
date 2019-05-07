@@ -1,10 +1,10 @@
+import sys
+sys.path.append('../src')
+
 import unittest
 import nibabel as nib
 import importlib.machinery
-
-spec = importlib.util.spec_from_file_location("module.name", "/home/fgrelard/src/readParametricMRI/compleximage.py")
-ci = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(ci)
+import compleximage as ci
 
 class TestComplexImage(unittest.TestCase):
     def setUp(self):

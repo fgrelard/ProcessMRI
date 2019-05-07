@@ -11,7 +11,7 @@ def fit_exponential(x, y):
     try:
         popt, pcov = curve_fit(exponential_function, x[::2], y[::2])
         return popt[0] + popt[2]
-    except RuntimeError:
+    except RuntimeWarning:
         fit_lreg = fit_exponential_linear_regression(x, y)
         return fit_lreg
 
