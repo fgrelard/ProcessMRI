@@ -38,21 +38,17 @@ def correct_phase_temporally(echotimes, img_data, order):
     odd_complex_img = complex_img_data[..., 1::2]
     phase_image = ci.complex_to_phase(complex_img_data)
     phases_unwrapped = unwrap_phases(phase_image)
+
     #Iterating over the even and odd slices
     for index in np.ndindex(even_complex_img.shape[:-1]):
         phase_unwrapped_even = phases_unwrapped[index + (slice(None, None, 2),)]
         phase_unwrapped_odd = phases_unwrapped[index + (slice(1, None, 2),)]
         tpc_even = correct_phase_1d(even_echotime, even_complex_img[index], order)
         tpc_odd = correct_phase_1d(odd_echotime, odd_complex_img[index], order)
-        if index == (22, 45):
-            print(tpc_even)
         for k in range(out_img_data.shape[-1]):
             pointwise_index = index + (k, )
             if k % 2 == 0:
                 out_img_data[pointwise_index] = tpc_even[k//2]
-                if index == (22, 45):
-                    print(tpc_even[k//2])
-                    print(pointwise_index)
             else:
                 out_img_data[pointwise_index] = tpc_odd[k//2]
     return out_img_data

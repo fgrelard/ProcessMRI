@@ -11,15 +11,24 @@ def exponential_function(x, a, b, c):
 # Fit the exponential on the (x, y) data
 def fit_exponential(x, y):
     try:
-        popt, pcov = curve_fit(exponential_function, x, y)
+        popt, pcov = curve_fit(exponential_function, x[::2], y[::2])
+        popt_odd, pcov_odd = curve_fit(exponential_function, x[1::2], y[1::2])
+        popt_all, pov_all = curve_fit(exponential_function, x, y)
+        if popt[0] +popt[2] > 30000:
+            print(popt)
+            print(popt_odd)
+            print(popt_all)
+            plt.plot(x, y, '.')
+            plt.show()
         return popt[0] + popt[2]
     except RuntimeError:
-        fit_lreg = fit_exponential_linear_regression(x, y)
+        fit_lreg = fit_exponential_linear_regression(x[::2], y[::2])
         return fit_lreg
 
 def fit_exponential_linear_regression(x, y):
     fit = np.polyfit(np.array(x), np.log(y), 1, w=np.sqrt(y))
     return np.exp(fit[1])
+
 
 
 def auto_threshold_gmm(data, number_gaussian):
