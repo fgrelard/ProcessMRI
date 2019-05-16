@@ -1,0 +1,4 @@
+[submodule "lib/bruker2nifti"]
+	path = lib/bruker2nifti
+	url = https://github.com/fgrelard/bruker2nifti.git
+	branch = master
