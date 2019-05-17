@@ -43,7 +43,7 @@ open_menu.add_command(label="Bruker directory")
 file_menu = tk.Menu(menu, tearoff=0)
 file_menu.add_cascade(label='Open', menu=open_menu)
 file_menu.add_separator()
-file_menu.add_command(label="Exit", command=window.quit)
+file_menu.add_command(label="Exit")
 
 
 process_menu = tk.Menu(menu, tearoff=0)
@@ -55,6 +55,6 @@ menu.add_cascade(label='File', menu=file_menu)
 menu.add_cascade(label='Process', menu=process_menu)
 window.config(menu=menu)
 
-controller = controller.MainController(lbl, open_menu, process_menu)
+controller = controller.MainController(window, lbl, open_menu, file_menu, process_menu)
 
 window.mainloop()

@@ -23,5 +23,5 @@ class TestImageIO(unittest.TestCase):
     def test_open_bruker(self):
         l = io.open_bruker("/mnt/d/IRM/raw/50")
 
-        if __name__ == "__main__":
+if __name__ == "__main__":
     unittest.main()
