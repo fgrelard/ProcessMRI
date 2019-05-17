@@ -4,25 +4,19 @@ import tkinter.filedialog as filedialog
 import configparser
 import os
 
-class ExponentialFitView(tk.Tk):
-    def __init__(self, config):
-        tk.Tk.__init__(self)
+class ExponentialFitView(tk.Frame):
+    def __init__(self, window, config):
+        tk.Frame.__init__(self, window)
+        self.grid()
         self.init(config)
 
     def init(self, config):
         self.init_configuration(config)
         self.init_header()
         self.init_body()
+        self.hide()
+        #self.show()
 
-    def init_header(self):
-        self.frame_header = tk.Frame(self)
-        self.frame_header.grid()
-
-        self.label = tk.Label(self.frame_header, text="Exponential fit", font='Helvetica 14 bold')
-        description ="""This tool allows to fit a n-exponential function on multiple echo data."""
-        self.description = tk.Label(self.frame_header, text=description)
-        self.label.grid(row=0, column=0, sticky="w")
-        self.description.grid(row=1, column=0, sticky="nw")
 
     def init_configuration(self, config):
         self.config = config
@@ -32,6 +26,17 @@ class ExponentialFitView(tk.Tk):
             self.config['default'] = {}
             self.config['default']['OutputDir'] = os.getcwd()
 
+    def init_header(self):
+        self.frame_header = tk.Frame(self)
+        self.frame_header.grid()
+
+        self.label = tk.Label(self.frame_header, text="Exponential fit", font='Helvetica 14 bold')
+        description = """This tool allows to fit a n-exponential function on multiple echo data."""
+        self.description = tk.Label(self.frame_header, text=description)
+        self.label.grid(row=0, column=0, sticky="w")
+        self.description.grid(row=1, column=0, sticky="nw")
+
+
 
     def init_body(self):
         self.frame_body = tk.Frame(self)
@@ -40,9 +45,10 @@ class ExponentialFitView(tk.Tk):
         self.label_method = tk.Label(self.frame_body, text="Fit method")
         self.label_threshold = tk.Label(self.frame_body, text="Threshold")
         self.label_destination = tk.Label(self.frame_body, text="Output directory")
-        self.threshold = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "0") )
+        self.threshold = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "0")
+        )
 
-        self.compute_button = tk.Button(self.frame_body, text="Compute", command=self.quit)
+        self.compute_button = tk.Button(self.frame_body, text="Compute")
         self.choice_method = tk.ttk.Combobox(self.frame_body, values = [
             "Linear regression",
             "Mono-exponential",
@@ -79,7 +85,19 @@ class ExponentialFitView(tk.Tk):
         else:
             return False
 
+
+    def show(self):
+        self.grid()
+        for widget in self.winfo_children():
+            widget.grid()
+
+    def hide(self):
+        for widget in self.grid_slaves():
+            widget.grid_remove()
+
+
 if __name__ == "__main__":
-    app = ExponentialFitView(None)
+    app = tk.Tk()
+    ExponentialFitView(app, None)
     app.title("Exponential fit")
     app.mainloop()

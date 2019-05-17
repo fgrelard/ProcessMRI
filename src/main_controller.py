@@ -4,9 +4,13 @@ import src.imageio as io
 import tkinter.filedialog as filedialog
 import os
 import configparser
+import src.exponentialfitview as expview
 
 class MainController:
     def __init__(self, window, lbl, open_menu, file_menu, process_menu):
+        #Storage preferences initialization
+        self.init_configuration()
+
         #View
         self.window = window
         self.label = lbl
@@ -14,22 +18,25 @@ class MainController:
         self.file_menu = file_menu
         self.process_menu = process_menu
 
+        self.expframe = expview.ExponentialFitView(window, self.config)
+
         self.init_states()
         self.init_callbacks()
-        self.init_configuration()
+
 
         #Model
         self.img_data = None
         self.echotime = None
-        self.protocol('WM_DELETE_WINDOW', self.exit_app)
+        window.protocol('WM_DELETE_WINDOW', self.exit_app)
 
     def init_states(self):
-        self.process_menu.entryconfig(0, state="disabled")
+        self.process_menu.entryconfig(0, state="normal")
         self.process_menu.entryconfig(1, state="disabled")
 
     def init_callbacks(self):
         self.open_menu.entryconfig(0, command=self.open_nifti)
         self.open_menu.entryconfig(1, command=self.open_bruker)
+        self.process_menu.entryconfig(0, command=self.expframe.show)
         self.file_menu.entryconfig(2, command=self.exit_app)
 
     def init_configuration(self):

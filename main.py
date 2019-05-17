@@ -18,7 +18,7 @@ window = tk.Tk()
 window.title("ProcessMRI")
 
 lbl = tk.Label(window, text="Load a MRI image: File/Open")
-lbl.pack(side=tk.BOTTOM)
+#lbl.pack(side=tk.BOTTOM)
 
 # open_button = tk.Button(window, text="Open...")
 # open_button.pack(side=tk.TOP, expand=tk.YES)
@@ -47,9 +47,8 @@ file_menu.add_command(label="Exit")
 
 
 process_menu = tk.Menu(menu, tearoff=0)
-process_menu.add_command(label='Correct phase')
 process_menu.add_command(label='Exponential fitting')
-
+process_menu.add_command(label='Correct phase')
 
 menu.add_cascade(label='File', menu=file_menu)
 menu.add_cascade(label='Process', menu=process_menu)
