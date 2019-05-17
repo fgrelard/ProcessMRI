@@ -38,13 +38,15 @@ class MainController:
         self.open_menu.entryconfig(1, command=self.open_bruker)
         self.process_menu.entryconfig(0, command=self.expframe.show)
         self.file_menu.entryconfig(2, command=self.exit_app)
+        self.expframe.compute_button.config(command=self.estimation_density)
 
     def init_configuration(self):
         self.config = configparser.ConfigParser()
         self.config.read('config.ini')
-        if 'default' not in self.config or 'NifTiDir' not in self.config['default']:
+        if 'default' not in self.config:
             self.config['default'] = {}
-            self.config['default']['NifTiDir'] = os.getcwd()
+            if 'NifTiDir' not in self.config['default']:
+                self.config['default']['NifTiDir'] = os.getcwd()
 
     def exit_app(self):
         with open('config.ini', 'w') as configfile:
@@ -81,5 +83,30 @@ class MainController:
 
 
     def estimation_density(self):
-        out_img = nib.Nifti1Image(out_img_data, np.eye(4))
-        out_img.to_filename(output)
+        fit_method = self.expframe.choice_method.get()
+        threshold = self.expframe.threshold.get()
+        outname = self.expframe.path.get()
+
+        if self.img_data:
+            try:
+                int(threshold)
+            except:
+                print("Please enter a correct value for threshold")
+            else:
+                threshold = None
+                lreg = True
+                n=1
+                if fit_method != "Linear regression":
+                    lreg = False
+                    if fit_method == "Mono-exponential":
+                        n=1
+                    elif fit_method == "Bi-exponential":
+                        n=2
+                    else:
+                        n=3
+
+                estimation_density_image(self.echotime, self.img_data, threshold, lreg, n)
+                out_img = nib.Nifti1Image(outname, np.eye(4))
+                out_img.to_filename(output)
+        else:
+            print("No image opened")

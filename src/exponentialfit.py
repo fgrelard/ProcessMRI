@@ -44,11 +44,10 @@ def fit_exponential_linear_regression(x, y):
     return [np.exp(fit[1]), -fit[0], 0]
 
 # Fit the exponential on the (x, y) data
-def fit_exponential(x, y, lreg=False):
+def fit_exponential(x, y, p0, lreg=False):
     if lreg:
         return fit_exponential_linear_regression(x, y)
     try:
-        p0 = (2*y[0], 0.1, 2*y[0], 0.1, 0)
         popt, pcov = curve_fit(n_exponential_function, x, y, p0=p0,maxfev=3000)
         # poptbi, pcovbi = curve_fit(biexponential_function, x, y)
         # popt_odd, pcov_odd = curve_fit(n_exponential_function, x[1::2], y[1::2], p0=p0, maxfev=3000)
@@ -89,8 +88,14 @@ def compute_edges(image):
         edges_sobel[index_xy] = np.interp(e, (e.min(), e.max()), (0, 255))
     return edges_sobel
 
+def n_to_p0(n, y0):
+    p0 = ()
+    for i in range(n):
+        p0 += (2*y0, 0.1)
+    p0 += (0,)
+
 # Main function to estimate the parametric image
-def estimation_density_image(echotime, image, threshold=None):
+def estimation_density_image(echotime, image,threshold=None, lreg=True, n=1):
     data = np.zeros(shape=image.shape[:-1])
 
     #Auto threshold with mixture of gaussian (EM alg.)
@@ -100,7 +105,8 @@ def estimation_density_image(echotime, image, threshold=None):
     for i in np.ndindex(data.shape):
         pixel_values = image[i + (slice(None),)]
         if pixel_values[0] > threshold:
-            fit = fit_exponential(echotime, pixel_values, False)
+            p0 = n_to_p0(n, pixel_values[0])
+            fit = fit_exponential(echotime, pixel_values, p0, lreg)
             pixel_value = density(fit)
             data[i] = pixel_value
         else:

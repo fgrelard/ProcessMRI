@@ -29,7 +29,7 @@ lbl = tk.Label(window, text="Load a MRI image: File/Open")
 # density_button = tk.Button(window, text="Exponential fitting")
 # density_button.pack(side=tk.TOP, expand=tk.YES)
 
-window.geometry('350x200')
+window.geometry('500x500')
 
 
 

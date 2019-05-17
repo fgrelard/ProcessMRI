@@ -14,8 +14,9 @@ class ExponentialFitView(tk.Frame):
         self.init_configuration(config)
         self.init_header()
         self.init_body()
+        self.post_init()
         self.hide()
-        #self.show()
+        self.show()
 
 
     def init_configuration(self, config):
@@ -54,6 +55,7 @@ class ExponentialFitView(tk.Frame):
             "Mono-exponential",
             "Bi-exponential",
             "Tri-exponential"], state="readonly")
+        self.choice_method.current(0)
 
         self.path = tk.StringVar(None)
         self.entry = tk.Entry(self.frame_body, textvariable=self.path)
@@ -68,6 +70,9 @@ class ExponentialFitView(tk.Frame):
         self.open_button.grid(row=4, column=2, sticky="sw")
         self.compute_button.grid(row=5, column=2, sticky="se")
 
+    def post_init(self):
+        for child in self.winfo_children():
+            child.grid_configure(padx=10, pady=10)
 
     def open(self):
          directory = filedialog.askdirectory(parent=self,title='Choose output directory')
