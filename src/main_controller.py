@@ -21,6 +21,7 @@ class MainController:
         #Model
         self.img_data = None
         self.echotime = None
+        self.protocol('WM_DELETE_WINDOW', self.exit_app)
 
     def init_states(self):
         self.process_menu.entryconfig(0, state="disabled")
@@ -55,6 +56,8 @@ class MainController:
             self.img_data = img.get_fdata()
             self.echotime = echotime
             self.label.config(text="Image \"" + os.path.join(os.path.split(os.path.dirname(filename))[1], os.path.split(filename)[1]) + "\" loaded")
+            self.process_menu.entryconfig(0, state="normal")
+            self.process_menu.entryconfig(1, state="normal")
 
 
     def open_bruker(self):
@@ -70,17 +73,6 @@ class MainController:
                 self.open_nifti()
 
 
-    def estimation_density(self, threshold):
-        dim = len(img_data.shape)
-        x = self.img_data.shape[0]
-        y = self.img_data.shape[1]
-        z = self.img_data.shape[2]
-        out_img_data = np.zeros(shape=(x, y, z))
-
-        for k in progressbar.progressbar(range(z)):
-            s = self.img_data[:, :, k, :]
-            out_data = estimation_density_image(self.echotime, s, threshold)
-            out_img_data[:,:,k] = out_data
-
+    def estimation_density(self):
         out_img = nib.Nifti1Image(out_img_data, np.eye(4))
         out_img.to_filename(output)
