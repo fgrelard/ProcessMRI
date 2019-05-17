@@ -1,18 +1,16 @@
-import nibabel as nib
 import json
 from src.exponentialfit import estimation_density_image
+import src.imageio as io
 import tkinter.filedialog as filedialog
 import os
 
 
 class MainController:
-    def __init__(self, lbl, open_button, tpc_button, density_button, menu):
+    def __init__(self, lbl, open_menu, process_menu):
         #View
         self.label = lbl
-        self.open_button = open_button
-        self.tpc_button = tpc_button
-        self.density_button = density_button
-        self.menu = menu
+        self.open_menu = open_menu
+        self.process_menu = process_menu
 
         self.init_states()
         self.init_callbacks()
@@ -22,26 +20,36 @@ class MainController:
         self.echotime = None
 
     def init_states(self):
-        self.tpc_button.config(state="disabled")
-        self.density_button.config(state="disabled")
+        self.process_menu.entryconfig(0, state="disabled")
+        self.process_menu.entryconfig(1, state="disabled")
 
     def init_callbacks(self):
-        self.open_button.config(command=self.open_image)
+        self.open_menu.entryconfig(0, command=self.open_nifti)
+        self.open_menu.entryconfig(1, command=self.open_bruker)
+
+    def open_nifti(self):
+        filename =  filedialog.askopenfilename(initialdir = "/mnt/d/IRM",title = "Select NifTi image",filetypes = (("nii files","*.nii.gz"),("all files","*.*")))
+        try:
+            img = io.open_generic_image(filename)
+            metadata = io.open_metadata(filename)
+        except Exception as e:
+            print(e)
+        else:
+            echotime = io.extract_metadata(metadata, 'VisuAcqEchoTime')
+            self.img_data = img.get_fdata()
+            self.echotime = echotime
+            self.label.config(text="Image \"" + os.path.join(os.path.split(dirname)[1], os.path.split(filename)[1]) + "\" loaded")
 
 
-    def open_image(self):
-        filename =  filedialog.askopenfilename(initialdir = "/mnt/d/IRM/nifti/7/BLE RECITAL/1_BLE 250DJ",title = "Select file",filetypes = (("nii files","*.nii"),("all files","*.*")))
-        img = nib.load(filename)
-        filename_stripped = os.path.splitext(filename)[0]
-        dirname = os.path.dirname(filename)
-        with open(filename_stripped+'.json') as f:
-            data = json.load(f)
-        self.img_data = img.get_fdata()
-        self.echotime = [item for sublist in data['EchoTime'] for item in sublist]
+    def open_bruker(self):
+        dirname =  filedialog.askdirectory (initialdir = "/mnt/d/IRM",title = "Select Bruker directory")
+        try:
+            list_filenames = io.open_generic_image(dirname)
+        except Exception as e:
+            print(e)
+        else:
+            print(list_filenames)
 
-        self.density_button.config(state="normal")
-        self.tpc_button.config(state="normal")
-        self.label.config(text="Image \"" + os.path.join(os.path.split(dirname)[1], os.path.split(filename)[1]) + "\" loaded")
 
     def estimation_density(self, threshold):
         dim = len(img_data.shape)
