@@ -29,13 +29,15 @@ class MainController:
 
     def init_states(self):
         self.mainview.process_menu.entryconfig(0, state="normal")
-        self.mainview.process_menu.entryconfig(1, state="disabled")
+        self.mainview.process_menu.entryconfig(1, state="normal")
 
     def init_callbacks(self):
         self.mainview.open_menu.entryconfig(0, command=self.open_nifti)
         self.mainview.open_menu.entryconfig(1, command=self.open_bruker)
-        self.mainview.process_menu.entryconfig(0, command=self.mainview.expframe.show)
+        self.mainview.process_menu.entryconfig(0, command=lambda : self.mainview.show_frame("ExponentialFitView"))
+        self.mainview.process_menu.entryconfig(1, command=lambda : self.mainview.show_frame("TemporalPhaseCorrectionView"))
         self.mainview.file_menu.entryconfig(2, command=self.exit_app)
+        self.mainview.back_button.config(command=lambda : self.mainview.show_frame("MainView"))
         self.mainview.expframe.compute_button.config(command=self.thread_estimation_density)
         self.mainview.tpcframe.compute_button.config(command=self.thread_phase_correction)
 

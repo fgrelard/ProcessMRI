@@ -38,8 +38,6 @@ class TemporalPhaseCorrectionView(tk.Frame):
         self.label.grid(row=0, column=0, sticky="w")
         self.description.grid(row=1, column=0, sticky="nw")
 
-
-
     def init_body(self):
         self.frame_body = tk.Frame(self)
         self.frame_body.grid()
