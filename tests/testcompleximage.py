@@ -1,10 +1,7 @@
-import sys
-sys.path.append('../src')
-
 import unittest
 import nibabel as nib
 import importlib.machinery
-import compleximage as ci
+import src.compleximage as ci
 
 class TestComplexImage(unittest.TestCase):
     def setUp(self):

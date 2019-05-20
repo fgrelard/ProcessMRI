@@ -3,7 +3,7 @@ sys.path.append('../src/')
 
 import unittest
 import nibabel as nib
-import exponentialfit as ef
+import src.exponentialfit as ef
 import numpy as np
 import numpy.testing as nptest
 import json
@@ -24,7 +24,7 @@ class TestExponentialFit(unittest.TestCase):
     def test_estimation_2D_density_image(self):
         img = nib.load("/mnt/d/IRM/nifti/1/BLE RECITAL/1_BLE 250DJ/50_1_MGE/1.nii")
         img_data = img.get_fdata()
-        out_img_data = ef.estimation_density_image(self.echotime, img_data[:,:,5,:], 2000)
+        out_img_data, t2 = ef.exponentialfit_image(self.echotime, img_data[:,:,5,:], 2000)
         out_img = nib.Nifti1Image(out_img_data, np.eye(4))
         out_img.to_filename("/mnt/d/IRM/nifti/1/BLE RECITAL/1_BLE 250DJ/50_1_MGE/correction_test.nii")
 

@@ -5,8 +5,8 @@ import configparser
 import os
 
 class ExponentialFitView(tk.Frame):
-    def __init__(self, window, config):
-        tk.Frame.__init__(self, window)
+    def __init__(self, config):
+        tk.Frame.__init__(self)
         self.grid()
         self.init(config)
 
@@ -21,11 +21,12 @@ class ExponentialFitView(tk.Frame):
 
     def init_configuration(self, config):
         self.config = config
-        if not self.config:
-            return
-        if 'default' not in self.config or 'OutputDir' not in self.config['default']:
+        self.path = tk.StringVar(None)
+        if 'default' not in self.config:
             self.config['default'] = {}
+        if 'OutputDir' not in self.config['default']:
             self.config['default']['OutputDir'] = os.getcwd()
+        self.path.set(self.config['default']['OutputDir'])
 
     def init_header(self):
         self.frame_header = tk.Frame(self)
@@ -46,7 +47,7 @@ class ExponentialFitView(tk.Frame):
         self.label_method = tk.Label(self.frame_body, text="Fit method")
         self.label_threshold = tk.Label(self.frame_body, text="Threshold")
         self.label_destination = tk.Label(self.frame_body, text="Output directory")
-        self.threshold = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "0")
+        self.threshold = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "None")
         )
 
         self.compute_button = tk.Button(self.frame_body, text="Compute")
@@ -57,7 +58,6 @@ class ExponentialFitView(tk.Frame):
             "Tri-exponential"], state="readonly")
         self.choice_method.current(0)
 
-        self.path = tk.StringVar(None)
         self.entry = tk.Entry(self.frame_body, textvariable=self.path)
         self.open_button = tk.Button(self.frame_body, command=self.open, text="Choose...")
 
@@ -75,7 +75,7 @@ class ExponentialFitView(tk.Frame):
             child.grid_configure(padx=10, pady=10)
 
     def open(self):
-         directory = filedialog.askdirectory(parent=self,title='Choose output directory')
+         directory = filedialog.askdirectory(parent=self, initialdir = self.config['default']['OutputDir'], title='Choose output directory')
          self.config['default']['OutputDir'] = directory
          self.path.set(directory)
 
