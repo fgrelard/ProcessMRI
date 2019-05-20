@@ -33,7 +33,7 @@ class ExponentialFitView(tk.Frame):
         self.frame_header.grid()
 
         self.label = tk.Label(self.frame_header, text="Exponential fit", font='Helvetica 14 bold')
-        description = """This tool allows to fit a n-exponential function on multiple echo data."""
+        description = """Fit a n-exponential function on multiple echo data."""
         self.description = tk.Label(self.frame_header, text=description)
         self.label.grid(row=0, column=0, sticky="w")
         self.description.grid(row=1, column=0, sticky="nw")
@@ -103,6 +103,6 @@ class ExponentialFitView(tk.Frame):
 
 if __name__ == "__main__":
     app = tk.Tk()
-    ExponentialFitView(app, None)
+    ExponentialFitView(app, {})
     app.title("Exponential fit")
     app.mainloop()

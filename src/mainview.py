@@ -3,6 +3,7 @@ from tkinter import ttk
 import tkinter.filedialog as filedialog
 import src.exponentialfitview as expview
 import src.temporalphasecorrectionview as tpcview
+import src.denoiseview as denoiseview
 import os
 
 class MainView(tk.Tk):
@@ -33,6 +34,7 @@ class MainView(tk.Tk):
         self.process_menu = tk.Menu(self.menu, tearoff=0)
         self.process_menu.add_command(label='Exponential fitting')
         self.process_menu.add_command(label='Correct phase')
+        self.process_menu.add_command(label='Denoise')
 
         self.menu.add_cascade(label='File', menu=self.file_menu)
         self.menu.add_cascade(label='Process', menu=self.process_menu)
@@ -45,14 +47,18 @@ class MainView(tk.Tk):
         self.frames = {}
         self.expframe = expview.ExponentialFitView(self, config)
         self.tpcframe = tpcview.TemporalPhaseCorrectionView(self, config)
+        self.denoiseframe = denoiseview.DenoiseView(self, config)
         self.frame()
 
         self.frames[MainView.__name__] = self.frame_header
         self.frames[expview.ExponentialFitView.__name__] = self.expframe
         self.frames[tpcview.TemporalPhaseCorrectionView.__name__] = self.tpcframe
+        self.frames[denoiseview.DenoiseView.__name__] = self.denoiseframe
+
         self.frame_header.grid(row=0, column=0, sticky="nsew")
         self.expframe.grid(row=0, column=0, sticky="nsew")
         self.tpcframe.grid(row=0, column=0, sticky="nsew")
+        self.denoiseframe.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame("MainView")
 

@@ -36,10 +36,13 @@ class MainController:
         self.mainview.open_menu.entryconfig(1, command=self.open_bruker)
         self.mainview.process_menu.entryconfig(0, command=lambda : self.mainview.show_frame("ExponentialFitView"))
         self.mainview.process_menu.entryconfig(1, command=lambda : self.mainview.show_frame("TemporalPhaseCorrectionView"))
+        self.mainview.process_menu.entryconfig(2, command=lambda : self.mainview.show_frame("DenoiseView"))
+
         self.mainview.file_menu.entryconfig(2, command=self.exit_app)
         self.mainview.back_button.config(command=lambda : self.mainview.show_frame("MainView"))
-        self.mainview.expframe.compute_button.config(command=self.thread_estimation_density)
+        self.mainview.expframe.compute_button.config(command=self.thread_density_estimation)
         self.mainview.tpcframe.compute_button.config(command=self.thread_phase_correction)
+        self.mainview.denoiseframe.compute_button.config(command=self.thread_image_denoising)
 
 
     def exit_app(self):
@@ -76,8 +79,15 @@ class MainController:
                 self.mainview.config['default']['NifTiDir'] = dirname
                 self.open_nifti()
 
+    def thread_image_denoising(self):
+        self.queue = queue.Queue()
+        self.mainview.show_bar()
+        self.mainview.progbar.start()
+        ThreadedTask(self.queue, self.image_denoising).start()
+        self.mainview.after(100, self.process_queue)
 
-    def thread_estimation_density(self):
+
+    def thread_density_estimation(self):
         self.queue = queue.Queue()
         self.mainview.show_bar()
         self.mainview.progbar.start()
@@ -101,6 +111,28 @@ class MainController:
         except queue.Empty:
             self.mainview.after(100, self.process_queue)
 
+    def image_denoising(self):
+        size = self.mainview.denoiseframe.size.get()
+        distance = self.mainview.denoiseframe.distance.get()
+        spread = self.mainview.denoiseframe.spread.get()
+        outname = self.mainview.expframe.path.get()
+
+        if self.img_data is not None:
+            try:
+                size = int(size)
+                distance = int(distance)
+                spread = float(spread)
+            except:
+                print("Defaulting.")
+                size = 5
+                distance = 6
+                spread = 1.5
+            finally:
+                img = expfit.denoise_image(self.img_data, size, distance, spread)
+                denoised_img = nib.Nifti1Image(img, np.eye(4))
+                denoised_img.to_filename(os.path.join(outname, "denoised.nii"))
+
+
     def phase_correction(self):
         order = self.mainview.tpcframe.order.get()
         outname = self.mainview.tpcframe.path.get()
@@ -123,7 +155,7 @@ class MainController:
                 phase_img = nib.Nifti1Image(phase, np.eye(4))
                 phase_img.to_filename(os.path.join(outname, "phase_tpc.nii"))
 
-    def estimation_density(self):
+    def density_estimation(self):
         fit_method = self.mainview.expframe.choice_method.get()
         threshold = self.mainview.expframe.threshold.get()
         outname = self.mainview.expframe.path.get()

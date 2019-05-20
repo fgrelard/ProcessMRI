@@ -10,14 +10,24 @@ import skimage
 import os
 import time
 
-def denoise_image(image):
+def denoise_image(image, size, distance, spread):
+    denoised = np.zeros_like(image)
+    dim = len(image.shape)
+    if dim > 3:
+        for i in range(len(image.shape[:-1])):
+            image3D = denoise_2_3D(image[...,i], size, distance, spread)
+            denoised[..., i] = image3D
+    else:
+        denoised = denoise_2_3D(image, size, distance, spread)
+    return denoised
+
+def denoise_2_3D(image, size, distance, spread):
     sigma_est = np.mean(skrestore.estimate_sigma(image, multichannel=True))
-    print(sigma_est)
-    patch_kw = dict(patch_size=5,      # 5x5 patches
-                patch_distance=6,  # 13x13 search area
+    patch_kw = dict(patch_size=size,      # s*s patches
+                patch_distance=distance,  # d*d search area
                 multichannel=True)
-    denoise2_fast = skrestore.denoise_nl_means(image, h=1.5*sigma_est,fast_mode=False, **patch_kw)
-    return denoise2_fast
+    denoised = skrestore.denoise_nl_means(image, h=spread*sigma_est,fast_mode=False, **patch_kw)
+    return denoised
 
 # Exponential function to be fitted against the data
 def exponential_function(x, a, b):
