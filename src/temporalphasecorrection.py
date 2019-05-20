@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import skimage
 import cmath
 import skimage.restoration as skires
-import compleximage as ci
+import src.compleximage as ci
 
 def unwrap_phases(phase_image):
     unwrapped_image = np.zeros_like(phase_image, dtype=float)

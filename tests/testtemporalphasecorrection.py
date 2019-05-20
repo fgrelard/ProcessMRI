@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 class TestTemporalPhaseCorrection(unittest.TestCase):
     def setUp(self):
-        img = nib.load("/mnt/d/IRM/nifti/7/BLE RECITAL/1_BLE 250DJ/50_7_MGE/1.nii")
+        img = nib.load("/mnt/d/IRM/raw/50/nifti/50_subscan_7.nii.gz")
         img_data = img.get_fdata()
         self.image = img_data
 

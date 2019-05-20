@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.filedialog as filedialog
 import src.exponentialfitview as expview
+import src.temporalphasecorrectionview as tpcview
 import os
 
 class MainView(tk.Tk):
@@ -41,8 +42,8 @@ class MainView(tk.Tk):
         self.progbar = ttk.Progressbar(self, orient="horizontal",
                                   length=200, mode="indeterminate")
 
-        self.expframe = expview.ExponentialFitView(config)
-
+        self.expframe = expview.ExponentialFitView(self, config)
+        self.tpcframe = tpcview.TemporalPhaseCorrectionView(self, config)
         self.progbar.grid(row=1, sticky="se")
         self.hide_bar()
 

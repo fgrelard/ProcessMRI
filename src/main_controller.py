@@ -1,6 +1,8 @@
 import json
 import src.exponentialfit as expfit
 import src.imageio as io
+import src.temporalphasecorrection as tpc
+import src.compleximage as ci
 
 import tkinter.filedialog as filedialog
 
@@ -35,6 +37,7 @@ class MainController:
         self.mainview.process_menu.entryconfig(0, command=self.mainview.expframe.show)
         self.mainview.file_menu.entryconfig(2, command=self.exit_app)
         self.mainview.expframe.compute_button.config(command=self.thread_estimation_density)
+        self.mainview.tpcframe.compute_button.config(command=self.thread_phase_correction)
 
 
     def exit_app(self):
@@ -79,6 +82,14 @@ class MainController:
         ThreadedTask(self.queue, self.estimation_density).start()
         self.mainview.after(100, self.process_queue)
 
+
+    def thread_phase_correction(self):
+        self.queue = queue.Queue()
+        self.mainview.show_bar()
+        self.mainview.progbar.start()
+        ThreadedTask(self.queue, self.phase_correction).start()
+        self.mainview.after(100, self.process_queue)
+
     def process_queue(self):
         try:
             self.mainview.update()
@@ -87,6 +98,28 @@ class MainController:
             self.mainview.hide_bar()
         except queue.Empty:
             self.mainview.after(100, self.process_queue)
+
+    def phase_correction(self):
+        order = self.mainview.tpcframe.order.get()
+        outname = self.mainview.tpcframe.path.get()
+        if self.img_data is not None:
+            try:
+                order = int(order)
+            except:
+                print("Defaulting to order=4")
+                order = 4
+            finally:
+                self.echotime = np.array(self.echotime).tolist()
+                order=3
+                temporally_corrected = tpc.correct_phase_temporally(self.echotime, self.img_data[:,:,4,:], order)
+                magnitude = ci.complex_to_magnitude(temporally_corrected)
+                phase = ci.complex_to_phase(temporally_corrected)
+
+                magnitude_img = nib.Nifti1Image(magnitude, np.eye(4))
+                magnitude_img.to_filename(os.path.join(outname, "magnitude_tpc.nii"))
+
+                phase_img = nib.Nifti1Image(phase, np.eye(4))
+                phase_img.to_filename(os.path.join(outname, "phase_tpc.nii"))
 
     def estimation_density(self):
         fit_method = self.mainview.expframe.choice_method.get()
