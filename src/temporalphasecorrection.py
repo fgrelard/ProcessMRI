@@ -1,6 +1,5 @@
 import numpy as np
 import math
-import json
 import matplotlib.pyplot as plt
 import skimage
 import cmath
