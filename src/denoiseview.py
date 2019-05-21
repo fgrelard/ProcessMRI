@@ -30,7 +30,7 @@ class DenoiseView(tk.Frame):
 
     def init_header(self):
         self.frame_header = tk.Frame(self)
-        self.frame_header.grid()
+        self.frame_header.grid(row=0, sticky="nw")
 
         self.label = tk.Label(self.frame_header, text="Rician Denoising", font='Helvetica 14 bold')
         description = """Denoise an image corrupted by Rician noise by a non-local means method."""
@@ -42,7 +42,7 @@ class DenoiseView(tk.Frame):
 
     def init_body(self):
         self.frame_body = tk.Frame(self)
-        self.frame_body.grid()
+        self.frame_body.grid(row=1, sticky="nw")
 
         self.label_size = tk.Label(self.frame_body, text="Patch size")
         self.label_distance = tk.Label(self.frame_body, text="Patch distance")

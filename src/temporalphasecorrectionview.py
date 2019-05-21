@@ -30,7 +30,7 @@ class TemporalPhaseCorrectionView(tk.Frame):
 
     def init_header(self):
         self.frame_header = tk.Frame(self)
-        self.frame_header.grid()
+        self.frame_header.grid(row=0, sticky="nw")
 
         self.label = tk.Label(self.frame_header, text="Temporal phase correction (TPC)", font='Helvetica 14 bold')
         description = """Correct the phase from complex MRI images."""
@@ -40,7 +40,7 @@ class TemporalPhaseCorrectionView(tk.Frame):
 
     def init_body(self):
         self.frame_body = tk.Frame(self)
-        self.frame_body.grid()
+        self.frame_body.grid(row=1, sticky="nw")
 
         self.label_order = tk.Label(self.frame_body, text="Polynomial order")
         self.order = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "4")

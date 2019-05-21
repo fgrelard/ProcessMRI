@@ -62,7 +62,7 @@ class MainController:
             echotime = io.extract_metadata(metadata, 'VisuAcqEchoTime')
             self.img_data = img.get_fdata()
             self.echotime = echotime
-            self.mainview.label.config(text="Image \"" + os.path.join(os.path.split(os.path.dirname(filename))[1], os.path.split(filename)[1]) + "\" loaded")
+            self.mainview.description.config(text="Image \"" + os.path.join(os.path.split(os.path.dirname(filename))[1], os.path.split(filename)[1]) + "\" loaded")
             self.mainview.process_menu.entryconfig(0, state="normal")
             self.mainview.process_menu.entryconfig(1, state="normal")
 
@@ -91,7 +91,7 @@ class MainController:
         self.queue = queue.Queue()
         self.mainview.show_bar()
         self.mainview.progbar.start()
-        ThreadedTask(self.queue, self.estimation_density).start()
+        ThreadedTask(self.queue, self.density_estimation).start()
         self.mainview.after(100, self.process_queue)
 
 
@@ -115,7 +115,7 @@ class MainController:
         size = self.mainview.denoiseframe.size.get()
         distance = self.mainview.denoiseframe.distance.get()
         spread = self.mainview.denoiseframe.spread.get()
-        outname = self.mainview.expframe.path.get()
+        outname = self.mainview.denoiseframe.path.get()
 
         if self.img_data is not None:
             try:

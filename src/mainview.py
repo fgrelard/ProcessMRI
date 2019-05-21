@@ -15,9 +15,6 @@ class MainView(tk.Tk):
     def init(self, config):
         self.title("ProcessMRI")
 
-        self.label = tk.Label(self, text="Load a MRI image: File/Open")
-        self.geometry('500x500')
-
         self.menu = tk.Menu(self)
 
         self.open_menu = tk.Menu(self, tearoff=0)
@@ -42,7 +39,7 @@ class MainView(tk.Tk):
         self.config(menu=self.menu)
         self.config = config
         self.progbar = ttk.Progressbar(self, orient="horizontal",
-                                  length=200, mode="indeterminate")
+                                  length=100, mode="indeterminate")
 
         self.frames = {}
         self.expframe = expview.ExponentialFitView(self, config)
@@ -64,8 +61,19 @@ class MainView(tk.Tk):
 
         self.back_button = tk.Button(self, text="Back")
         self.back_button.grid(row=1, column=0, sticky="sw")
-        self.progbar.grid(row=1, column=1,sticky="se")
+        self.progbar.grid(row=1, column=0,sticky="se")
+
+        self.post_init()
+
         self.hide_bar()
+
+
+    def post_init(self):
+        for child in self.winfo_children():
+            try:
+                child.grid_configure(padx=10, pady=10)
+            except:
+                pass
 
 
     def frame(self):

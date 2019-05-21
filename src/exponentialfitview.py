@@ -30,19 +30,19 @@ class ExponentialFitView(tk.Frame):
 
     def init_header(self):
         self.frame_header = tk.Frame(self)
-        self.frame_header.grid()
+        self.frame_header.grid(row=0, sticky="nw")
 
         self.label = tk.Label(self.frame_header, text="Exponential fit", font='Helvetica 14 bold')
         description = """Fit a n-exponential function on multiple echo data."""
         self.description = tk.Label(self.frame_header, text=description)
-        self.label.grid(row=0, column=0, sticky="w")
+        self.label.grid(row=0, column=0, sticky="nw")
         self.description.grid(row=1, column=0, sticky="nw")
 
 
 
     def init_body(self):
         self.frame_body = tk.Frame(self)
-        self.frame_body.grid()
+        self.frame_body.grid(row=1, sticky="nw")
 
         self.label_method = tk.Label(self.frame_body, text="Fit method")
         self.label_threshold = tk.Label(self.frame_body, text="Threshold")
@@ -61,13 +61,13 @@ class ExponentialFitView(tk.Frame):
         self.entry = tk.Entry(self.frame_body, textvariable=self.path)
         self.open_button = tk.Button(self.frame_body, command=self.open, text="Choose...")
 
-        self.label_method.grid(row=2, column=0, sticky="sw")
-        self.choice_method.grid(row=2, column=1, sticky="sw")
-        self.label_threshold.grid(row=3, column=0, sticky="sw")
-        self.threshold.grid(row=3, column=1, sticky="sw")
-        self.label_destination.grid(row=4, column=0, sticky="sw")
-        self.entry.grid(row=4, column=1, sticky="sw")
-        self.open_button.grid(row=4, column=2, sticky="sw")
+        self.label_method.grid(row=2, column=0, sticky="nw")
+        self.choice_method.grid(row=2, column=1, sticky="nw")
+        self.label_threshold.grid(row=3, column=0, sticky="nw")
+        self.threshold.grid(row=3, column=1, sticky="nw")
+        self.label_destination.grid(row=4, column=0, sticky="nw")
+        self.entry.grid(row=4, column=1, sticky="nw")
+        self.open_button.grid(row=4, column=2, sticky="nw")
         self.compute_button.grid(row=5, column=2, sticky="se")
 
     def post_init(self):
