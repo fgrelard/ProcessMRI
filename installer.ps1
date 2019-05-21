@@ -1,1 +1,1 @@
-python -m PyInstaller --clean -y -p src --additional-hooks-dir=. .\main.py
+python -m PyInstaller --clean -y -p src --additional-hooks-dir=. --one-file .\main.py
