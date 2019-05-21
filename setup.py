@@ -1,3 +1,4 @@
-from setuptools import setup, find_packages
+from distutils.core import setup
+import py2exe
 
-setup(name='ProcessMRI', version='1.0', packages=find_packages())
+setup(console=['main.py'])
