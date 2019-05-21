@@ -60,9 +60,10 @@ class MainController:
             print(e)
         else:
             echotime = io.extract_metadata(metadata, 'VisuAcqEchoTime')
+            self.filename = os.path.split(filename)[1]
             self.img_data = img.get_fdata()
             self.echotime = echotime
-            self.mainview.description.config(text="Image \"" + os.path.join(os.path.split(os.path.dirname(filename))[1], os.path.split(filename)[1]) + "\" loaded")
+            self.mainview.description.config(text="Image \"" + os.path.join(os.path.split(os.path.dirname(filename))[1], self.filename) + "\" loaded")
             self.mainview.process_menu.entryconfig(0, state="normal")
             self.mainview.process_menu.entryconfig(1, state="normal")
 
@@ -130,7 +131,7 @@ class MainController:
             finally:
                 img = expfit.denoise_image(self.img_data, size, distance, spread)
                 denoised_img = nib.Nifti1Image(img, np.eye(4))
-                denoised_img.to_filename(os.path.join(outname, "denoised.nii"))
+                denoised_img.to_filename(os.path.join(outname,  self.filename+"_denoised.nii"))
 
 
     def phase_correction(self):
@@ -144,16 +145,16 @@ class MainController:
                 order = 4
             finally:
                 self.echotime = np.array(self.echotime).tolist()
-                order=3
+                order = 3
                 temporally_corrected = tpc.correct_phase_temporally(self.echotime, self.img_data[:,:,4,:], order)
                 magnitude = ci.complex_to_magnitude(temporally_corrected)
                 phase = ci.complex_to_phase(temporally_corrected)
 
                 magnitude_img = nib.Nifti1Image(magnitude, np.eye(4))
-                magnitude_img.to_filename(os.path.join(outname, "magnitude_tpc.nii"))
+                magnitude_img.to_filename(os.path.join(outname, self.filename+"_magnitude_tpc.nii"))
 
                 phase_img = nib.Nifti1Image(phase, np.eye(4))
-                phase_img.to_filename(os.path.join(outname, "phase_tpc.nii"))
+                phase_img.to_filename(os.path.join(outname, self.filename+"_phase_tpc.nii"))
 
     def density_estimation(self):
         fit_method = self.mainview.expframe.choice_method.get()
@@ -179,10 +180,10 @@ class MainController:
                         n=3
                 density, t2 = expfit.exponentialfit_image(self.echotime, self.img_data, threshold, lreg, n)
                 density_img = nib.Nifti1Image(density, np.eye(4))
-                density_img.to_filename(os.path.join(outname, "density.nii"))
+                density_img.to_filename(os.path.join(outname,  self.filename+"_density.nii"))
 
                 t2_img = nib.Nifti1Image(t2, np.eye(4))
-                t2_img.to_filename(os.path.join(outname, "t2_star.nii"))
+                t2_img.to_filename(os.path.join(outname,  self.filename+"_t2_star.nii"))
 
 class ThreadedTask(threading.Thread):
     def __init__(self, queue, function):
