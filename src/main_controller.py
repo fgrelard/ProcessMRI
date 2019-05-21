@@ -61,6 +61,7 @@ class MainController:
         else:
             echotime = io.extract_metadata(metadata, 'VisuAcqEchoTime')
             self.filename = os.path.split(filename)[1]
+            self.filename = self.filename.replace('.nii.gz', '')
             self.img_data = img.get_fdata()
             self.echotime = echotime
             self.mainview.description.config(text="Image \"" + os.path.join(os.path.split(os.path.dirname(filename))[1], self.filename) + "\" loaded")
