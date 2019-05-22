@@ -7,6 +7,22 @@ import skimage.restoration as skires
 import src.compleximage as ci
 
 def unwrap_phases(phase_image):
+    """
+    Unwrap the phase modulo 2pi
+    so that the difference between two consecutive
+    phases is no more than pi
+
+    Parameters
+    ----------
+    phase_image: numpy.ndarray
+        n-D phase image
+
+    Returns
+    ----------
+    numpy.ndarray
+        n-D unwrapped phase image
+
+    """
     unwrapped_image = np.zeros_like(phase_image, dtype=float)
     for index in np.ndindex(phase_image.shape[2:]):
         nd_index = (slice(None),slice(None))+index
@@ -16,6 +32,27 @@ def unwrap_phases(phase_image):
 
 
 def correct_phase_1d(echotimes, decays, order, phases_unwrap=None):
+    """
+    Corrects the phase for 1D-decays
+
+    Parameters
+    ----------
+    echotimes: list
+        x data
+    decays: list
+        complex data
+    order: int
+        polynomial order to fit on the unwrapped phase
+    phases_unwrap: numpy.ndarray
+        n-D unwrapped phase image
+        (default: None, uses numpy.unwrap function)
+
+    Returns
+    ----------
+    list
+        corrected complex data
+
+    """
     if phases_unwrap is None:
         phases = [cmath.phase(decay) for decay in decays]
         phases_unwrap = np.unwrap(phases)
@@ -27,6 +64,25 @@ def correct_phase_1d(echotimes, decays, order, phases_unwrap=None):
     return decay_new
 
 def correct_phase_temporally(echotimes, img_data, order):
+    """
+    Corrects the phase temporally (main function)
+    on n-D complex images
+
+    Parameters
+    ----------
+    echotimes: list
+        x data
+    img_data: numpy.ndarray
+        n-D complex image
+    order: int
+        polynomial order
+
+    Returns
+    ----------
+    type
+        description
+
+    """
     out_img_data = np.zeros(shape=(img_data.shape[:-1]+ (img_data.shape[-1]//2, )), dtype=complex)
     complex_img_data = ci.to_complex(img_data)
     even_echotime = echotimes[:8:2]
@@ -54,6 +110,18 @@ def correct_phase_temporally(echotimes, img_data, order):
 
 
 def draw_phase_repartition(before, after):
+    """
+    Draws repartition of real and imaginary components
+
+    Parameters
+    ----------
+    before: numpy.ndarray
+        n-D complex non-corrected image
+    after: numpy.ndarray
+        n-D complex corrected image
+
+
+    """
     mag_before = [elem for elem in np.nditer(ci.complex_to_magnitude(before))]
     phase_before = [elem for elem in np.nditer(ci.complex_to_phase(before))]
     mag = [elem for elem in np.nditer(ci.complex_to_magnitude(after))]

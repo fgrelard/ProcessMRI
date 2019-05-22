@@ -11,6 +11,19 @@ from tkinter import ttk
 import configparser
 
 def init_configuration():
+    """
+    Initialisation of the configuration:
+    storage preferences
+
+    Parameters
+    ----------
+    None.
+
+    Returns
+    ----------
+    config
+
+    """
     config = configparser.ConfigParser()
     config.read('config.ini')
     if 'default' not in config:

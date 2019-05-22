@@ -8,11 +8,26 @@ import os
 
 class MainView(tk.Tk):
     def __init__(self, config):
+        """
+        Constructor for MainView
+        Represents the main window in the application
+        """
         tk.Tk.__init__(self)
         self.grid()
         self.init(config)
 
     def init(self, config):
+        """
+        Initializes the graphical various elements
+
+        Parameters
+        ----------
+        self: type
+            description
+        config: configparser.Config
+            configuration preferences
+
+        """
         self.title("ProcessMRI")
 
         self.menu = tk.Menu(self)
@@ -69,6 +84,9 @@ class MainView(tk.Tk):
 
 
     def post_init(self):
+        """
+        Adds a padding of 10 for each element
+        """
         for child in self.winfo_children():
             try:
                 child.grid_configure(padx=10, pady=10)
@@ -77,6 +95,9 @@ class MainView(tk.Tk):
 
 
     def frame(self):
+        """
+        Initializes the main frame (label+description)
+        """
         self.frame_header = tk.Frame(self)
         self.frame_header.grid()
 
@@ -87,14 +108,22 @@ class MainView(tk.Tk):
         self.description.grid(row=1, column=0, sticky="nw")
 
     def show_frame(self, page_name):
-        '''Show a frame for the given page name'''
+        """
+        Shows a frame for the given page name
+        """
         frame = self.frames[page_name]
         frame.tkraise()
 
     def show_bar(self):
+        """
+        Shows progress bar
+        """
         self.progbar.grid()
 
     def hide_bar(self):
+        """
+        Hides progress bar
+        """
         self.progbar.grid_remove()
 
 if __name__ == "__main__":

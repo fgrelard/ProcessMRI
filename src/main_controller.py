@@ -16,22 +16,37 @@ import time
 
 class MainController:
     def __init__(self, mainview):
-        self.mainview = mainview
+        """
+        Constructor of MainController
+        Class to link model and view of main window
 
+        Parameters
+        ----------
+        self: type
+            description
+        mainview: src.MainView
+            main view (window)
+        """
+        self.mainview = mainview
         self.init_states()
         self.init_callbacks()
-
-
-        #Model
         self.img_data = None
         self.echotime = None
         mainview.protocol('WM_DELETE_WINDOW', self.exit_app)
 
     def init_states(self):
+        """
+        States of entries in menu
+        """
         self.mainview.process_menu.entryconfig(0, state="normal")
         self.mainview.process_menu.entryconfig(1, state="normal")
 
     def init_callbacks(self):
+        """
+        Defines the functions associated with various elements
+        such as menu elements and buttons in the main view,
+        and child frames
+        """
         self.mainview.open_menu.entryconfig(0, command=self.open_nifti)
         self.mainview.open_menu.entryconfig(1, command=self.open_bruker)
         self.mainview.process_menu.entryconfig(0, command=lambda : self.mainview.show_frame("ExponentialFitView"))
@@ -46,11 +61,18 @@ class MainController:
 
 
     def exit_app(self):
+        """
+        Exits the app and save configuration
+        preferences
+        """
         with open('config.ini', 'w') as configfile:
             self.mainview.config.write(configfile)
         self.mainview.quit()
 
     def open_nifti(self):
+        """
+        Opens nifti file and reads metadata
+        """
         filename =  filedialog.askopenfilename(initialdir = self.mainview.config['default']['NifTiDir'],title = "Select NifTi image",filetypes = (("nii files","*.nii.gz"),("all files","*.*")))
         try:
             self.mainview.config['default']['NifTiDir'] = os.path.dirname(filename)
@@ -70,6 +92,9 @@ class MainController:
 
 
     def open_bruker(self):
+        """
+        Opens Bruker directory
+        """
         dirname =  filedialog.askdirectory(initialdir = self.mainview.config['default']['NifTiDir'], title = "Select Bruker directory")
         try:
             list_filenames = io.open_generic_image(dirname)
@@ -82,6 +107,9 @@ class MainController:
                 self.open_nifti()
 
     def thread_image_denoising(self):
+        """
+        Thread for image denoising
+        """
         self.queue = queue.Queue()
         self.mainview.show_bar()
         self.mainview.progbar.start()
@@ -90,6 +118,9 @@ class MainController:
 
 
     def thread_density_estimation(self):
+        """
+        Thread for density estimation
+        """
         self.queue = queue.Queue()
         self.mainview.show_bar()
         self.mainview.progbar.start()
@@ -98,6 +129,9 @@ class MainController:
 
 
     def thread_phase_correction(self):
+        """
+        Thread for phase correction
+        """
         self.queue = queue.Queue()
         self.mainview.show_bar()
         self.mainview.progbar.start()
@@ -105,6 +139,11 @@ class MainController:
         self.mainview.after(100, self.process_queue)
 
     def process_queue(self):
+        """
+        Function called every 100ms to check for the
+        state of the task (whether it is finished
+        or not)
+        """
         try:
             self.mainview.update()
             msg = self.queue.get(0)
@@ -114,6 +153,10 @@ class MainController:
             self.mainview.after(100, self.process_queue)
 
     def image_denoising(self):
+        """
+        Image denoising through nl means
+        see expfit.denoise_image
+        """
         size = self.mainview.denoiseframe.size.get()
         distance = self.mainview.denoiseframe.distance.get()
         spread = self.mainview.denoiseframe.spread.get()
@@ -136,6 +179,10 @@ class MainController:
 
 
     def phase_correction(self):
+        """
+        Temporal phase correction
+        see tpc.correct_phase_temporally
+        """
         order = self.mainview.tpcframe.order.get()
         outname = self.mainview.tpcframe.path.get()
         if self.img_data is not None:
@@ -146,7 +193,6 @@ class MainController:
                 order = 4
             finally:
                 self.echotime = np.array(self.echotime).tolist()
-                order = 3
                 temporally_corrected = tpc.correct_phase_temporally(self.echotime, self.img_data[:,:,4,:], order)
                 magnitude = ci.complex_to_magnitude(temporally_corrected)
                 phase = ci.complex_to_phase(temporally_corrected)
@@ -158,6 +204,11 @@ class MainController:
                 phase_img.to_filename(os.path.join(outname, self.filename+"_phase_tpc.nii"))
 
     def density_estimation(self):
+        """
+        Density and T2 estimation from
+        exponential fitting
+        see expfit.exponentialfit_image
+        """
         fit_method = self.mainview.expframe.choice_method.get()
         threshold = self.mainview.expframe.threshold.get()
         outname = self.mainview.expframe.path.get()
@@ -188,9 +239,28 @@ class MainController:
 
 class ThreadedTask(threading.Thread):
     def __init__(self, queue, function):
+        """
+        ThreadedTask: initializes a thread with a function
+        and checks for its status through a queue
+
+        Parameters
+        ----------
+        self: type
+            description
+        queue: queue.Queue
+            the queue which allows to check status
+        function: function
+            function to threadify
+
+        """
         threading.Thread.__init__(self)
         self.queue = queue
         self.function = function
+
     def run(self):
+        """
+        Puts a message in a queue at the end
+        of the processing
+        """
         self.function()
         self.queue.put("Task finished")

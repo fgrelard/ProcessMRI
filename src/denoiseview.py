@@ -5,12 +5,31 @@ import configparser
 import os
 
 class DenoiseView(tk.Frame):
+
     def __init__(self, window, config):
+        """
+        Constructor of DenoiseView, inherits
+        tkinter Frame
+
+        Parameters
+        ----------
+        self: type
+            description
+        window: tk.Root
+            main window
+        config: configparser.Config
+            configuration preferences
+        """
         tk.Frame.__init__(self, window)
         self.grid()
         self.init(config)
 
+
+
     def init(self, config):
+        """
+        Various initialization functions
+        """
         self.init_configuration(config)
         self.init_header()
         self.init_body()
@@ -20,6 +39,9 @@ class DenoiseView(tk.Frame):
 
 
     def init_configuration(self, config):
+        """
+        Initializes the configuration preferences
+        """
         self.config = config
         self.path = tk.StringVar(None)
         if 'default' not in self.config:
@@ -29,6 +51,9 @@ class DenoiseView(tk.Frame):
         self.path.set(self.config['default']['OutputDir'])
 
     def init_header(self):
+        """
+        Builds the header (title + description)
+        """
         self.frame_header = tk.Frame(self)
         self.frame_header.grid(row=0, sticky="nw")
 
@@ -41,6 +66,9 @@ class DenoiseView(tk.Frame):
 
 
     def init_body(self):
+        """
+        Builds the body (labels, entries, file chooser...)
+        """
         self.frame_body = tk.Frame(self)
         self.frame_body.grid(row=1, sticky="nw")
 
@@ -69,32 +97,32 @@ class DenoiseView(tk.Frame):
         self.compute_button.grid(row=6, column=2, sticky="se")
 
     def post_init(self):
+        """
+        Adds a padding of 10 for each element
+        """
         for child in self.winfo_children():
             child.grid_configure(padx=10, pady=10)
 
     def open(self):
-         directory = filedialog.askdirectory(parent=self, initialdir = self.config['default']['OutputDir'], title='Choose output directory')
-         self.config['default']['OutputDir'] = directory
-         self.path.set(directory)
-
-    def validate_int(self, action, index, value_if_allowed,
-                       prior_value, text, validation_type, trigger_type, widget_name):
-        if text in '0123456789.-+':
-            try:
-                float(value_if_allowed)
-                return True
-            except ValueError:
-                return False
-        else:
-            return False
-
+        """
+        Function called when the button for the choice of the directory is selected
+        """
+        directory = filedialog.askdirectory(parent=self, initialdir = self.config['default']['OutputDir'], title='Choose output directory')
+        self.config['default']['OutputDir'] = directory
+        self.path.set(directory)
 
     def show(self):
+        """
+        Shows this frame in the main window
+        """
         self.grid()
         for widget in self.winfo_children():
             widget.grid()
 
     def hide(self):
+        """
+        Hides this frame in the main window
+        """
         for widget in self.grid_slaves():
             widget.grid_remove()
 

@@ -11,6 +11,28 @@ import os
 import time
 
 def denoise_image(image, size, distance, spread):
+    """
+    Image denoising by non-local means
+    Adapted to Rician noise
+    For 4D images
+
+    Parameters
+    ----------
+    image: numpy.ndarray
+        description
+    size: int
+        patch size
+    distance: int
+        patch distance search
+    spread: float
+        factor by which the estimated noise variance is multiplied for noise correction
+
+    Returns
+    ----------
+    numpy.ndarray:
+        the denoised image
+
+    """
     denoised = np.zeros_like(image)
     dim = len(image.shape)
     if dim > 3:
@@ -22,6 +44,28 @@ def denoise_image(image, size, distance, spread):
     return denoised
 
 def denoise_2_3D(image, size, distance, spread):
+    """
+    Image denoising by non-local means
+    Adapted to Rician noise
+    For 2 and 3D images
+
+    Parameters
+    ----------
+    image: numpy.ndarray
+        description
+    size: int
+        patch size
+    distance: int
+        patch distance search
+    spread: float
+        factor by which the estimated noise variance is multiplied for noise correction
+
+    Returns
+    ----------
+    numpy.ndarray:
+        the denoised image
+
+    """
     sigma_est = np.mean(skrestore.estimate_sigma(image, multichannel=True))
     patch_kw = dict(patch_size=size,      # s*s patches
                 patch_distance=distance,  # d*d search area
@@ -29,44 +73,125 @@ def denoise_2_3D(image, size, distance, spread):
     denoised = skrestore.denoise_nl_means(image, h=spread*sigma_est,fast_mode=False, **patch_kw)
     return denoised
 
-# Exponential function to be fitted against the data
 def exponential_function(x, a, b):
+    """
+    Mono-exponential function : ae-(bx)
+
+    Parameters
+    ----------
+    x: float
+        data
+    a: float
+        first parameter
+    b: float
+        second parameter
+
+    Returns
+    ----------
+    float:
+        the exponential of x
+
+    """
     return a*np.exp(-b*x)
 
 def n_exponential_function(x, *params):
+    """
+    n-exponential function
+
+    Parameters
+    ----------
+    x: np.ndarray
+        data
+    params: list
+        number of parameters, determining the order of the exponential
+
+    Returns
+    ----------
+    numpy.ndarray:
+        n-exponential of x
+
+    """
     n = (len(params)-1)//2
     exp = 0
     for i in range(n):
         exp += exponential_function(x, params[i*2], params[i*2+1])
     return exp + params[-1]
 
-def biexponential_function(x, a, b, c, d, e):
-    return a*np.exp(-b*x) + d*np.exp(-e*x) + c
-
 
 def density(values):
+    """
+    Density from exponential coefficients
+
+    Parameters
+    ----------
+    values: list
+        list of exponential coefficients
+
+    Returns
+    ----------
+    float
+        the density
+    """
     return np.sum(values[0:-1:2]) + values[-1]
 
 def t2_star(values, echotime):
+    """
+    T2-star from exponential coefficients
+    Parameters
+    ----------
+    values: list
+        list of exponential coefficients
+    echotime:
+        echotime spacing
+
+    Returns
+    ----------
+    float
+        t2 star
+
+    """
     return np.sum(np.divide(echotime,values[1::2]))
 
 def fit_exponential_linear_regression(x, y):
+    """
+    Fit a mono-exponential by linear regression
+    on the log of the data
+
+    Parameters
+    ----------
+    x: list
+        x data
+    y: numpy.array
+        y data
+
+    Returns
+    ----------
+    list
+        exponential coefficients
+    """
     fit = np.polyfit(np.array(x), np.log(y), 1,  w=np.sqrt(y))
     return [np.exp(fit[1]), -fit[0], 0]
 
-# Fit the exponential on the (x, y) data
 def fit_exponential(x, y, p0, lreg=False):
+    """
+    Fit the exponential on the (x, y) data
+    Parameters
+    ----------
+    x: list
+        x data
+    y: numpy.array
+        y data
+    p0: tuple
+        first approximation of exponential coefficients
+        the number of arguments in the tuple determines the order
+        of the exponential
+    lreg: bool
+        use linear regression or nnls
+    """
     if lreg:
         return fit_exponential_linear_regression(x, y)
     try:
         popt, pcov = curve_fit(n_exponential_function, x, y, p0=p0,maxfev=3000)
-        # poptbi, pcovbi = curve_fit(biexponential_function, x, y)
-        # popt_odd, pcov_odd = curve_fit(n_exponential_function, x[1::2], y[1::2], p0=p0, maxfev=3000)
-        # popt_even, pov_even = curve_fit(n_exponential_function, x[::2], y[::2], p0=p0, maxfev=3000)
-        # if popt_odd[1] < popt[1] and popt_odd[1] < popt_even[1]:  #
-        #     popt = popt_odd
-        # elif popt_even[1] < popt[1] and popt_even[1] < popt_odd[1]: #
-        #     popt = popt_even
 
         if popt[1] > 3:
             raise RuntimeError("Exponential coefficient not suited.")
@@ -75,6 +200,25 @@ def fit_exponential(x, y, p0, lreg=False):
         return fit_exponential_linear_regression(x, y)
 
 def plot_values(x, y, value, popt, threshold, f=n_exponential_function):
+    """
+    Plot values and corresponding exponential fit
+
+    Parameters
+    ----------
+    x: list
+        x data
+    y: numpy.array
+        y data
+    value: float
+        value to check
+    popt: list
+        exponential coefficients from fit
+    threshold: int
+        threshold to check value against
+    f: function
+        function to use to use the exponential coefficients
+
+    """
     if value > threshold:
         xx = np.linspace(0, 9, 1000)
         yy = f(xx, *popt)
@@ -82,6 +226,22 @@ def plot_values(x, y, value, popt, threshold, f=n_exponential_function):
         plt.show()
 
 def auto_threshold_gmm(data, number_gaussian):
+    """
+    Auto thresholding through fitting of a mixture of gaussians
+    by the expectation maximization algorithm
+
+    Parameters
+    ----------
+    data: image
+        numpy.ndarray
+    number_gaussian: int
+        number of gaussians to fit
+
+    Returns
+    ----------
+    int
+        threshold as mu_0 + 2 * sigma_0
+    """
     gmm = skm.GaussianMixture(n_components=number_gaussian, max_iter=250)
     gmm = gmm.fit(data)
 
@@ -91,15 +251,23 @@ def auto_threshold_gmm(data, number_gaussian):
     argmin_mean = np.argmin(mean)
     return mean[argmin_mean] + 2*np.sqrt(covariance[argmin_mean])
 
-def compute_edges(image):
-    edges_sobel = np.zeros_like(image)
-    for index in np.ndindex(image.shape[2:]):
-        index_xy = (slice(None), slice(None)) + index
-        e = skfilters.sobel(image[index_xy])
-        edges_sobel[index_xy] = np.interp(e, (e.min(), e.max()), (0, 255))
-    return edges_sobel
-
 def n_to_p0(n, y0):
+    """
+    Construct exponential coefficients from order
+
+    Parameters
+    ----------
+    n: int
+        order
+    y0: float
+        first y-point
+
+    Returns
+    ----------
+    tuple
+        the exponential coefficients
+
+    """
     p0 = ()
     for i in range(n):
         p0 += (2*y0, 0.1)
@@ -108,6 +276,31 @@ def n_to_p0(n, y0):
 
 # Main function to estimate the parametric image
 def exponentialfit_image(echotime, image,threshold=None, lreg=True, n=1):
+    """
+    Exponential fit on an image
+
+    Parameters
+    ----------
+    echotime: list
+        x data
+    image: numpy.ndarray
+        image with multiple echoes in last dimension
+    threshold: float
+        value below which exponential fit is not performed
+        (snr low)
+    lreg: bool
+        linear regression or nnls
+    n: int
+        order of exponential
+
+    Returns
+    ----------
+    desnity_data: numpy.ndarray
+        density image
+
+    t2_data: numpy.ndarray
+        t2* image
+    """
     density_data = np.zeros(shape=image.shape[:-1])
     t2_data = np.zeros(shape=image.shape[:-1])
 

@@ -4,6 +4,20 @@ import nibabel as nib
 import numpy as np
 
 def open_generic_image(input_name):
+    """
+    Generic function to open NifTi images or Bruker
+    images
+
+    Parameters
+    ----------
+    input_name: string
+        image name
+
+    Returns
+    ----------
+    list or numpy.ndarray
+        the image or list of images
+    """
     if os.path.isdir(input_name):
         return open_bruker(input_name)
     elif input_name.endswith(".nii") or input_name.endswith(".nii.gz"):
@@ -12,6 +26,21 @@ def open_generic_image(input_name):
         raise RuntimeError("Unknown file format. Please open a Bruker NMR data directory or NifTi images.")
 
 def open_bruker(input_name):
+    """
+    Opens a Bruker directory containing NMR data
+    thanks to bruker2nifti
+
+    Parameters
+    ----------
+    input_name: string
+        image name
+
+    Returns
+    ----------
+    list
+        list of filenames (.nii)
+
+    """
     bruker2nifti(input_name)
     l = []
     for subdir, dirs, files in os.walk(os.path.join(input_name, "nifti")):
@@ -22,9 +51,38 @@ def open_bruker(input_name):
 
 
 def open_nifti(input_name):
+    """
+    Opens a NifTi image thanks to nibabel
+
+    Parameters
+    ----------
+    input_name: string
+        image filename
+
+    Returns
+    ----------
+    numpy.ndarray
+        image
+    """
     return nib.load(input_name)
 
 def open_metadata(input_name):
+    """
+    Loads metadata from a .npy file
+    associated to a NifTi image
+    normally produced from bruker2nifti
+
+    Parameters
+    ----------
+    input_name: string
+        image (nii) filename
+
+    Returns
+    ----------
+    dict
+        dictionary (key-val) metadata
+
+    """
     filename_stripped = os.path.splitext(input_name)[0]
     if input_name.endswith(".nii.gz"):
         filename_stripped = os.path.splitext(filename_stripped)[0]
@@ -32,19 +90,37 @@ def open_metadata(input_name):
     return dic.item()
 
 def extract_metadata(metadata, key):
+    """
+    Extracts a given value from the metadata
+    dict with given key
+
+    Parameters
+    ----------
+    metadata: dict
+        dictionary
+    key: string
+        the key to search for
+    """
     return metadata[key]
 
 
 def bruker2nifti(input_name):
+    """
+    Converts Bruker data to NifTi
+    Calls the bruker2nifti submodule
+    (in lib/bruker2nifti)
+    with appropriate parameters
+
+    Parameters
+    ----------
+    input_name: string
+        image filename
+
+    """
     output_name = os.path.join(input_name, "nifti")
     # Instantiate a converter:
     bruconv = Bruker2Nifti(os.path.dirname(input_name),
                            output_name)
-
-    # # if args.scans_list is not None:
-    # #     bruconv.scans_list = args.scans_list
-    # # if args.list_new_name_each_scan is not None:
-    # #     bruconv.list_new_name_each_scan = args.list_new_name_each_scan
 
     # # Basics
     bruconv.nifti_version       = 1
