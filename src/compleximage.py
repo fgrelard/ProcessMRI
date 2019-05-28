@@ -27,7 +27,7 @@ def separate_real_imaginary(img_data):
     real = np.zeros(shape=(img_data.shape[:-1]+ (img_data.shape[-1]//2,)))
     imaginary = np.zeros(shape=(img_data.shape[:-1]+ (img_data.shape[-1]//2,)))
     dim = len(img_data.shape)
-    ri = img_data.shape[dim-1]+1
+    ri = img_data.shape[dim-1]
     for i, x in np.ndenumerate(img_data):
         image = img_data[i]
         if i[-1] < ri//2:

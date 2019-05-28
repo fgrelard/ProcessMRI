@@ -193,7 +193,7 @@ class MainController:
                 order = 4
             finally:
                 self.echotime = np.array(self.echotime).tolist()
-                temporally_corrected = tpc.correct_phase_temporally(self.echotime, self.img_data[:,:,4,:], order)
+                temporally_corrected = tpc.correct_phase_temporally(self.echotime, self.img_data, order)
                 magnitude = ci.complex_to_magnitude(temporally_corrected)
                 phase = ci.complex_to_phase(temporally_corrected)
 

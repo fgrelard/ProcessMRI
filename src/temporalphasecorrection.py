@@ -84,9 +84,10 @@ def correct_phase_temporally(echotimes, img_data, order):
 
     """
     out_img_data = np.zeros(shape=(img_data.shape[:-1]+ (img_data.shape[-1]//2, )), dtype=complex)
+    ri = img_data.shape[-1]
     complex_img_data = ci.to_complex(img_data)
-    even_echotime = echotimes[:8:2]
-    odd_echotime = echotimes[1:8:2]
+    even_echotime = echotimes[:ri//2:2]
+    odd_echotime = echotimes[1:ri//2:2]
 
     #Separating even and odd echoes
     even_complex_img = complex_img_data[..., ::2]

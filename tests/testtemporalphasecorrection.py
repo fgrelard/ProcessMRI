@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 class TestTemporalPhaseCorrection(unittest.TestCase):
     def setUp(self):
-        img = nib.load("/mnt/d/IRM/raw/50/nifti/50_subscan_7.nii.gz")
+        img = nib.load("/mnt/d/IRM/nifti/BLE/850/13/13_subscan_2.nii.gz")
         img_data = img.get_fdata()
         self.image = img_data
 
@@ -36,7 +36,7 @@ class TestTemporalPhaseCorrection(unittest.TestCase):
 
     def test_draw_phase_repartition(self):
         complex_img = ci.to_complex(self.image[:,:,4,:])
-        img = tpc.correct_phase_temporally(range(1, 9), self.image[:,:,4,:], 3)
+        img = tpc.correct_phase_temporally(range(1, 33), self.image[:,:,4,:], 4)
         tpc.draw_phase_repartition(complex_img, img)
 
 if __name__ == "__main__":
