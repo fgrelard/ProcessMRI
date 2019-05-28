@@ -21,7 +21,8 @@ def init_configuration():
 
     Returns
     ----------
-    config
+    configparser.ConfigParser:
+        configuration preferences
 
     """
     config = configparser.ConfigParser()
