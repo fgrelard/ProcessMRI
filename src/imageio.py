@@ -143,3 +143,8 @@ def bruker2nifti(input_name, output_name=None):
                          nifti_file_name=os.path.basename(input_name),
                          create_output_folder_if_not_exists=True)
     print("Nifti saved to "+  output_name)
+
+
+def write_nifti(img, filename):
+    nibimg = nib.Nifti1Image(img, np.eye(4))
+    nibimg.to_filename(filename)

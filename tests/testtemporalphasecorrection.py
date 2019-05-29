@@ -34,6 +34,15 @@ class TestTemporalPhaseCorrection(unittest.TestCase):
         y = [factor(i/10)*math.sin(i/10) for i in x]
         dn = tpc.correct_phase_1d(x, y, 4)
 
+    def test_draw_phase(self):
+        x = range(16)
+        y = self.image[46,38,6,:]
+        complex_y = ci.to_complex(y)
+        phase_y = ci.complex_to_phase(complex_y)
+        correct_y = tpc.correct_phase_1d(x,complex_y,4)
+        plt.plot(x,phase_y,x,ci.complex_to_phase(correct_y))
+        plt.show()
+
     def test_draw_phase_repartition(self):
         complex_img = ci.to_complex(self.image[:,:,4,:])
         img = tpc.correct_phase_temporally(range(1, 33), self.image[:,:,4,:], 4)

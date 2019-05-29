@@ -185,8 +185,7 @@ class MainController:
                 spread = 1.5
             finally:
                 img = expfit.denoise_image(self.img_data, size, distance, spread)
-                denoised_img = nib.Nifti1Image(img, np.eye(4))
-                denoised_img.to_filename(os.path.join(outname,  self.filename+"_denoised.nii"))
+                io.write_nifti(img, os.path.join(outname,  self.filename+"_denoised.nii"))
 
 
     def phase_correction(self):
@@ -208,11 +207,8 @@ class MainController:
                 magnitude = ci.complex_to_magnitude(temporally_corrected)
                 phase = ci.complex_to_phase(temporally_corrected)
 
-                magnitude_img = nib.Nifti1Image(magnitude, np.eye(4))
-                magnitude_img.to_filename(os.path.join(outname, self.filename+"_magnitude_tpc.nii"))
-
-                phase_img = nib.Nifti1Image(phase, np.eye(4))
-                phase_img.to_filename(os.path.join(outname, self.filename+"_phase_tpc.nii"))
+                io.write_nifti(magnitude, os.path.join(outname, self.filename+"_magnitude_tpc.nii"))
+                io.write_nifti(phase, os.path.join(outname, self.filename+"_phase_tpc.nii"))
 
     def density_estimation(self):
         """
@@ -242,11 +238,9 @@ class MainController:
                     else:
                         n=3
                 density, t2 = expfit.exponentialfit_image(self.echotime, self.img_data, threshold, lreg, n)
-                density_img = nib.Nifti1Image(density, np.eye(4))
-                density_img.to_filename(os.path.join(outname,  self.filename+"_density.nii"))
 
-                t2_img = nib.Nifti1Image(t2, np.eye(4))
-                t2_img.to_filename(os.path.join(outname,  self.filename+"_t2_star.nii"))
+                io.write_nifti(density, os.path.join(outname,  self.filename+"_density.nii"))
+                io.write_nifti(t2, os.path.join(outname,  self.filename+"_t2_star.nii"))
 
 class ThreadedTask(threading.Thread):
     def __init__(self, queue, function):
