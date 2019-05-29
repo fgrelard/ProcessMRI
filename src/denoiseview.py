@@ -3,6 +3,7 @@ from tkinter import ttk
 import tkinter.filedialog as filedialog
 import configparser
 import os
+import src.hoverview as hoverview
 
 class DenoiseView(tk.Frame):
 
@@ -80,6 +81,13 @@ class DenoiseView(tk.Frame):
         self.distance = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "6"))
         self.spread = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "1.5"))
 
+        self.info_size = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
+        self.info_distance = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
+        self.info_spread = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
+        hoverview.HoverInfo(self.info_size, "Rectangular window of size n*n")
+        hoverview.HoverInfo(self.info_distance, "Distance (in pixels) to search for similarity in intensities around a pixel")
+        hoverview.HoverInfo(self.info_spread, "Multiplication factor of the estimated noise variance for noise correction")
+
         self.compute_button = tk.Button(self.frame_body, text="Compute")
 
         self.entry = tk.Entry(self.frame_body, textvariable=self.path)
@@ -87,10 +95,14 @@ class DenoiseView(tk.Frame):
 
         self.label_size.grid(row=2, column=0, sticky="sw")
         self.size.grid(row=2, column=1, sticky="sw")
+        self.info_size.grid(row=2, column=2, sticky="sw")
+        #h.grid(row=2, column=3, sticky="sw")
         self.label_distance.grid(row=3, column=0, sticky="sw")
         self.distance.grid(row=3, column=1, sticky="sw")
+        self.info_distance.grid(row=3, column=2, sticky="sw")
         self.label_spread.grid(row=4, column=0, sticky="sw")
         self.spread.grid(row=4, column=1, sticky="sw")
+        self.info_spread.grid(row=4, column=2, sticky="sw")
         self.label_destination.grid(row=5, column=0, sticky="sw")
         self.entry.grid(row=5, column=1, sticky="sw")
         self.open_button.grid(row=5, column=2, sticky="sw")

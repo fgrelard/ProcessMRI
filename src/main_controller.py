@@ -228,7 +228,7 @@ class MainController:
             try:
                 threshold = int(threshold)
             except:
-                print("Please enter a correct value for threshold")
+                print("Automatic threshold with gaussian mixture")
                 threshold = None
             finally:
                 lreg = True

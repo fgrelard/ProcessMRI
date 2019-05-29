@@ -3,6 +3,7 @@ from tkinter import ttk
 import tkinter.filedialog as filedialog
 import configparser
 import os
+import src.hoverview as hoverview
 
 class TemporalPhaseCorrectionView(tk.Frame):
     def __init__(self, window, config):
@@ -70,6 +71,9 @@ class TemporalPhaseCorrectionView(tk.Frame):
         self.label_order = tk.Label(self.frame_body, text="Polynomial order")
         self.order = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "4")
         )
+        self.info_order = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
+        hoverview.HoverInfo(self.info_order, "Order of the fitted polynomial to correct phase")
+
         self.label_destination = tk.Label(self.frame_body, text="Output directory")
 
 
@@ -80,6 +84,7 @@ class TemporalPhaseCorrectionView(tk.Frame):
 
         self.label_order.grid(row=2, column=0, sticky="sw")
         self.order.grid(row=2, column=1, sticky="sw")
+        self.info_order.grid(row=2, column=2, sticky="sw")
         self.label_destination.grid(row=3, column=0, sticky="sw")
         self.entry.grid(row=3, column=1, sticky="sw")
         self.open_button.grid(row=3, column=2, sticky="sw")

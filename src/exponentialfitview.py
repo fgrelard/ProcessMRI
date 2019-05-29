@@ -3,6 +3,7 @@ from tkinter import ttk
 import tkinter.filedialog as filedialog
 import configparser
 import os
+import src.hoverview as hoverview
 
 class ExponentialFitView(tk.Frame):
     def __init__(self, window, config):
@@ -72,8 +73,15 @@ class ExponentialFitView(tk.Frame):
         self.label_method = tk.Label(self.frame_body, text="Fit method")
         self.label_threshold = tk.Label(self.frame_body, text="Threshold")
         self.label_destination = tk.Label(self.frame_body, text="Output directory")
-        self.threshold = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "None")
+        self.threshold = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "Auto")
         )
+        self.info_method = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
+        self.info_threshold = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
+
+        hoverview.HoverInfo(self.info_method, "Fit method: linear regression on the log of the data, \nor non-negative least squares fitting of n-exponential")
+        hoverview.HoverInfo(self.info_threshold, "Threshold on pixel values to discard low SNR pixels from the fitting. \nDefault: auto threshold based on gaussian mixture on the histogram values. \nSet the value to 0 for no threshold.")
+
+
 
         self.compute_button = tk.Button(self.frame_body, text="Compute")
         self.choice_method = tk.ttk.Combobox(self.frame_body, values = [
@@ -88,8 +96,10 @@ class ExponentialFitView(tk.Frame):
 
         self.label_method.grid(row=2, column=0, sticky="nw")
         self.choice_method.grid(row=2, column=1, sticky="nw")
+        self.info_method.grid(row=2, column=2, sticky="nw")
         self.label_threshold.grid(row=3, column=0, sticky="nw")
         self.threshold.grid(row=3, column=1, sticky="nw")
+        self.info_threshold.grid(row=3, column=2, sticky="nw")
         self.label_destination.grid(row=4, column=0, sticky="nw")
         self.entry.grid(row=4, column=1, sticky="nw")
         self.open_button.grid(row=4, column=2, sticky="nw")
