@@ -5,6 +5,7 @@ import src.temporalphasecorrection as tpc
 import src.compleximage as ci
 
 import tkinter.filedialog as filedialog
+import tkinter.simpledialog as simpledialog
 
 import os
 import configparser
@@ -73,22 +74,32 @@ class MainController:
         """
         Opens nifti file and reads metadata
         """
-        filename =  filedialog.askopenfilename(initialdir = self.mainview.config['default']['NifTiDir'],title = "Select NifTi image",filetypes = (("nii files","*.nii.gz"),("all files","*.*")))
+        filename =  filedialog.askopenfilename(initialdir = self.mainview.config['default']['NifTiDir'],title = "Select NifTi image",filetypes = (("nii files","*.nii*"),("all files","*.*")))
         try:
             self.mainview.config['default']['NifTiDir'] = os.path.dirname(filename)
             img = io.open_generic_image(filename)
-            metadata = io.open_metadata(filename)
         except Exception as e:
             print(e)
         else:
-            echotime = io.extract_metadata(metadata, 'VisuAcqEchoTime')
             self.filename = os.path.split(filename)[1]
             self.filename = self.filename.replace('.nii.gz', '')
             self.img_data = img.get_fdata()
-            self.echotime = echotime
             self.mainview.description.config(text="Image \"" + os.path.join(os.path.split(os.path.dirname(filename))[1], self.filename) + "\" loaded")
             self.mainview.process_menu.entryconfig(0, state="normal")
             self.mainview.process_menu.entryconfig(1, state="normal")
+        try:
+            metadata = io.open_metadata(filename)
+        except Exception as e:
+            print("No metadata or echotimes")
+            answer = simpledialog.askstring("No echotimes found", "Echotimes separated by a semi-colon ';'",
+                                            parent=self.mainview)
+            echostring = answer.split(";")
+            echostring = filter(None, echostring)
+            echotime = [int(i) for i in echostring]
+            self.echotime = echotime
+        else:
+            echotime = io.extract_metadata(metadata, 'VisuAcqEchoTime')
+            self.echotime = echotime
 
 
     def open_bruker(self):

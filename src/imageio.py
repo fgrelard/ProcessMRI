@@ -104,7 +104,7 @@ def extract_metadata(metadata, key):
     return metadata[key]
 
 
-def bruker2nifti(input_name, output_name):
+def bruker2nifti(input_name, output_name=None):
     """
     Converts Bruker data to NifTi
     Calls the bruker2nifti submodule
@@ -119,6 +119,8 @@ def bruker2nifti(input_name, output_name):
     """
     if output_name is None:
         output_name = os.path.join(input_name, "nifti")
+        if not os.path.exists(output_name):
+            os.makedirs(output_name)
     # Instantiate a converter:
     bruconv = Bruker2Nifti(os.path.dirname(input_name),
                            output_name)
