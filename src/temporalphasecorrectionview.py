@@ -56,9 +56,12 @@ class TemporalPhaseCorrectionView(tk.Frame):
         self.frame_header.grid(row=0, sticky="nw")
 
         self.label = tk.Label(self.frame_header, text="Temporal phase correction (TPC)", font='Helvetica 14 bold')
-        description = """Correct the phase from complex MRI images."""
+        self.info_label = tk.Label(self.frame_header, text=" ? ", borderwidth=2, relief="groove")
+        description = """Correct the phase from complex MRI images,\n in order to obtain a strictly gaussian noise distribution."""
+        hoverview.HoverInfo(self.info_label, """The denoised signal is found in the real part of the temporally corrected image,\nand the noise is in the imaginary image.\nAfter processing, open the image \"_real_tpc.nii\" for further processing (e.g. gaussian denoising)""")
         self.description = tk.Label(self.frame_header, text=description)
         self.label.grid(row=0, column=0, sticky="w")
+        self.info_label.grid(row=0, column=1, sticky="w")
         self.description.grid(row=1, column=0, sticky="nw")
 
     def init_body(self):
@@ -74,6 +77,12 @@ class TemporalPhaseCorrectionView(tk.Frame):
         self.info_order = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
         hoverview.HoverInfo(self.info_order, "Order of the fitted polynomial to correct phase")
 
+        self.label_noise = tk.Label(self.frame_body, text="Noise threshold")
+        self.noise = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "0")
+        )
+        self.info_noise = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
+        hoverview.HoverInfo(self.info_noise, "Noise threshold on magnitude to discard air pixels")
+
         self.label_destination = tk.Label(self.frame_body, text="Output directory")
 
 
@@ -85,10 +94,13 @@ class TemporalPhaseCorrectionView(tk.Frame):
         self.label_order.grid(row=2, column=0, sticky="sw")
         self.order.grid(row=2, column=1, sticky="sw")
         self.info_order.grid(row=2, column=2, sticky="sw")
-        self.label_destination.grid(row=3, column=0, sticky="sw")
-        self.entry.grid(row=3, column=1, sticky="sw")
-        self.open_button.grid(row=3, column=2, sticky="sw")
-        self.compute_button.grid(row=5, column=2, sticky="se")
+        self.label_noise.grid(row=3, column=0, sticky="sw")
+        self.noise.grid(row=3, column=1, sticky="sw")
+        self.info_noise.grid(row=3, column=2, sticky="sw")
+        self.label_destination.grid(row=4, column=0, sticky="sw")
+        self.entry.grid(row=4, column=1, sticky="sw")
+        self.open_button.grid(row=4, column=2, sticky="sw")
+        self.compute_button.grid(row=6, column=2, sticky="se")
 
     def post_init(self):
         """

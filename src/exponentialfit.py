@@ -14,7 +14,7 @@ def denoise_image(image, size, distance, spread):
     """
     Image denoising by non-local means
     Adapted to Rician noise
-    For 4D images
+    For up to 4D images
 
     Parameters
     ----------
@@ -47,7 +47,7 @@ def denoise_2_3D(image, size, distance, spread):
     """
     Image denoising by non-local means
     Adapted to Rician noise
-    For 2 and 3D images
+    For 2D and 3D images
 
     Parameters
     ----------

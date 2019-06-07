@@ -194,19 +194,27 @@ class MainController:
         see tpc.correct_phase_temporally
         """
         order = self.mainview.tpcframe.order.get()
+        noise = self.mainview.tpcframe.noise.get()
         outname = self.mainview.tpcframe.path.get()
         if self.img_data is not None:
             try:
                 order = int(order)
+                noise = int(noise)
             except:
-                print("Defaulting to order=4")
+                print("Defaulting to order=4 and noise=0")
                 order = 4
+                noise = 0
             finally:
                 self.echotime = np.array(self.echotime).tolist()
-                temporally_corrected = tpc.correct_phase_temporally(self.echotime, self.img_data, order)
+                temporally_corrected = tpc.correct_phase_temporally(self.echotime, self.img_data, order, noise)
+
+                real = temporally_corrected.real
+                imaginary = temporally_corrected.imag
                 magnitude = ci.complex_to_magnitude(temporally_corrected)
                 phase = ci.complex_to_phase(temporally_corrected)
 
+                io.write_nifti(real, os.path.join(outname, self.filename+"_real_tpc.nii"))
+                io.write_nifti(imaginary, os.path.join(outname, self.filename+"_imaginary_tpc.nii"))
                 io.write_nifti(magnitude, os.path.join(outname, self.filename+"_magnitude_tpc.nii"))
                 io.write_nifti(phase, os.path.join(outname, self.filename+"_phase_tpc.nii"))
 

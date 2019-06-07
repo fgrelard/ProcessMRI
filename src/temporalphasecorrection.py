@@ -63,7 +63,7 @@ def correct_phase_1d(echotimes, decays, order, phases_unwrap=None):
     decay_new = np.multiply(decays, np.exp(-1j*np.transpose(f)))
     return decay_new
 
-def correct_phase_temporally(echotimes, img_data, order):
+def correct_phase_temporally(echotimes, img_data, order, noise=0):
     """
     Corrects the phase temporally (main function)
     on n-D complex images
@@ -89,6 +89,8 @@ def correct_phase_temporally(echotimes, img_data, order):
     even_echotime = echotimes[:ri//2:2]
     odd_echotime = echotimes[1:ri//2:2]
 
+    magnitude_img = ci.complex_to_magnitude(complex_img_data)
+
     #Separating even and odd echoes
     even_complex_img = complex_img_data[..., ::2]
     odd_complex_img = complex_img_data[..., 1::2]
@@ -100,17 +102,22 @@ def correct_phase_temporally(echotimes, img_data, order):
         phase_unwrapped_even = phases_unwrapped[index + (slice(None, None, 2),)]
         phase_unwrapped_odd = phases_unwrapped[index + (slice(1, None, 2),)]
         tpc_even = correct_phase_1d(even_echotime, even_complex_img[index], order)
+        tpc_even = correct_phase_1d(even_echotime, tpc_even, order)
         tpc_odd = correct_phase_1d(odd_echotime, odd_complex_img[index], order)
+        tpc_odd = correct_phase_1d(odd_echotime, tpc_odd, order)
         for k in range(out_img_data.shape[-1]):
             pointwise_index = index + (k, )
-            if k % 2 == 0:
+            value = magnitude_img[pointwise_index]
+            if value < noise:
+                out_img_data[pointwise_index] = complex_img_data[pointwise_index]
+            elif k % 2 == 0:
                 out_img_data[pointwise_index] = tpc_even[k//2]
             else:
                 out_img_data[pointwise_index] = tpc_odd[k//2]
     return out_img_data
 
 
-def draw_phase_repartition(before, after):
+def draw_phase_repartition(before, after, noise):
     """
     Draws repartition of real and imaginary components
 
@@ -123,12 +130,34 @@ def draw_phase_repartition(before, after):
 
 
     """
-    mag_before = [elem for elem in np.nditer(ci.complex_to_magnitude(before))]
-    phase_before = [elem for elem in np.nditer(ci.complex_to_phase(before))]
-    mag = [elem for elem in np.nditer(ci.complex_to_magnitude(after))]
-    phase = [elem for elem in np.nditer(ci.complex_to_phase(after))]
+    mag_before = ci.complex_to_magnitude(before)
+    mag_after =  ci.complex_to_magnitude(after)
+
+    phase_before =  ci.complex_to_phase(before)
+    phase_after =  ci.complex_to_phase(after)
+
+    plot_mag_before = []
+    plot_mag_after = []
+    plot_phase_before = []
+    plot_phase_after = []
+
+    for index in np.ndindex(mag_before.shape):
+        mag_before_value = mag_before[index]
+        mag_after_value = mag_after[index]
+
+        phase_before_value = phase_before[index]
+        phase_after_value = phase_after[index]
+
+        if (mag_before_value > noise):
+            plot_mag_before.append(mag_before_value)
+            plot_phase_before.append(phase_before_value)
+
+        if (mag_after_value > noise):
+            plot_mag_after.append(mag_after_value)
+            plot_phase_after.append(phase_after_value)
+
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='polar')
-    ax.scatter(phase_before, mag_before, alpha=0.75)
-    ax.scatter(phase, mag, alpha=0.75)
+    ax.scatter(plot_phase_before, plot_mag_before, alpha=0.75)
+    ax.scatter(plot_phase_after, plot_mag_after, alpha=0.75)
     plt.show()
