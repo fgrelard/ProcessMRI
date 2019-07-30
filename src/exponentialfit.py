@@ -36,7 +36,7 @@ def denoise_image(image, size, distance, spread):
     denoised = np.zeros_like(image)
     dim = len(image.shape)
     if dim > 3:
-        for i in range(len(image.shape[:-1])):
+        for i in range(image.shape[-1]):
             image3D = denoise_2_3D(image[...,i], size, distance, spread)
             denoised[..., i] = image3D
     else:
