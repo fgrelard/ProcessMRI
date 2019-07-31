@@ -223,6 +223,8 @@ def plot_values(x, y, value, popt, threshold, f=n_exponential_function):
         xx = np.linspace(0, 9, 1000)
         yy = f(xx, *popt)
         plt.plot(x, y, '.', xx, yy)
+        plt.xlabel("Temps d'échos")
+        plt.ylabel("Intensités")
         plt.show()
 
 def auto_threshold_gmm(data, number_gaussian):

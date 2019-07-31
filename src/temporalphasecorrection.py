@@ -60,6 +60,7 @@ def correct_phase_1d(echotimes, decays, order, phases_unwrap=None):
     weighting_vector = np.ones(shape=(len(phases_unwrap)))
     p = np.polyfit(echotimes, phases_unwrap, order, w=weighting_vector)
     f = np.polyval(p, echotimes)
+    # Multiply decays by conjugate of polynomial fit
     decay_new = np.multiply(decays, np.exp(-1j*np.transpose(f)))
     return decay_new
 
@@ -105,6 +106,7 @@ def correct_phase_temporally(echotimes, img_data, order, noise=0):
         tpc_even = correct_phase_1d(even_echotime, tpc_even, order)
         tpc_odd = correct_phase_1d(odd_echotime, odd_complex_img[index], order)
         tpc_odd = correct_phase_1d(odd_echotime, tpc_odd, order)
+        
         for k in range(out_img_data.shape[-1]):
             pointwise_index = index + (k, )
             value = magnitude_img[pointwise_index]
@@ -140,14 +142,14 @@ def draw_phase_repartition(before, after, noise):
     plot_mag_after = []
     plot_phase_before = []
     plot_phase_after = []
-
     for index in np.ndindex(mag_before.shape):
         mag_before_value = mag_before[index]
         mag_after_value = mag_after[index]
 
         phase_before_value = phase_before[index]
         phase_after_value = phase_after[index]
-
+        if index[:-1] == (45,27):
+            print(index, " phase before=", phase_before_value, " phase after=", phase_after_value)
         if (mag_before_value > noise):
             plot_mag_before.append(mag_before_value)
             plot_phase_before.append(phase_before_value)
