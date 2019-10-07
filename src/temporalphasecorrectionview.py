@@ -6,7 +6,7 @@ import os
 import src.hoverview as hoverview
 
 class TemporalPhaseCorrectionView(tk.Frame):
-    def __init__(self, window, config):
+    def __init__(self, window):
         """
         Constructor of TemporalPhaseCorrectionView
         inherits tkinter Frame
@@ -22,13 +22,12 @@ class TemporalPhaseCorrectionView(tk.Frame):
         """
         tk.Frame.__init__(self, window)
         self.grid()
-        self.init(config)
+        self.init()
 
-    def init(self, config):
+    def init(self):
         """
         Various initialization functions
         """
-        self.init_configuration(config)
         self.init_header()
         self.init_body()
         self.post_init()
@@ -36,17 +35,6 @@ class TemporalPhaseCorrectionView(tk.Frame):
         self.show()
 
 
-    def init_configuration(self, config):
-        """
-        Initializes the configuration preferences
-        """
-        self.config = config
-        self.path = tk.StringVar(None)
-        if 'default' not in self.config:
-            self.config['default'] = {}
-        if 'OutputDir' not in self.config['default']:
-            self.config['default']['OutputDir'] = os.getcwd()
-        self.path.set(self.config['default']['OutputDir'])
 
     def init_header(self):
         """
@@ -58,7 +46,7 @@ class TemporalPhaseCorrectionView(tk.Frame):
         self.label = tk.Label(self.frame_header, text="Temporal phase correction (TPC)", font='Helvetica 14 bold')
         self.info_label = tk.Label(self.frame_header, text=" ? ", borderwidth=2, relief="groove")
         description = """Correct the phase from complex MRI images,\n in order to obtain a strictly gaussian noise distribution."""
-        hoverview.HoverInfo(self.info_label, """The denoised signal is found in the real part of the temporally corrected image,\nand the noise is in the imaginary image.\nAfter processing, open the image \"_real_tpc.nii\" for further processing (e.g. gaussian denoising)""")
+        hoverview.HoverInfo(self.info_label, """The denoised signal is found in the real part of the temporally corrected image,\nand the noise is in the imaginary image.""")
         self.description = tk.Label(self.frame_header, text=description)
         self.label.grid(row=0, column=0, sticky="w")
         self.info_label.grid(row=0, column=1, sticky="w")
@@ -83,13 +71,9 @@ class TemporalPhaseCorrectionView(tk.Frame):
         self.info_noise = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
         hoverview.HoverInfo(self.info_noise, "Noise threshold on magnitude to discard air pixels")
 
-        self.label_destination = tk.Label(self.frame_body, text="Output directory")
-
 
         self.compute_button = tk.Button(self.frame_body, text="Compute")
 
-        self.entry = tk.Entry(self.frame_body, textvariable=self.path)
-        self.open_button = tk.Button(self.frame_body, command=self.open, text="Choose...")
 
         self.label_order.grid(row=2, column=0, sticky="sw")
         self.order.grid(row=2, column=1, sticky="sw")
@@ -97,9 +81,6 @@ class TemporalPhaseCorrectionView(tk.Frame):
         self.label_noise.grid(row=3, column=0, sticky="sw")
         self.noise.grid(row=3, column=1, sticky="sw")
         self.info_noise.grid(row=3, column=2, sticky="sw")
-        self.label_destination.grid(row=4, column=0, sticky="sw")
-        self.entry.grid(row=4, column=1, sticky="sw")
-        self.open_button.grid(row=4, column=2, sticky="sw")
         self.compute_button.grid(row=6, column=2, sticky="se")
 
     def post_init(self):

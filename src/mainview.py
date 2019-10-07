@@ -58,9 +58,9 @@ class MainView(tk.Tk):
                                   length=100, mode="indeterminate")
 
         self.frames = {}
-        self.expframe = expview.ExponentialFitView(self, config)
-        self.tpcframe = tpcview.TemporalPhaseCorrectionView(self, config)
-        self.denoiseframe = denoiseview.DenoiseView(self, config)
+        self.expframe = expview.ExponentialFitView(self,)
+        self.tpcframe = tpcview.TemporalPhaseCorrectionView(self)
+        self.denoiseframe = denoiseview.DenoiseView(self)
         self.frame()
 
         self.frames[MainView.__name__] = self.frame_header

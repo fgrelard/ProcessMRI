@@ -184,7 +184,7 @@ class MainController:
         size = self.mainview.denoiseframe.size.get()
         distance = self.mainview.denoiseframe.distance.get()
         spread = self.mainview.denoiseframe.spread.get()
-        outname = self.mainview.denoiseframe.path.get()
+        outname = self.mainview.config['default']['NifTiDir']
 
         if self.img_data is not None:
             try:
@@ -198,7 +198,7 @@ class MainController:
                 spread = 1.5
             finally:
                 img = expfit.denoise_image(self.img_data, size, distance, spread)
-                io.write_nifti(img, os.path.join(outname,  self.filename+"_denoised.nii"))
+                self.img_data = img
 
 
     def phase_correction(self):
@@ -208,7 +208,7 @@ class MainController:
         """
         order = self.mainview.tpcframe.order.get()
         noise = self.mainview.tpcframe.noise.get()
-        outname = self.mainview.tpcframe.path.get()
+        outname = self.mainview.config['default']['NifTiDir']
         if self.img_data is not None:
             try:
                 order = int(order)
@@ -230,6 +230,7 @@ class MainController:
                 io.write_nifti(imaginary, os.path.join(outname, self.filename+"_imaginary_tpc.nii"))
                 io.write_nifti(magnitude, os.path.join(outname, self.filename+"_magnitude_tpc.nii"))
                 io.write_nifti(phase, os.path.join(outname, self.filename+"_phase_tpc.nii"))
+                self.img_data = magnitude
 
     def density_estimation(self):
         """
@@ -239,7 +240,7 @@ class MainController:
         """
         fit_method = self.mainview.expframe.choice_method.get()
         threshold = self.mainview.expframe.threshold.get()
-        outname = self.mainview.expframe.path.get()
+        outname = self.mainview.config['default']['NifTiDir']
 
         if self.img_data is not None:
             try:
@@ -262,6 +263,7 @@ class MainController:
 
                 io.write_nifti(density, os.path.join(outname,  self.filename+"_density.nii"))
                 io.write_nifti(t2, os.path.join(outname,  self.filename+"_t2_star.nii"))
+                self.img_data = density
 
 class ThreadedTask(threading.Thread):
     def __init__(self, queue, function):

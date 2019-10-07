@@ -6,7 +6,7 @@ import os
 import src.hoverview as hoverview
 
 class ExponentialFitView(tk.Frame):
-    def __init__(self, window, config):
+    def __init__(self, window):
         """
         Constructor of ExponentialFitView, inherits
         tkinter Frame
@@ -17,18 +17,15 @@ class ExponentialFitView(tk.Frame):
             description
         window: tk.Root
             main window
-        config: configparser.Config
-            configuration preferences
         """
         tk.Frame.__init__(self, window)
         self.grid()
-        self.init(config)
+        self.init()
 
-    def init(self, config):
+    def init(self):
         """
         Various initialization functions
         """
-        self.init_configuration(config)
         self.init_header()
         self.init_body()
         self.post_init()
@@ -36,17 +33,6 @@ class ExponentialFitView(tk.Frame):
         self.show()
 
 
-    def init_configuration(self, config):
-        """
-        Initializes the configuration preferences
-        """
-        self.config = config
-        self.path = tk.StringVar(None)
-        if 'default' not in self.config:
-            self.config['default'] = {}
-        if 'OutputDir' not in self.config['default']:
-            self.config['default']['OutputDir'] = os.getcwd()
-        self.path.set(self.config['default']['OutputDir'])
 
     def init_header(self):
         """
@@ -72,7 +58,6 @@ class ExponentialFitView(tk.Frame):
 
         self.label_method = tk.Label(self.frame_body, text="Fit method")
         self.label_threshold = tk.Label(self.frame_body, text="Threshold")
-        self.label_destination = tk.Label(self.frame_body, text="Output directory")
         self.threshold = tk.Entry(self.frame_body, textvariable=tk.StringVar(self, "Auto")
         )
         self.info_method = tk.Label(self.frame_body, text=" ? ", borderwidth=2, relief="groove")
@@ -91,8 +76,6 @@ class ExponentialFitView(tk.Frame):
             "Tri-exponential"], state="readonly")
         self.choice_method.current(0)
 
-        self.entry = tk.Entry(self.frame_body, textvariable=self.path)
-        self.open_button = tk.Button(self.frame_body, command=self.open, text="Choose...")
 
         self.label_method.grid(row=2, column=0, sticky="nw")
         self.choice_method.grid(row=2, column=1, sticky="nw")
@@ -100,9 +83,6 @@ class ExponentialFitView(tk.Frame):
         self.label_threshold.grid(row=3, column=0, sticky="nw")
         self.threshold.grid(row=3, column=1, sticky="nw")
         self.info_threshold.grid(row=3, column=2, sticky="nw")
-        self.label_destination.grid(row=4, column=0, sticky="nw")
-        self.entry.grid(row=4, column=1, sticky="nw")
-        self.open_button.grid(row=4, column=2, sticky="nw")
         self.compute_button.grid(row=5, column=2, sticky="se")
 
     def post_init(self):
@@ -111,14 +91,6 @@ class ExponentialFitView(tk.Frame):
         """
         for child in self.winfo_children():
             child.grid_configure(padx=10, pady=10)
-
-    def open(self):
-        """
-        Function called when the button for the choice of the directory is selected
-        """
-        directory = filedialog.askdirectory(parent=self, initialdir = self.config['default']['OutputDir'], title='Choose output directory')
-        self.config['default']['OutputDir'] = directory
-        self.path.set(directory)
 
 
     def show(self):
