@@ -6,6 +6,7 @@ import src.compleximage as ci
 
 import tkinter.filedialog as filedialog
 import tkinter.simpledialog as simpledialog
+import tkinter.messagebox as messagebox
 
 import os
 import configparser
@@ -54,7 +55,8 @@ class MainController:
         self.mainview.process_menu.entryconfig(1, command=lambda : self.mainview.show_frame("TemporalPhaseCorrectionView"))
         self.mainview.process_menu.entryconfig(2, command=lambda : self.mainview.show_frame("DenoiseView"))
 
-        self.mainview.file_menu.entryconfig(2, command=self.exit_app)
+        self.mainview.file_menu.entryconfig(1, command=self.save_nifti)
+        self.mainview.file_menu.entryconfig(3, command=self.exit_app)
         self.mainview.back_button.config(command=lambda : self.mainview.show_frame("MainView"))
         self.mainview.expframe.compute_button.config(command=self.thread_density_estimation)
         self.mainview.tpcframe.compute_button.config(command=self.thread_phase_correction)
@@ -100,6 +102,17 @@ class MainController:
         else:
             echotime = io.extract_metadata(metadata, 'VisuAcqEchoTime')
             self.echotime = echotime
+
+    def save_nifti(self):
+        """
+        Saves image to nifti
+        """
+        if self.img_data is not None:
+            filename =  filedialog.asksaveasfilename(initialdir = self.mainview.config['default']['NifTiDir'],title = "Save as NifTi",defaultextension=".nii",filetypes = (("nii files","*.nii*"),("all files","*.*")))
+            io.write_nifti(self.img_data, filename)
+        else:
+            messagebox.showinfo("Open an image", "No image loaded currently. Please open an image in \"File > Open\" before saving it.")
+
 
 
     def open_bruker(self):

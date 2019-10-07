@@ -39,6 +39,7 @@ class MainView(tk.Tk):
 
         self.file_menu = tk.Menu(self.menu, tearoff=0)
         self.file_menu.add_cascade(label='Open', menu=self.open_menu)
+        self.file_menu.add_command(label='Save')
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Exit")
 
