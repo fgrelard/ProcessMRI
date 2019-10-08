@@ -100,9 +100,44 @@ def extract_metadata(metadata, key):
         dictionary
     key: string
         the key to search for
+
+    Returns
+    ----------
+    any
+        metadata associated with key
+
     """
     return metadata[key]
 
+def save_metadata_by_keyval(output_name, key, val):
+    """
+    Saves metadata to file
+
+    Parameters
+    ----------
+    output_name: string
+        name of output file
+    key: string
+        key in dictionary
+    val: any
+        value
+    """
+    metadata = {}
+    metadata[key] = val
+    save_metadata(output_name, metadata)
+
+def save_metadata(output_name, metadata):
+    """
+    Saves metadata to file
+
+    Parameters
+    ----------
+    output_name: string
+        name of output file
+    metadata: any
+        metadata to save
+    """
+    np.save(output_name, metadata)
 
 def bruker2nifti(input_name, output_name=None):
     """
@@ -145,6 +180,6 @@ def bruker2nifti(input_name, output_name=None):
     print("Nifti saved to "+  output_name)
 
 
-def write_nifti(img, filename):
+def write_nifti(filename, img):
     nibimg = nib.Nifti1Image(img, np.eye(4))
     nibimg.to_filename(filename)
