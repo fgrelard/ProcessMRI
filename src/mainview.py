@@ -46,8 +46,8 @@ class MainView(tk.Tk):
 
         self.process_menu = tk.Menu(self.menu, tearoff=0)
         self.process_menu.add_command(label='Exponential fitting')
-        self.process_menu.add_command(label='Correct phase')
-        self.process_menu.add_command(label='Denoise')
+        self.process_menu.add_command(label='Denoising TPC')
+        self.process_menu.add_command(label='Denoising NL-means')
 
         self.menu.add_cascade(label='File', menu=self.file_menu)
         self.menu.add_cascade(label='Process', menu=self.process_menu)
@@ -68,16 +68,18 @@ class MainView(tk.Tk):
         self.frames[tpcview.TemporalPhaseCorrectionView.__name__] = self.tpcframe
         self.frames[denoiseview.DenoiseView.__name__] = self.denoiseframe
 
-        self.frame_header.grid(row=0, column=0, sticky="nsew")
-        self.expframe.grid(row=0, column=0, sticky="nsew")
-        self.tpcframe.grid(row=0, column=0, sticky="nsew")
-        self.denoiseframe.grid(row=0, column=0, sticky="nsew")
+        self.frame_header.grid(row=1, column=0, sticky="nsew")
+        self.expframe.grid(row=1, column=0, sticky="nsew")
+        self.tpcframe.grid(row=1, column=0, sticky="nsew")
+        self.denoiseframe.grid(row=1, column=0, sticky="nsew")
 
         self.show_frame("MainView")
 
         self.back_button = tk.Button(self, text="Back")
-        self.back_button.grid(row=1, column=0, sticky="sw")
-        self.progbar.grid(row=1, column=0,sticky="se")
+        self.back_button.grid(row=2, column=0, sticky="sw")
+        self.progbar.grid(row=2, column=0,sticky="se")
+        self.label_complete = tk.Label(self)
+        self.label_complete.grid(row=0, column=0, sticky="ne")
 
         self.post_init()
 
@@ -102,11 +104,16 @@ class MainView(tk.Tk):
         self.frame_header = tk.Frame(self)
         self.frame_header.grid()
 
-        self.label = tk.Label(self.frame_header, text="Process MRI", font='Helvetica 14 bold')
-        description = """Open an image (File/Open...)"""
-        self.description = tk.Label(self.frame_header, text=description)
+        self.label = tk.Label(self.frame_header, text="Process MRI", font='Helvetica 16 bold')
+        description = "Simple tools to process MRI images.\n\nFirst open an image with \"File/Open\".\nSecond, use processing tools in \"Process\":\n- multi-exponential fit\n- denoising with temporal phase correction\n- denoising with non-local means"
+        self.description = tk.Text(self.frame_header, height=10)
+        self.description.insert(tk.END, description)
+        self.description.configure(bg=self.cget('bg'), relief="flat")
+        self.description.configure(state="disabled")
+        self.description.configure(cursor="")
+        self.description.configure(font=("Helvetica", 12))
         self.label.grid(row=0, column=0, sticky="w")
-        self.description.grid(row=1, column=0, sticky="nw")
+        self.description.grid(row=1, column=0, sticky="nsew")
 
     def show_frame(self, page_name):
         """

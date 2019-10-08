@@ -86,7 +86,8 @@ class MainController:
             self.filename = os.path.split(filename)[1]
             self.filename = self.filename.replace('.nii.gz', '')
             self.img_data = img.get_fdata()
-            self.mainview.description.config(text="Image \"" + os.path.join(os.path.split(os.path.dirname(filename))[1], self.filename) + "\" loaded")
+            messagebox.showinfo("Info", "Image \"" + os.path.join(os.path.split(os.path.dirname(filename))[1], self.filename) + "\" loaded")
+            self.mainview.label_complete.config(text="Working on " + os.path.join(os.path.split(os.path.dirname(filename))[1], self.filename))
             self.mainview.process_menu.entryconfig(0, state="normal")
             self.mainview.process_menu.entryconfig(1, state="normal")
         try:
@@ -199,7 +200,8 @@ class MainController:
             finally:
                 img = expfit.denoise_image(self.img_data, size, distance, spread)
                 self.img_data = img
-
+                messagebox.showinfo("Info", "Done. Now working on denoised image.")
+                self.mainview.label_complete.config(text="Working on denoised image")
 
     def phase_correction(self):
         """
@@ -231,6 +233,8 @@ class MainController:
                 io.write_nifti(magnitude, os.path.join(outname, self.filename+"_magnitude_tpc.nii"))
                 io.write_nifti(phase, os.path.join(outname, self.filename+"_phase_tpc.nii"))
                 self.img_data = magnitude
+                messagebox.showinfo("Info", "Done. Images \"tpc\" saved in directory \"" + outname + "\". Now working on magnitude image.")
+                self.mainview.label_complete.config(text="Working on magnitude image from TPC")
 
     def density_estimation(self):
         """
@@ -264,6 +268,8 @@ class MainController:
                 io.write_nifti(density, os.path.join(outname,  self.filename+"_density.nii"))
                 io.write_nifti(t2, os.path.join(outname,  self.filename+"_t2_star.nii"))
                 self.img_data = density
+                messagebox.showinfo("Info", "Done. Images \"density\" and \"t2_star\" saved in directory \"" + outname + "\". Now working on density image.")
+                self.mainview.label_complete.config(text="Working on density image from exponential fit")
 
 class ThreadedTask(threading.Thread):
     def __init__(self, queue, function):
