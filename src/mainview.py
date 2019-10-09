@@ -49,8 +49,12 @@ class MainView(tk.Tk):
         self.process_menu.add_command(label='Denoising TPC')
         self.process_menu.add_command(label='Denoising NL-means')
 
+        self.help_menu = tk.Menu(self.menu, tearoff=0)
+        self.help_menu.add_command(label='User manual (FR)')
+
         self.menu.add_cascade(label='File', menu=self.file_menu)
         self.menu.add_cascade(label='Process', menu=self.process_menu)
+        self.menu.add_cascade(label='Help', menu=self.help_menu)
 
         self.config(menu=self.menu)
         self.config = config

@@ -15,6 +15,7 @@ import numpy as np
 import threading
 import queue
 import time
+import webbrowser
 
 class MainController:
     def __init__(self, mainview):
@@ -54,6 +55,8 @@ class MainController:
         self.mainview.process_menu.entryconfig(0, command=lambda : self.mainview.show_frame("ExponentialFitView"))
         self.mainview.process_menu.entryconfig(1, command=lambda : self.mainview.show_frame("TemporalPhaseCorrectionView"))
         self.mainview.process_menu.entryconfig(2, command=lambda : self.mainview.show_frame("DenoiseView"))
+
+        self.mainview.help_menu.entryconfig(0, command=lambda : webbrowser.open_new(r'docs/manual.pdf'))
 
         self.mainview.file_menu.entryconfig(1, command=self.save_nifti)
         self.mainview.file_menu.entryconfig(3, command=self.exit_app)
