@@ -5,7 +5,7 @@ all : clean manual
 
 manual:
 	$(PDF) $@
-#	bibtex manual
+	bibtex manual
 	$(PDF) $@
 	$(PDFFINAL) $@
 

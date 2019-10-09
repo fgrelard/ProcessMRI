@@ -235,7 +235,7 @@ class MainController:
                 io.write_nifti(os.path.join(outname, self.filename+"_imaginary_tpc.nii"), imaginary)
                 io.write_nifti(os.path.join(outname, self.filename+"_magnitude_tpc.nii"), magnitude)
                 io.write_nifti(os.path.join(outname, self.filename+"_phase_tpc.nii"), phase)
-                self.img_data = magnitude
+                self.img_data = real
                 messagebox.showinfo("Info", "Done. Images \"tpc\" saved in directory \"" + outname + "\". Now working on magnitude image.")
                 self.mainview.label_complete.config(text="Working on magnitude image from TPC")
 

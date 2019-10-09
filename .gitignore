@@ -8,3 +8,5 @@ config.ini
 build/
 dist/
 env/
+*.bbl
+*.blg

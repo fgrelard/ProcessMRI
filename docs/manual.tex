@@ -28,7 +28,7 @@ top=3cm]{geometry}
 \newcommand{\Equ}[1]{\ensuremath{(\ref{#1})}}
 \newtheorem{proposition}{Proposition}
 
-%\bibliographystyle{plain}
+\bibliographystyle{plain}
 
 \begin{document}
 
@@ -55,7 +55,7 @@ Développé en Python, il repose sur plusieurs bibliothèques :
 \begin{itemize}
 \item \href{https://pypi.org/project/tkinter/}{tkinter}, pour l'interface graphique
 \item \href{https://pypi.org/project/bruker2nifti/}{bruker2nifti}, pour la conversion d'images au format Bruker
-  (fichiers \texttt{ser} et répertoires \texttt{pdata})
+  (fichiers \texttt{ser} et dossier \texttt{pdata})
 \item \href{https://pypi.org/project/nibabel/}{nibabel}, pour la lecture et la sauvegarde d'images au format
   NIFTI.
 \item \href{https://pypi.org/project/scikit/}{scikit}, pour l'ajustement de fonctions exponentielles et le
@@ -86,7 +86,7 @@ sont regroupées dans la barre de menu :
 \end{itemize}
 
 
-Un message dans le coin supérieur droit indique l'\textbf{image de travail} et sur
+Un message dans le coin supérieur droit indique l'\textbf{image de travail} sur
 laquelle les traitements vont être effectués (cf. Fig.
 \ref{fig:ecran_ppal_nifti_loaded_red}, encadré en rouge). Ce logiciel
 n'est pas destiné à la visualisation d'images. On pourra, par exemple,
@@ -95,15 +95,15 @@ cette fin.
 
 \subsection{Lecture et sauvegarde d'images}
 \label{sec:lect-et-sauv}
-L'option ``File/Open/Bruker directory'' permet de converter les images
+L'option ``File/Open/Bruker directory'' permet de convertir les images
 IRM au format Bruker vers le format image NIFTI. Le dossier à ouvrir
-doit impérativement contenir un dossier fils nommé ``pdata'' (cf.
+doit impérativement contenir un dossier fils nommé \texttt{pdata} (cf.
 Fig.~\ref{fig:open_bruker2}).
 
 \begin{figure}[ht]
   \centering \includegraphics[width=0.7\textwidth]{fig/open_bruker2}
   \caption{Dossier Bruker pris en charge par le logiciel ProcessMRI :
-    celui-ci contient un dossier fils nommé ``pdata''.}
+    celui-ci contient un dossier fils nommé \texttt{pdata}.}
   \label{fig:open_bruker2}
 \end{figure}
 
@@ -121,7 +121,7 @@ suffit alors de sélectionner l'image NIFTI voulue (extension
   \caption{Fenêtre de sélection des images NIFTI converties à partir
     d'un dossier Bruker. Dans ce cas, le numéro d'étude est ``50'', et
     les numéros d'acquisition ``1'', ``2'', ``4'', ``6'', ``7''. Il
-    s'agit des sous-répertoires présents dans le dossier ``pdata'' de
+    s'agit des sous-dossiers présents dans le dossier \texttt{pdata} de
     Bruker.}
   \label{fig:open_bruker_nii}
 \end{figure}
@@ -131,38 +131,46 @@ haut à droite de la fenêtre principale (cf. Fig.~\ref{fig:ecran_ppal_nifti_loa
 
 \section{Traitement}
 Les méthodes de traitement ont divers paramètres : des informations
-sur ceux-ci peuvent être obtenues en survolant la boîte ``?'' située à
+sur ceux-ci peuvent être obtenues en survolant la boîte \texttt{?} située à
 leur droite.
 
 Lors du traitement, une barre de progression apparaît. Un message
 d'information signale la fin du traitement et indique, le cas échéant,
-la nouvelle image de travail.
+la nouvelle image de travail (cf. Fig.~\ref{fig:denoising_nlmeans4}).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.35\textwidth]{fig/denoising_nlmeans4}
+  \caption{Fenêtre de dialogue lorsqu'un traitement est achevé.}
+  \label{fig:denoising_nlmeans4}
+\end{figure}
+
 
 \subsection{Ajustement de fonctions exponentielles}
 
-La fenêtre pour l'ajustement de fonctions multi-exponentielles est
-présentée dans la Figure~\ref{fig:expfit}. Cette fonctionnalité permet
+Cette fonctionnalité permet
 d'ajuster une fonction multi-exponentielle sur une image IRM
 multi-échos afin d'estimer une image en densité (à $t = 0$) et en
-mobilité ($T_2$ ou $T_2^*$).
+mobilité ($T_2$ ou $T_2^*$). La fenêtre pour l'ajustement de fonctions multi-exponentielles est
+présentée dans la Figure~\ref{fig:expfit}. 
 
 \begin{figure}[ht]
   \centering \includegraphics[width=0.65\textwidth]{fig/expfit}
-  \caption{Fenêtre d'ajustement de fonctions exponentielles}
+  \caption{Fenêtre d'ajustement de fonctions exponentielles.}
   \label{fig:expfit}
 \end{figure}
 
 
 
-Le paramètre \textbf{fit method} permet de choisir la méthode
+Le paramètre \textbf{Fit method} permet de choisir la méthode
 d'ajustement. \textbf{Linear regression} estime les paramètres d'une
 fonction mono-exponentielle par régression linéaire sur le logarithme
-des intensités observées. \textbf{Mono-, Bi-, Tri- Exponential}
-estiment les paramètres d'une fonction multi-exponentielle par
+des intensités observées. Les valeurs \textbf{Mono-, Bi-, Tri- Exponential}
+permettent d'estimer les paramètres d'une fonction multi-exponentielle par
 moindres carrés non-linéaires (NNLS).
 
 Le paramètre \textbf{Threshold} permet de fixer un seuil sur les
-intensités des pixels en-deça duquel l'ajustement n'est pas effectué.
+intensités des pixels en deçà duquel l'ajustement n'est pas effectué.
 Cela permet d'éviter des aberrations d'ajustement pour les pixels de
 l'arrière-plan. Par défaut, ce paramètre est fixé sur \textbf{Auto} :
 le seuil est estimé automatiquement à partir d'un mélange de
@@ -170,10 +178,83 @@ gaussiennes sur l'histogramme de l'image. Si l'on ne souhaite pas
 mettre de seuil, on peut fixer ce paramètre à 0. 
 
 Lorsque les paramètres sont choisis, on peut lancer le traitement en
-cliquant sur le bouton ``Compute''. A son issue, une image ``density'' et
-``t2\_star'' sont enregistrées dans le dossier où se
+cliquant sur le bouton \texttt{Compute}. À son issue, une image \texttt{density} et
+\texttt{t2\_star} sont enregistrées dans le dossier où se
 situe l'image de travail. L'image de travail devient alors l'image de
 densité.
+
+\subsection{Débruitage par méthode non-locale}
+\label{sec:debr-par-meth}
+
+Cette méthode de débruitage est basée sur une méthode non-locale. Le
+principe est d'exploiter la redondance de l'information de l'image.
+Elles calculent la similarité entre deux points dans l'image en
+considérant des voisinages, appelés \textit{patchs}, autour de ces
+points. Les auteurs de \cite{Wiest08} adaptent une méthode non-locale
+spécifiquement pour supprimer le bruit Ricien. La fenêtre associée à
+ce traitement est présentée dans la
+Figure~\ref{fig:denoising_nlmeans}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.65\textwidth]{fig/denoising_nlmeans}
+  \caption{Débruitage du bruit Ricien par méthode non-locale.}
+  \label{fig:denoising_nlmeans}
+\end{figure}
+
+Le paramètre \textbf{Patch size} correspond à la taille du patch, en
+pixels. Pour une taille $n$, le patch couvre une région de $n \times n$
+pixels. Le paramètre \textbf{Patch distance} permet de définir la
+fenêtre de recherche de similarité des patchs dans les images. La
+similarité est calculée pour des points situés à une distance au point
+d'intérêt inférieure ou égale à la valeur spécifiée $d$, c'est-à-dire
+que la taille de la fenêtre de recherche est $2 \times d$. Le paramètre
+\textbf{Noise spread} correspond à un facteur multiplicatif de la
+variance du bruit. La variance du bruit est un terme permettant de
+retrouver les intensités débruitées~\cite{Wiest08}. Dans
+l'article, le paramètre est fixé à 1.
+
+Lorsque les paramètres sont choisis, on peut lancer le traitement en
+cliquant sur le bouton \texttt{Compute}. À son issue, une image
+\texttt{denoised} est enregistrée dans le dossier où se situe l'image de
+travail. L'image de travail devient alors l'image débruitée.
+
+
+\subsection{Débruitage par correction temporelle de phase}
+\label{sec:debr-par-corr}
+Cette méthode de débruitage exploite l'information temporelle dans les
+images IRM multi-échos complexes. L'objectif est de convertir le bruit
+Ricien en bruit gaussien en corrigeant la phase. La méthode consiste à
+ajuster un polynôme d'ordre faible sur les valeurs de phase. Les
+intensités complexes sont multipliées par le conjugué des valeurs de
+ce polynôme, la partie imaginaire est diminuée: les valeurs de phase
+approchent 0. La partie réelle contient uniquement le bruit gaussien.
+Une méthode débruitage classique (filtre médian, méthode non-locale
+simple) peut alors être employée.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.65\textwidth]{fig/tpc}
+  \caption{Fenêtre pour la correction temporelle de phase.}
+  \label{fig:tpc}
+\end{figure}
+
+
+Il est nécessaire d'ouvrir une image \textbf{complexe} pour utiliser
+cette méthode.
+
+Le paramètre \textbf{Polynomial order} permet de spécifier l'ordre du
+polynôme à ajuster. Dans l'article, ce paramètre est fixé à 4, pour 48
+échos. Ce paramètre est à ajuster en fonction du nombre d'échos dans
+l'image. Le paramètre \textbf{Noise threshold} permet de spécifier un
+seuil pour ne considérer que la région d'intérêt dans l'image, et ne
+pas effectuer l'ajustement sur des pixels de l'arrière-plan.
+
+Lorsque les paramètres sont choisis, on peut lancer le traitement en
+cliquant sur le bouton \texttt{Compute}. À son issue, quatres images
+\texttt{real\_tpc} (partie réelle), \texttt{imaginary\_tpc} (partie imaginaire),
+\texttt{magnitude\_tpc} et \texttt{phase\_tpc} sont générées dans le dossier de
+l'image de travail. L'image de travail devient alors l'image réelle.
 
 
 \bibliography{manual}
