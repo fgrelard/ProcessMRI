@@ -1,4 +1,4 @@
-from lib.bruker2nifti.bruker2nifti.converter import Bruker2Nifti
+from bruker2nifti.converter import Bruker2Nifti
 import os
 import nibabel as nib
 import numpy as np
