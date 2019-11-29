@@ -9,7 +9,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 import pyqtgraph as pg
-import sys
+
 
 class Ui_MainView(object):
     def setupUi(self, MainView):
@@ -22,6 +22,7 @@ class Ui_MainView(object):
         self.imageview = pg.ImageView()
         self.progressBar = QtWidgets.QProgressBar(self.gridLayoutWidget)
         self.textEdit = QtWidgets.QTextEdit(self.gridLayoutWidget)
+        self.combobox = QtWidgets.QComboBox(self.gridLayoutWidget)
         self.menubar = QtWidgets.QMenuBar(MainView)
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.actionExit = QtWidgets.QAction(MainView)
@@ -81,13 +82,20 @@ class Ui_MainView(object):
         self.textEdit.setAutoFillBackground(True)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("textEdit")
-        self.gridLayout.addWidget(self.textEdit, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.textEdit, 1, 0, 1, 1)
+        self.combobox.setFixedWidth(100)
+        self.combobox.addItem("No image")
+
+        self.gridLayout.addWidget(self.combobox, 0, 1, 1, 1)
+
         self.imageview.ui.menuBtn.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.imageview.ui.roiBtn.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.imageview.ui.histogram.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.imageview.ui.graphicsView.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.imageview.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.imageview.ui.histogram.vb.setFixedWidth(2)
         self.imageview.ui.histogram.vb.setMinimumWidth(2)
-        self.gridLayout.addWidget(self.imageview, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.imageview, 1, 1, 1, 1)
         MainView.setCentralWidget(self.centralwidget)
 
 
@@ -123,6 +131,7 @@ class Ui_MainView(object):
         self.menubar.addAction(self.menuProcess.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
+
     def retranslateUi(self, MainView):
         _translate = QtCore.QCoreApplication.translate
         MainView.setWindowTitle(_translate("MainView", "ProcessMRI"))
@@ -152,20 +161,3 @@ class Ui_MainView(object):
         self.actionDenoising_TPC.setText(_translate("MainView", "Denoising TPC"))
         self.actionDenoising_NL_means.setText(_translate("MainView", "Denoising NL-means"))
         self.actionUser_manual_FR.setText(_translate("MainView", "User manual (FR)"))
-
-
-class AppWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.ui = Ui_MainView()
-        self.ui.setupUi(self)
-        self.show()
-
-
-if __name__=='__main__':
-    app = QApplication.instance()
-    if not app:
-        app = QApplication(sys.argv)
-    main_window = AppWindow()
-    main_window.show()
-    app.exec_()
