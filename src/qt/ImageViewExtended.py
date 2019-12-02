@@ -2,6 +2,7 @@ import pyqtgraph as pg
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib.colors as colors
 
 def addNewGradientFromMatplotlib( name):
     gradient = cm.get_cmap(name)
@@ -116,3 +117,27 @@ class ImageViewExtended(pg.ImageView):
                 norm -= n
 
         return norm
+
+    def export(self, fileName):
+        img = self.imageDisp[self.currentIndex, ...]
+        current_cm = self.ui.histogram.gradient.colorMap().getColors()
+        current_cm = current_cm.astype(float)
+        current_cm /= 255.0
+        nb = len(current_cm[...,0])
+        red, green, blue = [], [], []
+        for i in range(nb):
+            red.append([float(i/(nb-1)), current_cm[i, 0], current_cm[i, 0]])
+            green.append([float(i/(nb-1)), current_cm[i, 1], current_cm[i, 1]])
+            blue.append([float(i/(nb-1)), current_cm[i, 2], current_cm[i, 2]])
+        print(red)
+        cdict = {'red': np.array(red),
+                 'green': np.array(green),
+                 'blue': np.array(blue)}
+        print(cdict)
+        newcmp = colors.LinearSegmentedColormap("current_cmap", segmentdata=cdict)
+        pos = plt.imshow(img, cmap=newcmp)
+        plt.colorbar(pos)
+        plt.show()
+
+    def exportClicked(self):
+        self.export("test.png")
