@@ -9,6 +9,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 import pyqtgraph as pg
+import src.qt.ImageViewExtended as ive
 
 
 class Ui_MainView(object):
@@ -20,7 +21,7 @@ class Ui_MainView(object):
         self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
 
         pg.setConfigOptions(imageAxisOrder='row-major')
-        self.imageview = pg.ImageView()
+        self.imageview = ive.ImageViewExtended()
         self.imageview.label = pg.LabelItem(justify='right')
         self.imageview.scene.addItem(self.imageview.label)
         self.progressBar = QtWidgets.QProgressBar(self.gridLayoutWidget)

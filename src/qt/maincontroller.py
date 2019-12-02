@@ -41,7 +41,7 @@ class MainController:
             return
         if x >= 0 and x < image.shape[1] and y >= 0 and y < image.shape[2]:
             t = imv.currentIndex
-            imv.label.setText("<span>(%d, %d)</span><span style='font-size: 12pt; color: green;'>=%0.01f</span>" % (x, y, image[(t,y,x)]))
+            imv.label.setText("<span>(%d, %d)</span><span style='font-size: 12pt; color: green;'>=%0.3f</span>" % (x, y, image[(t,y,x)]))
 
 
     def open_nifti(self):
@@ -64,7 +64,7 @@ class MainController:
             self.mainview.combobox.addItem(self.filename)
             self.img_data = img.get_fdata()
             img_data_vis = img.get_fdata()
-            img_data_vis = np.reshape(img_data_vis, (img_data_vis.shape[0], img_data_vis.shape[1]) + (-1,))
+            img_data_vis = np.reshape(img_data_vis, (img_data_vis.shape[0], img_data_vis.shape[1]) + (-1,), order='F')
             img_data_vis = img_data_vis.transpose()
             self.images[self.filename] = img_data_vis
             self.mainview.combobox.setCurrentIndex(self.mainview.combobox.findText(self.filename))
