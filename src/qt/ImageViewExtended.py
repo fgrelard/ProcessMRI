@@ -1,16 +1,41 @@
 import pyqtgraph as pg
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+def addNewGradientFromMatplotlib( name):
+    gradient = cm.get_cmap(name)
+    L = []
+    nb = 10
+    for i in range(nb):
+        normI = float(i/(nb-1))
+        elemColor = ((normI, tuple(int(elem*255) for elem in gradient(normI))))
+        L.append(elemColor)
+    pg.graphicsItems.GradientEditorItem.Gradients[name] = {'ticks':L, 'mode': 'rgb'}
 
 class ImageViewExtended(pg.ImageView):
     def __init__(self, parent=None, name="ImageView", view=None, imageItem=None, *args):
+        addNewGradientFromMatplotlib("jet")
+        addNewGradientFromMatplotlib("viridis")
+        addNewGradientFromMatplotlib("plasma")
+        addNewGradientFromMatplotlib("inferno")
+        addNewGradientFromMatplotlib("magma")
+        addNewGradientFromMatplotlib("cividis")
         super().__init__(parent, name, view, imageItem, *args)
         self.timeLine.setPen('g')
+
+        self.ui.histogram.gradient.loadPreset("cividis")
+        self.ui.histogram.gradient.updateGradient()
+        self.ui.histogram.gradientChanged()
+
 
     def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True):
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
         self.ui.roiPlot.setMouseEnabled(True, True)
         max_t = img.shape[0]
         self.normRgn.setRegion((1, max_t//2))
+
+
 
     def getProcessedImage(self):
         if self.imageDisp is None:
