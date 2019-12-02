@@ -19,7 +19,10 @@ class Ui_MainView(object):
         self.centralwidget = QtWidgets.QWidget(MainView)
         self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
 
+        pg.setConfigOptions(imageAxisOrder='row-major')
         self.imageview = pg.ImageView()
+        self.imageview.label = pg.LabelItem(justify='right')
+        self.imageview.scene.addItem(self.imageview.label)
         self.progressBar = QtWidgets.QProgressBar(self.gridLayoutWidget)
         self.textEdit = QtWidgets.QTextEdit(self.gridLayoutWidget)
         self.combobox = QtWidgets.QComboBox(self.gridLayoutWidget)
@@ -93,8 +96,8 @@ class Ui_MainView(object):
         self.imageview.ui.histogram.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         self.imageview.ui.graphicsView.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.imageview.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.imageview.ui.histogram.vb.setFixedWidth(2)
-        self.imageview.ui.histogram.vb.setMinimumWidth(2)
+        # self.imageview.ui.histogram.vb.setFixedWidth(2)
+        # self.imageview.ui.histogram.vb.setMinimumWidth(2)
         self.gridLayout.addWidget(self.imageview, 1, 1, 1, 1)
         MainView.setCentralWidget(self.centralwidget)
 
