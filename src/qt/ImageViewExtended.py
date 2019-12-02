@@ -27,7 +27,19 @@ class ImageViewExtended(pg.ImageView):
         self.ui.histogram.gradient.loadPreset("cividis")
         self.ui.histogram.gradient.updateGradient()
         self.ui.histogram.gradientChanged()
+        self.hide_partial()
 
+    def hide_partial(self):
+        self.ui.roiBtn.hide()
+        self.ui.label_4.hide()
+        self.ui.label_8.hide()
+        self.ui.label_9.hide()
+        self.ui.label_10.hide()
+        self.ui.normXBlurSpin.hide()
+        self.ui.normYBlurSpin.hide()
+        self.ui.normTBlurSpin.hide()
+        self.ui.normFrameCheck.hide()
+        self.ui.gridLayout_2.addWidget(self.ui.normTimeRangeCheck, 1, 2, 1, 1)
 
     def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True):
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
