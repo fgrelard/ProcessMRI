@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QMessageBox
+import os
 
 def addNewGradientFromMatplotlib( name):
     gradient = cm.get_cmap(name)
@@ -25,7 +28,9 @@ class ImageViewExtended(pg.ImageView):
         super().__init__(parent, name, view, imageItem, *args)
         self.timeLine.setPen('g')
 
-        self.ui.histogram.gradient.loadPreset("cividis")
+        self.ui.histogram.sigLevelsChanged.connect(self.levelsChanged)
+
+        self.ui.histogram.gradient.loadPreset("viridis")
         self.ui.histogram.gradient.updateGradient()
         self.ui.histogram.gradientChanged()
         self.hide_partial()
@@ -55,7 +60,8 @@ class ImageViewExtended(pg.ImageView):
             image = self.normalize(self.image)
             self.imageDisp = image
             if self.axes['t'] is not None:
-                self.levelMin, self.levelMax = list(map(float, self.quickMinMax(self.imageDisp[self.currentIndex, ...])))
+                curr_img = self.imageDisp[self.currentIndex, ...]
+                self.levelMin, self.levelMax = np.amin(curr_img), np.amax(curr_img)
             else:
                 self.levelMin, self.levelMax = list(map(float, self.quickMinMax(self.imageDisp)))
         return self.imageDisp
@@ -118,7 +124,7 @@ class ImageViewExtended(pg.ImageView):
 
         return norm
 
-    def export(self, fileName):
+    def export(self, filename):
         img = self.imageDisp[self.currentIndex, ...]
         current_cm = self.ui.histogram.gradient.colorMap().getColors()
         current_cm = current_cm.astype(float)
@@ -129,15 +135,44 @@ class ImageViewExtended(pg.ImageView):
             red.append([float(i/(nb-1)), current_cm[i, 0], current_cm[i, 0]])
             green.append([float(i/(nb-1)), current_cm[i, 1], current_cm[i, 1]])
             blue.append([float(i/(nb-1)), current_cm[i, 2], current_cm[i, 2]])
-        print(red)
         cdict = {'red': np.array(red),
                  'green': np.array(green),
                  'blue': np.array(blue)}
-        print(cdict)
         newcmp = colors.LinearSegmentedColormap("current_cmap", segmentdata=cdict)
         pos = plt.imshow(img, cmap=newcmp)
-        plt.colorbar(pos)
-        plt.show()
+        plt.colorbar()
+        plt.clim(self.levelMin, self.levelMax)
+        plt.axis('off')
+        # plt.gca().set_axis_off()
+        plt.margins(0,0)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+        plt.savefig(filename, bbox_inches='tight', pad_inches=0, transparent=True)
+        plt.clf()
+        plt.close()
+
 
     def exportClicked(self):
-        self.export("test.png")
+        fileName, image_format = QtGui.QFileDialog.getSaveFileName(None, "Save image as...", "", "PNG images (.png);;Portable Document Format (.pdf);; Scalable Vector Graphics (.svg)")
+        if not fileName:
+            return
+        root, ext = os.path.splitext(fileName)
+        if not ext:
+            if "png" in image_format:
+                ext = ".png"
+            if "svg" in image_format:
+                ext = ".svg"
+            if "pdf" in image_format:
+                ext = ".pdf"
+        if ext == ".png" or ext == ".svg" or ext == ".pdf":
+            self.export(root + ext)
+        else:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("No extension or wrong extension specified")
+            msg.setInformativeText("Please specify a valid extension (.png, .svg or .pdf) ")
+            msg.setWindowTitle("Wrong image format")
+            msg.exec_()
+
+    def levelsChanged(self):
+        self.levelMin, self.levelMax = self.ui.histogram.getLevels()
