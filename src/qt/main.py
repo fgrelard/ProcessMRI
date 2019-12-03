@@ -1,9 +1,15 @@
 from src.qt.maincontroller import MainController
 from src.qt.mainview import Ui_MainView
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
 import sys
 import configparser
 import os
+
+if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
+    QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
+    QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
 class AppWindow(QMainWindow):
     def __init__(self):
@@ -42,6 +48,6 @@ if __name__=='__main__':
         app = QApplication(sys.argv)
     main_window = AppWindow()
     config = init_configuration()
-    main_controller = MainController(app, main_window.ui, config)
+    main_controller = MainController(app, main_window, config)
     main_window.show()
     app.exec_()

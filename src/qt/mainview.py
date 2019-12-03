@@ -8,7 +8,6 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
-import pyqtgraph as pg
 import src.qt.ImageViewExtended as ive
 
 
@@ -20,10 +19,9 @@ class Ui_MainView(object):
         self.centralwidget = QtWidgets.QWidget(MainView)
         self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
 
-        pg.setConfigOptions(imageAxisOrder='row-major')
         self.imageview = ive.ImageViewExtended()
-        self.imageview.label = pg.LabelItem(justify='right')
-        self.imageview.scene.addItem(self.imageview.label)
+        self.label = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.label.setText("Running...")
         self.progressBar = QtWidgets.QProgressBar(self.gridLayoutWidget)
         self.textEdit = QtWidgets.QTextEdit(self.gridLayoutWidget)
         self.combobox = QtWidgets.QComboBox(self.gridLayoutWidget)
@@ -59,6 +57,14 @@ class Ui_MainView(object):
         self.retranslateUi(MainView)
         QtCore.QMetaObject.connectSlotsByName(MainView)
 
+    def show_run(self):
+        self.label.show()
+        self.progressBar.show()
+
+    def hide_run(self):
+        self.label.hide()
+        self.progressBar.hide()
+
     def configure(self, MainView):
         self.centralwidget.setEnabled(True)
         self.centralwidget.setObjectName("centralwidget")
@@ -68,20 +74,24 @@ class Ui_MainView(object):
 
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
 
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setContentsMargins(20, 10, 0, 0)
         self.gridLayout.setSizeConstraint(self.gridLayout.SetMaximumSize)
         self.gridLayout.setObjectName("gridLayout")
 
 
-        self.progressBar.setEnabled(False)
-        self.progressBar.setMaximum(100)
+        self.progressBar.setEnabled(True)
+        self.progressBar.setMinimum(0)
+        self.progressBar.setMaximum(0)
         self.progressBar.setProperty("value", 0)
+        self.progressBar.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Preferred)
         self.progressBar.setVisible(False)
         self.progressBar.setTextVisible(True)
         self.progressBar.setInvertedAppearance(False)
         self.progressBar.setObjectName("progressBar")
 
-        self.gridLayout.addWidget(self.progressBar, 3, 0, 1, 1)
+        self.gridLayout.addWidget(self.label, 3, 0, 1, 1)
+
+        self.gridLayout.addWidget(self.progressBar, 4, 0, 1, 1)
         self.textEdit.setAcceptDrops(False)
         self.textEdit.setAutoFillBackground(True)
         self.textEdit.setReadOnly(True)

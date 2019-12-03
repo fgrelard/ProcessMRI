@@ -6,6 +6,8 @@ import matplotlib.colors as colors
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QMessageBox
 import os
+import pyqtgraph as pg
+
 
 def addNewGradientFromMatplotlib( name):
     gradient = cm.get_cmap(name)
@@ -29,11 +31,14 @@ class ImageViewExtended(pg.ImageView):
         self.timeLine.setPen('g')
 
         self.ui.histogram.sigLevelsChanged.connect(self.levelsChanged)
-
         self.ui.histogram.gradient.loadPreset("viridis")
         self.ui.histogram.gradient.updateGradient()
         self.ui.histogram.gradientChanged()
         self.hide_partial()
+
+        pg.setConfigOptions(imageAxisOrder='row-major')
+        self.label = pg.LabelItem(justify='right')
+        self.scene.addItem(self.label)
 
     def hide_partial(self):
         self.ui.roiBtn.hide()
