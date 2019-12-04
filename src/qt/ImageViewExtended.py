@@ -14,22 +14,20 @@ import time
 class WorkerExport(QtCore.QObject):
     signal_end = QtCore.pyqtSignal()
 
-    def __init__(self, fnExport, path, currentIndex, tVals):
+    def __init__(self, ive, path):
         super().__init__()
-        self.fnExport = fnExport
+        self.ive = ive
         self.path = path
-        self.currentIndex = currentIndex
-        self.tVals = tVals
         self.is_abort = False
 
     @QtCore.pyqtSlot()
     def work(self):
-        for i in range(self.tVals.max()):
+        for i in range(self.ive.imageDisp.shape[0]):
             QApplication.processEvents()
             if self.is_abort:
                 break
-            self.fnExport(self.path + os.path.sep + str(self.currentIndex) + ".png")
-            self.currentIndex += 1
+            self.ive.export(self.path + os.path.sep + str(self.ive.currentIndex) + ".png")
+            self.ive.currentIndex += 1
         self.signal_end.emit()
 
     def abort(self):
@@ -101,7 +99,7 @@ class ImageViewExtended(pg.ImageView):
         image = self.imageDisp
         if image is None:
             return
-        if x >= 0 and x < image.shape[1] and y >= 0 and y < image.shape[2]:
+        if x >= 0 and x < image.shape[2] and y >= 0 and y < image.shape[1]:
             t = self.currentIndex
             self.label.setText("<span>(%d, %d): </span><span style='font-weight: bold; color: green;'>%0.3f</span>" % (x, y, image[(t,y,x)]))
 
@@ -177,7 +175,10 @@ class ImageViewExtended(pg.ImageView):
         return norm
 
     def export(self, filename):
-        img = self.imageDisp[self.currentIndex, ...]
+        if self.imageDisp.ndim == 2:
+            img = self.imageDisp
+        else:
+            img = self.imageDisp[self.currentIndex, ...]
         current_cm = self.ui.histogram.gradient.colorMap().getColors()
         current_cm = current_cm.astype(float)
         current_cm /= 255.0
@@ -236,7 +237,7 @@ class ImageViewExtended(pg.ImageView):
             print("quit")
 
         self.previousIndex = self.currentIndex
-        worker = WorkerExport(self.export, path, self.currentIndex, self.tVals)
+        worker = WorkerExport(self, path)
         thread = QtCore.QThread()
         worker.moveToThread(thread)
         worker.signal_end.connect(self.reset_index)
