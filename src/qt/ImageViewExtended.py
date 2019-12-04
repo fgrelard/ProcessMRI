@@ -193,5 +193,19 @@ class ImageViewExtended(pg.ImageView):
             msg.setWindowTitle("Wrong image format")
             msg.exec_()
 
+    def exportSlicesClicked(self):
+        path = QtGui.QFileDialog.getExistingDirectory(None, "Select a directory", "")
+        previous_index = self.currentIndex
+        for i in range(self.tVals.max()):
+            self.export(path + os.path.sep + str(self.currentIndex) + ".png")
+            self.currentIndex += 1
+        self.currentIndex = previous_index
+
     def levelsChanged(self):
         self.levelMin, self.levelMax = self.ui.histogram.getLevels()
+
+    def buildMenu(self):
+        super().buildMenu()
+        self.exportSlicesAction = QtGui.QAction("Export all slices", self.menu)
+        self.exportSlicesAction.triggered.connect(self.exportSlicesClicked)
+        self.menu.addAction(self.exportSlicesAction)
