@@ -17,6 +17,7 @@ class MainController:
 
         self.mainview.actionExit.triggered.connect(self.exit_app)
         self.mainview.actionNifti.triggered.connect(self.open_nifti)
+        self.mainview.actionSave.triggered.connect(self.save_nifti)
         self.mainview.actionExponential_fitting.triggered.connect(self.expfitcontroller.show)
         self.mainview.actionDenoising_NL_means.triggered.connect(self.display_nl_means)
         self.mainview.actionDenoising_TPC.triggered.connect(self.display_tpc)
@@ -61,6 +62,17 @@ class MainController:
                 self.add_image(t2, "t2")
                 self.choose_image("density")
                 self.mainview.hide_run()
+
+
+    def save_nifti(self):
+        filedialog = QtWidgets.QFileDialog(None, "Save Nifti")
+        filedialog.setOption(filedialog.DontUseNativeDialog)
+        filedialog.setAcceptMode(filedialog.AcceptSave)
+        self.mainview.parent.move_dialog(filedialog)
+        filedialog.setDirectory(self.config['default']['NifTiDir'])
+        if filedialog.exec():
+            filename = filedialog.selectedFiles()[0]
+            io.save_nifti_with_metadata(self.img_data, self.echotime, filename)
 
 
     def display_nl_means(self):
@@ -120,7 +132,6 @@ class MainController:
         filedialog.setDirectory(self.config['default']['NifTiDir'])
         if filedialog.exec():
             filename = filedialog.selectedFiles()[0]
-            print(filename)
         try:
             self.config['default']['NifTiDir'] = os.path.dirname(filename)
             img = io.open_generic_image(filename)
@@ -128,7 +139,8 @@ class MainController:
             print(e)
         else:
             self.filename = os.path.split(filename)[1]
-            self.filename = self.filename.replace('.nii.gz', '')
+            self.filename = self.filename.replace('.nii', '')
+            self.filename = self.filename.replace('.gz', '')
             self.img_data = img.get_fdata()
             self.add_image(img.get_fdata(), self.filename)
             self.mainview.combobox.setCurrentIndex(self.mainview.combobox.findText(self.filename))

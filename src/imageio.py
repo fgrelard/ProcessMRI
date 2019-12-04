@@ -180,6 +180,13 @@ def bruker2nifti(input_name, output_name=None):
     print("Nifti saved to "+  output_name)
 
 
-def write_nifti(filename, img):
+def save_nifti(img, filename):
     nibimg = nib.Nifti1Image(img, np.eye(4))
     nibimg.to_filename(filename)
+
+def save_nifti_with_metadata(img, echotime, filename):
+    root, ext = os.path.splitext(filename)
+    image_name = root + ".nii"
+    metadata_name = root + "_visu_pars.npy"
+    save_nifti(img, image_name)
+    save_metadata(metadata_name, echotime)

@@ -167,7 +167,7 @@ class Ui_MainView(object):
         self.menuOpen.setTitle(_translate("MainView", "Open"))
         self.menuProcess.setTitle(_translate("MainView", "Process"))
         self.menuHelp.setTitle(_translate("MainView", "Help"))
-        self.actionSave.setText(_translate("MainView", "Save"))
+        self.actionSave.setText(_translate("MainView", "Save Nifti"))
         self.actionExit.setText(_translate("MainView", "Exit"))
         self.actionBruker_directory.setText(_translate("MainView", "Bruker directory"))
         self.actionNifti.setText(_translate("MainView", "Nifti"))

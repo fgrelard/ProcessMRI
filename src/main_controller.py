@@ -115,7 +115,7 @@ class MainController:
             filename =  filedialog.asksaveasfilename(initialdir = self.mainview.config['default']['NifTiDir'],title = "Save as NifTi",defaultextension=".nii",filetypes = (("nii files","*.nii*"),("all files","*.*")))
             echo_name = os.path.splitext(filename)[0]
             echo_name = os.path.splitext(echo_name)[0] + "_visu_pars.npy"
-            io.write_nifti(filename, self.img_data)
+            io.save_nifti(self.img_data, filename)
             io.save_metadata_by_keyval(echo_name, "VisuAcqEchoTime", self.echotime)
         else:
             messagebox.showinfo("Open an image", "No image loaded currently. Please open an image in \"File > Open\" before saving it.")
@@ -234,10 +234,10 @@ class MainController:
                 magnitude = ci.complex_to_magnitude(temporally_corrected)
                 phase = ci.complex_to_phase(temporally_corrected)
 
-                io.write_nifti(os.path.join(outname, self.filename+"_real_tpc.nii"), real)
-                io.write_nifti(os.path.join(outname, self.filename+"_imaginary_tpc.nii"), imaginary)
-                io.write_nifti(os.path.join(outname, self.filename+"_magnitude_tpc.nii"), magnitude)
-                io.write_nifti(os.path.join(outname, self.filename+"_phase_tpc.nii"), phase)
+                io.save_nifti(real, os.path.join(outname, self.filename+"_real_tpc.nii"))
+                io.save_nifti(imaginary, os.path.join(outname, self.filename+"_imaginary_tpc.nii"))
+                io.save_nifti(magnitude, os.path.join(outname, self.filename+"_magnitude_tpc.nii"))
+                io.save_nifti(phase, os.path.join(outname, self.filename+"_phase_tpc.nii"))
                 self.img_data = real
                 messagebox.showinfo("Info", "Done. Images \"tpc\" saved in directory \"" + outname + "\". Now working on magnitude image.")
                 self.mainview.label_complete.config(text="Working on magnitude image from TPC")
@@ -271,8 +271,8 @@ class MainController:
                         n=3
                 density, t2 = expfit.exponentialfit_image(self.echotime, self.img_data, threshold, lreg, n)
 
-                io.write_nifti(os.path.join(outname,  self.filename+"_density.nii"), density)
-                io.write_nifti(os.path.join(outname,  self.filename+"_t2_star.nii"), t2)
+                io.save_nifti(density, os.path.join(outname,  self.filename+"_density.nii"))
+                io.save_nifti(t2, os.path.join(outname,  self.filename+"_t2_star.nii"))
                 self.img_data = density
                 messagebox.showinfo("Info", "Done. Images \"density\" and \"t2_star\" saved in directory \"" + outname + "\". Now working on density image.")
                 self.mainview.label_complete.config(text="Working on density image from exponential fit")
