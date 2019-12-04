@@ -9,9 +9,7 @@ class ExpFitController:
         self.dialog.parent = app
 
         #Move dialog
-        dialog_rect = self.dialog.mapToGlobal(self.dialog.rect().center())
-        parent_rect = app.mapToGlobal(app.rect().center())
-        self.dialog.move(parent_rect - dialog_rect)
+        app.move_dialog(self.dialog)
 
         #Init ui
         self.expfitview = Ui_ExpFit_View()

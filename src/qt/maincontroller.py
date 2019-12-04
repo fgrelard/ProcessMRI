@@ -9,6 +9,7 @@ import src.exponentialfit as expfit
 class MainController:
     def __init__(self, app, mainview, config):
         self.mainview = mainview.ui
+        self.mainview.parent = mainview
         self.app = app
 
         self.expfitcontroller = ExpFitController(mainview)
@@ -25,6 +26,7 @@ class MainController:
         self.config = config
         self.images = {}
         self.mainview.hide_run()
+
 
     def exp_fit_estimation(self):
         """
@@ -112,9 +114,13 @@ class MainController:
         """
         Opens nifti file and reads metadata
         """
-        filename, _ =  QtWidgets.QFileDialog.getOpenFileName(None, directory=self.config['default']['NifTiDir'],caption = "Select NifTi image")
-
-        # getOpenFileName( filedialog.askopenfilename(initialdir = self.mainview.config['default']['NifTiDir'],title = "Select NifTi image",filetypes = (("nii files","*.nii*"),("all files","*.*")))
+        filedialog = QtWidgets.QFileDialog(None, "Select Nifti")
+        filedialog.setOption(filedialog.DontUseNativeDialog)
+        self.mainview.parent.move_dialog(filedialog)
+        filedialog.setDirectory(self.config['default']['NifTiDir'])
+        if filedialog.exec():
+            filename = filedialog.selectedFiles()[0]
+            print(filename)
         try:
             self.config['default']['NifTiDir'] = os.path.dirname(filename)
             img = io.open_generic_image(filename)
