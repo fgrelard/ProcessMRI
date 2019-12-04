@@ -85,7 +85,7 @@ class Ui_MainView(object):
 
         self.progressBar.setEnabled(True)
         self.progressBar.setMinimum(0)
-        self.progressBar.setMaximum(0)
+        self.progressBar.setMaximum(100)
         self.progressBar.setProperty("value", 0)
         self.progressBar.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Preferred)
         self.progressBar.setVisible(False)

@@ -1,57 +1,26 @@
-from src.qt.expfitcontroller import ExpFitController
+from src.qt.expfitcontroller import ExpFitController, WorkerExpFit
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 import src.imageio as io
 import os
 import numpy as np
 import src.exponentialfit as expfit
 from threading import Thread
 
-class WorkerExpFit(QObject):
+class Signal(QObject):
+    signal = pyqtSignal()
 
-    signal_start = pyqtSignal()
-    signal_end = pyqtSignal()
-
-    def __init__(self, maincontroller, parent=None, threshold=None, lreg=True, n=1):
-        super().__init__()
-        self.maincontroller = maincontroller
-        self.threshold = threshold
-        self.lreg = lreg
-        self.n = n
-
-    @pyqtSlot()
-    def work(self):
-        print("workwork")
-        self.maincontroller.app.processEvents()
-        self.signal_start.emit()
-        density, t2 = expfit.exponentialfit_image(self.maincontroller.echotime, self.maincontroller.img_data, self.threshold, self.lreg, self.n)
-        self.signal_end.emit()
-        self.maincontroller.add_image(density, "density")
-        self.maincontroller.add_image(t2, "t2")
-        self.maincontroller.choose_image("density")
-
-class ThreadExpFit(Thread):
-    def __init__(self, maincontroller, threshold, lreg, n):
-        Thread.__init__(self)
-        self.maincontroller = maincontroller
-        self.threshold = threshold
-        self.lreg = lreg
-        self.n = n
-
-    def run(self):
-        self.maincontroller.mainview.show_run()
-        density, t2 = expfit.exponentialfit_image(self.maincontroller.echotime, self.maincontroller.img_data, self.threshold, self.lreg, self.n)
-        self.maincontroller.add_image(density, "density")
-        self.maincontroller.add_image(t2, "t2")
-        self.maincontroller.choose_image("density")
-        self.maincontroller.mainview.hide_run()
+    def trigger(self):
+        self.signal.emit()
 
 
 class MainController:
+
     def __init__(self, app, mainview, config):
         self.mainview = mainview.ui
         self.mainview.parent = mainview
         self.app = app
+        self.sig_abort_workers = Signal()
 
         self.expfitcontroller = ExpFitController(mainview)
         self.expfitcontroller.signal.compute_signal.connect(self.exp_fit_estimation)
@@ -64,7 +33,7 @@ class MainController:
         self.mainview.actionDenoising_NL_means.triggered.connect(self.display_nl_means)
         self.mainview.actionDenoising_TPC.triggered.connect(self.display_tpc)
 
-        # self.mainview.stopButton.clicked.connect(self.abort_workers)
+        self.mainview.stopButton.clicked.connect(self.abort_computation)
         self.mainview.combobox.activated[str].connect(self.choose_image)
         self.app.aboutToQuit.connect(self.exit_app)
         self.config = config
@@ -160,7 +129,6 @@ class MainController:
         fit_method = self.expfitcontroller.fit_method
         threshold = self.expfitcontroller.threshold
         outname = self.config['default']['NifTiDir']
-        print(self.img_data.shape)
         if self.img_data is not None:
             try:
                 threshold = int(threshold)
@@ -178,18 +146,33 @@ class MainController:
                         n=2
                     else:
                         n=3
-                thread = ThreadExpFit(maincontroller=self, threshold=threshold, lreg=lreg, n=n)
+                worker = WorkerExpFit(maincontroller=self, threshold=threshold, lreg=lreg, n=n)
+
+                thread = QThread()
+                worker.moveToThread(thread)
+                worker.signal_start.connect(self.mainview.show_run)
+                worker.signal_end.connect(self.end_expfit)
+                worker.signal_progress.connect(self.update_progressbar)
+                self.sig_abort_workers.signal.connect(worker.abort)
+                thread.started.connect(worker.work)
                 thread.start()
-                # worker = WorkerExpFit(maincontroller=self, threshold=threshold, lreg=lreg, n=n)
+                self.threads.append((thread, worker))
 
-                # thread = QThread()
-                # worker.moveToThread(thread)
-                # worker.signal_start.connect(self.mainview.show_run)
-                # worker.signal_end.connect(self.mainview.hide_run)
-                # thread.started.connect(worker.work)
-                # thread.start()
-                # self.threads.append((thread, worker))
+    def update_progressbar(self, progress):
+        self.mainview.progressBar.setValue(progress)
 
+    def end_expfit(self, density, t2):
+        self.mainview.hide_run()
+        self.add_image(density, "density")
+        self.add_image(t2, "t2")
+        self.choose_image("density")
+
+    def abort_computation(self):
+        self.sig_abort_workers.trigger()
+        for thread, worker in self.threads:
+            thread.quit()
+            thread.wait()
+        self.mainview.hide_run()
 
     def display_nl_means(self):
         pass
