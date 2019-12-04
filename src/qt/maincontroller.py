@@ -1,9 +1,50 @@
 from src.qt.expfitcontroller import ExpFitController
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QObject, QThread, pyqtSignal, pyqtSlot
 import src.imageio as io
 import os
 import numpy as np
 import src.exponentialfit as expfit
+from threading import Thread
+
+class WorkerExpFit(QObject):
+
+    signal_start = pyqtSignal()
+    signal_end = pyqtSignal()
+
+    def __init__(self, maincontroller, parent=None, threshold=None, lreg=True, n=1):
+        super().__init__()
+        self.maincontroller = maincontroller
+        self.threshold = threshold
+        self.lreg = lreg
+        self.n = n
+
+    @pyqtSlot()
+    def work(self):
+        print("workwork")
+        self.maincontroller.app.processEvents()
+        self.signal_start.emit()
+        density, t2 = expfit.exponentialfit_image(self.maincontroller.echotime, self.maincontroller.img_data, self.threshold, self.lreg, self.n)
+        self.signal_end.emit()
+        self.maincontroller.add_image(density, "density")
+        self.maincontroller.add_image(t2, "t2")
+        self.maincontroller.choose_image("density")
+
+class ThreadExpFit(Thread):
+    def __init__(self, maincontroller, threshold, lreg, n):
+        Thread.__init__(self)
+        self.maincontroller = maincontroller
+        self.threshold = threshold
+        self.lreg = lreg
+        self.n = n
+
+    def run(self):
+        self.maincontroller.mainview.show_run()
+        density, t2 = expfit.exponentialfit_image(self.maincontroller.echotime, self.maincontroller.img_data, self.threshold, self.lreg, self.n)
+        self.maincontroller.add_image(density, "density")
+        self.maincontroller.add_image(t2, "t2")
+        self.maincontroller.choose_image("density")
+        self.maincontroller.mainview.hide_run()
 
 
 class MainController:
@@ -22,11 +63,14 @@ class MainController:
         self.mainview.actionExponential_fitting.triggered.connect(self.expfitcontroller.show)
         self.mainview.actionDenoising_NL_means.triggered.connect(self.display_nl_means)
         self.mainview.actionDenoising_TPC.triggered.connect(self.display_tpc)
+
+        # self.mainview.stopButton.clicked.connect(self.abort_workers)
         self.mainview.combobox.activated[str].connect(self.choose_image)
         self.app.aboutToQuit.connect(self.exit_app)
         self.config = config
         self.images = {}
         self.mainview.hide_run()
+        self.threads = []
 
     def open_bruker(self):
         """
@@ -37,6 +81,7 @@ class MainController:
         self.mainview.parent.move_dialog(filedialog)
         filedialog.setDirectory(self.config['default']['NifTiDir'])
         filedialog.setFileMode(filedialog.Directory)
+        filedialog.setModal(False)
         if filedialog.exec():
             dirname = filedialog.selectedFiles()[0]
         try:
@@ -133,12 +178,17 @@ class MainController:
                         n=2
                     else:
                         n=3
-                self.mainview.show_run()
-                density, t2 = expfit.exponentialfit_image(self.echotime, self.img_data, threshold, lreg, n)
-                self.add_image(density, "density")
-                self.add_image(t2, "t2")
-                self.choose_image("density")
-                self.mainview.hide_run()
+                thread = ThreadExpFit(maincontroller=self, threshold=threshold, lreg=lreg, n=n)
+                thread.start()
+                # worker = WorkerExpFit(maincontroller=self, threshold=threshold, lreg=lreg, n=n)
+
+                # thread = QThread()
+                # worker.moveToThread(thread)
+                # worker.signal_start.connect(self.mainview.show_run)
+                # worker.signal_end.connect(self.mainview.hide_run)
+                # thread.started.connect(worker.work)
+                # thread.start()
+                # self.threads.append((thread, worker))
 
 
     def display_nl_means(self):

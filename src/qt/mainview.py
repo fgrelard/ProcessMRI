@@ -23,6 +23,8 @@ class Ui_MainView(object):
         self.label = QtWidgets.QLabel(self.gridLayoutWidget)
         self.label.setText("Running...")
         self.progressBar = QtWidgets.QProgressBar(self.gridLayoutWidget)
+        self.stopButton = QtWidgets.QPushButton(self.gridLayoutWidget)
+
         self.textEdit = QtWidgets.QTextEdit(self.gridLayoutWidget)
         self.combobox = QtWidgets.QComboBox(self.gridLayoutWidget)
         self.menubar = QtWidgets.QMenuBar(MainView)
@@ -60,10 +62,12 @@ class Ui_MainView(object):
     def show_run(self):
         self.label.show()
         self.progressBar.show()
+        self.stopButton.show()
 
     def hide_run(self):
         self.label.hide()
         self.progressBar.hide()
+        self.stopButton.hide()
 
     def configure(self, MainView):
         self.centralwidget.setEnabled(True)
@@ -90,8 +94,13 @@ class Ui_MainView(object):
         self.progressBar.setObjectName("progressBar")
 
         self.gridLayout.addWidget(self.label, 3, 0, 1, 1)
-
         self.gridLayout.addWidget(self.progressBar, 4, 0, 1, 1)
+
+        self.stopButton.setText("Stop")
+        self.stopButton.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Preferred)
+
+        self.gridLayout.addWidget(self.stopButton, 5, 0, 1, 1)
+
         self.textEdit.setAcceptDrops(False)
         self.textEdit.setAutoFillBackground(True)
         self.textEdit.setReadOnly(True)
