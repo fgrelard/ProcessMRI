@@ -147,7 +147,6 @@ class MainController:
                     else:
                         n=3
                 worker = WorkerExpFit(maincontroller=self, threshold=threshold, lreg=lreg, n=n)
-
                 thread = QThread()
                 worker.moveToThread(thread)
                 worker.signal_start.connect(self.mainview.show_run)
@@ -161,11 +160,11 @@ class MainController:
     def update_progressbar(self, progress):
         self.mainview.progressBar.setValue(progress)
 
-    def end_expfit(self, density, t2):
+    def end_expfit(self, density, t2, number):
         self.mainview.hide_run()
-        self.add_image(density, "density")
-        self.add_image(t2, "t2")
-        self.choose_image("density")
+        self.add_image(density, "density_" + str(number))
+        self.add_image(t2, "t2_" + str(number))
+        self.choose_image("density_" + str(number))
 
     def abort_computation(self):
         self.sig_abort_workers.trigger()

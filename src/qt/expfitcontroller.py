@@ -9,8 +9,9 @@ import src.exponentialfit as expfit
 class WorkerExpFit(QtCore.QObject):
 
     signal_start = QtCore.pyqtSignal()
-    signal_end = QtCore.pyqtSignal(np.ndarray, np.ndarray)
+    signal_end = QtCore.pyqtSignal(np.ndarray, np.ndarray, int)
     signal_progress = QtCore.pyqtSignal(int)
+    number = 1
 
     def __init__(self, maincontroller, parent=None, threshold=None, lreg=True, n=1):
         super().__init__()
@@ -56,7 +57,9 @@ class WorkerExpFit(QtCore.QObject):
             progress = float(index/length*100)
             self.signal_progress.emit(progress)
         if not self.is_abort:
-            self.signal_end.emit(density_data, t2_data)
+            self.signal_end.emit(density_data, t2_data, self.number)
+            self.number += 1
+
 
     def abort(self):
         self.is_abort = True
