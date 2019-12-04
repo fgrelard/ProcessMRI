@@ -15,7 +15,7 @@ class TestImageIO(unittest.TestCase):
         l = io.open_generic_image("/mnt/d/IRM/raw/50")
 
     def test_bruker2nifti(self):
-        io.bruker2nifti("/mnt/d/IRM/raw/50")
+        io.bruker2nifti("/mnt/d/IRM/raw/BLE/250/50")
 
     def test_open_metadata(self):
         io.open_metadata("/mnt/d/IRM/raw/50/nifti/50_subscan_1.nii.gz")

@@ -21,6 +21,7 @@ def addNewGradientFromMatplotlib( name):
 
 class ImageViewExtended(pg.ImageView):
     def __init__(self, parent=None, name="ImageView", view=None, imageItem=None, *args):
+        pg.setConfigOptions(imageAxisOrder='row-major')
         addNewGradientFromMatplotlib("jet")
         addNewGradientFromMatplotlib("viridis")
         addNewGradientFromMatplotlib("plasma")
@@ -36,9 +37,10 @@ class ImageViewExtended(pg.ImageView):
         self.ui.histogram.gradientChanged()
         self.hide_partial()
 
-        pg.setConfigOptions(imageAxisOrder='row-major')
         self.label = pg.LabelItem(justify='right')
         self.scene.addItem(self.label)
+        self.scene.sigMouseMoved.connect(self.on_hover_image)
+
 
     def hide_partial(self):
         self.ui.roiBtn.hide()
@@ -57,6 +59,18 @@ class ImageViewExtended(pg.ImageView):
         self.ui.roiPlot.setMouseEnabled(True, True)
         max_t = img.shape[0]
         self.normRgn.setRegion((1, max_t//2))
+
+    def on_hover_image(self, evt):
+        pos = evt
+        mousePoint = self.view.mapSceneToView(pos)
+        x = int(mousePoint.x())
+        y = int(mousePoint.y())
+        image = self.imageDisp
+        if image is None:
+            return
+        if x >= 0 and x < image.shape[1] and y >= 0 and y < image.shape[2]:
+            t = self.currentIndex
+            self.label.setText("<span>(%d, %d): </span><span style='font-weight: bold; color: green;'>%0.3f</span>" % (x, y, image[(t,y,x)]))
 
 
 
