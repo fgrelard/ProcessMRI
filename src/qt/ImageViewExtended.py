@@ -1,5 +1,7 @@
 import pyqtgraph as pg
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -26,8 +28,7 @@ class WorkerExport(QtCore.QObject):
             QApplication.processEvents()
             if self.is_abort:
                 break
-            # self.fnExport(self.path + os.path.sep + str(self.currentIndex) + ".png")
-            time.sleep(5)
+            self.fnExport(self.path + os.path.sep + str(self.currentIndex) + ".png")
             self.currentIndex += 1
         self.signal_end.emit()
 
