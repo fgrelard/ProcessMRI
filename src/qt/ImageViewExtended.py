@@ -4,9 +4,36 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QMessageBox, QApplication
 import os
 import pyqtgraph as pg
+import time
+class WorkerExport(QtCore.QObject):
+    signal_end = QtCore.pyqtSignal()
+
+    def __init__(self, fnExport, path, currentIndex, tVals):
+        super().__init__()
+        self.fnExport = fnExport
+        self.path = path
+        self.currentIndex = currentIndex
+        self.tVals = tVals
+        self.is_abort = False
+
+    @QtCore.pyqtSlot()
+    def work(self):
+        for i in range(self.tVals.max()):
+            QApplication.processEvents()
+            if self.is_abort:
+                break
+            # self.fnExport(self.path + os.path.sep + str(self.currentIndex) + ".png")
+            time.sleep(5)
+            self.currentIndex += 1
+        self.signal_end.emit()
+
+    def abort(self):
+        self.is_abort = True
+
 
 
 def addNewGradientFromMatplotlib( name):
@@ -20,6 +47,9 @@ def addNewGradientFromMatplotlib( name):
     pg.graphicsItems.GradientEditorItem.Gradients[name] = {'ticks':L, 'mode': 'rgb'}
 
 class ImageViewExtended(pg.ImageView):
+
+    signal_abort = QtCore.pyqtSignal()
+
     def __init__(self, parent=None, name="ImageView", view=None, imageItem=None, *args):
         pg.setConfigOptions(imageAxisOrder='row-major')
         addNewGradientFromMatplotlib("jet")
@@ -40,6 +70,8 @@ class ImageViewExtended(pg.ImageView):
         self.label = pg.LabelItem(justify='right')
         self.scene.addItem(self.label)
         self.scene.sigMouseMoved.connect(self.on_hover_image)
+
+        self.threads = []
 
 
     def hide_partial(self):
@@ -195,11 +227,26 @@ class ImageViewExtended(pg.ImageView):
 
     def exportSlicesClicked(self):
         path = QtGui.QFileDialog.getExistingDirectory(None, "Select a directory", "")
-        previous_index = self.currentIndex
-        for i in range(self.tVals.max()):
-            self.export(path + os.path.sep + str(self.currentIndex) + ".png")
-            self.currentIndex += 1
-        self.currentIndex = previous_index
+        if len(self.threads) > 0:
+            self.signal_abort.emit()
+            for thread, worker in self.threads:
+                thread.quit()
+                thread.wait()
+            print("quit")
+
+        self.previousIndex = self.currentIndex
+        worker = WorkerExport(self.export, path, self.currentIndex, self.tVals)
+        thread = QtCore.QThread()
+        worker.moveToThread(thread)
+        worker.signal_end.connect(self.reset_index)
+        self.signal_abort.connect(worker.abort)
+        thread.started.connect(worker.work)
+        thread.start()
+        self.threads.append((thread, worker))
+
+    def reset_index(self):
+        self.currentIndex = self.previousIndex
+
 
     def levelsChanged(self):
         self.levelMin, self.levelMax = self.ui.histogram.getLevels()
