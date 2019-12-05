@@ -231,7 +231,7 @@ class ImageViewExtended(pg.ImageView):
 
 
     def exportClicked(self):
-        fileName, image_format = QtGui.QFileDialog.getSaveFileName(None, "Save image as...", "", "PNG images (.png);;Portable Document Format (.pdf);; Scalable Vector Graphics (.svg)")
+        fileName, image_format = QtGui.QFileDialog.getSaveFileName(self.parentWidget(), "Save image as...", "", "PNG images (.png);;Portable Document Format (.pdf);; Scalable Vector Graphics (.svg)")
         if not fileName:
             return
         root, ext = os.path.splitext(fileName)
@@ -253,14 +253,15 @@ class ImageViewExtended(pg.ImageView):
             msg.exec_()
 
     def exportSlicesClicked(self):
-        path = QtGui.QFileDialog.getExistingDirectory(None, "Select a directory", "")
+        path = QtGui.QFileDialog.getExistingDirectory(self.parentWidget(), "Select a directory", "")
         if len(self.threads) > 0:
             self.signal_abort.emit()
             for thread, worker in self.threads:
                 thread.quit()
                 thread.wait()
             print("quit")
-
+        if not path:
+            return
         self.previousIndex = self.currentIndex
         worker = WorkerExport(self, path)
         thread = QtCore.QThread()

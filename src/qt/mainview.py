@@ -19,7 +19,7 @@ class Ui_MainView(object):
         self.centralwidget = QtWidgets.QWidget(MainView)
         self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
 
-        self.imageview = ive.ImageViewExtended()
+        self.imageview = ive.ImageViewExtended(parent=self.centralwidget)
         self.label = QtWidgets.QLabel(self.gridLayoutWidget)
         self.label.setText("Running...")
         self.progressBar = QtWidgets.QProgressBar(self.gridLayoutWidget)
