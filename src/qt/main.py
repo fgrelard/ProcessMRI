@@ -1,7 +1,7 @@
 from src.qt.maincontroller import MainController
 from src.qt.mainview import Ui_MainView
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout
 import sys
 import configparser
 import os
@@ -16,6 +16,8 @@ class AppWindow(QMainWindow):
         super().__init__()
         self.ui = Ui_MainView()
         self.ui.setupUi(self)
+        self.gridLayout = QGridLayout(self.ui.centralwidget)
+        self.gridLayout.addLayout(self.ui.gridLayout, 0, 0, 1, 1)
         self.show()
 
 

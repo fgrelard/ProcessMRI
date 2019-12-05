@@ -26,6 +26,8 @@ class Ui_MainView(object):
         self.stopButton = QtWidgets.QPushButton(self.gridLayoutWidget)
 
         self.textEdit = QtWidgets.QTextEdit(self.gridLayoutWidget)
+        self.labelCombo = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.horizontalSpace = QtWidgets.QSpacerItem(20, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Maximum)
         self.combobox = QtWidgets.QComboBox(self.gridLayoutWidget)
         self.menubar = QtWidgets.QMenuBar(MainView)
         self.menuFile = QtWidgets.QMenu(self.menubar)
@@ -76,10 +78,9 @@ class Ui_MainView(object):
 
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
 
-        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
+        self.gridLayout = QtWidgets.QGridLayout()
 
         self.gridLayout.setContentsMargins(20, 10, 0, 0)
-        self.gridLayout.setSizeConstraint(self.gridLayout.SetMaximumSize)
         self.gridLayout.setObjectName("gridLayout")
 
 
@@ -92,7 +93,6 @@ class Ui_MainView(object):
         self.progressBar.setTextVisible(True)
         self.progressBar.setInvertedAppearance(False)
         self.progressBar.setObjectName("progressBar")
-
         self.gridLayout.addWidget(self.label, 3, 0, 1, 1)
         self.gridLayout.addWidget(self.progressBar, 4, 0, 1, 1)
 
@@ -106,19 +106,28 @@ class Ui_MainView(object):
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("textEdit")
         self.gridLayout.addWidget(self.textEdit, 1, 0, 1, 1)
+
+        self.labelCombo.setText("Current image: ")
         self.combobox.setFixedWidth(100)
+        self.combobox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
         self.combobox.addItem("No image")
+        self.hLayout = QtWidgets.QHBoxLayout()
+        self.hLayout.addWidget(self.labelCombo)
+        self.hLayout.addWidget(self.combobox)
+        self.hLayout.addStretch()
+        self.hLayout.setAlignment(QtCore.Qt.AlignLeft)
 
-        self.gridLayout.addWidget(self.combobox, 0, 1, 1, 1)
+        self.gridLayout.addLayout(self.hLayout, 0, 1, 1, 1)
 
-        self.imageview.ui.menuBtn.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        self.imageview.ui.roiBtn.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        self.imageview.ui.histogram.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-        self.imageview.ui.graphicsView.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        # self.imageview.ui.menuBtn.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        # self.imageview.ui.roiBtn.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        # self.imageview.ui.histogram.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        # self.imageview.ui.graphicsView.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.imageview.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         # self.imageview.ui.histogram.vb.setFixedWidth(2)
         # self.imageview.ui.histogram.vb.setMinimumWidth(2)
         self.gridLayout.addWidget(self.imageview, 1, 1, 1, 1)
+        self.gridLayout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         MainView.setCentralWidget(self.centralwidget)
 
 

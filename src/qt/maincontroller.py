@@ -69,7 +69,6 @@ class MainController:
         Opens nifti file and reads metadata
         """
         filename, ext = QtWidgets.QFileDialog.getOpenFileName(self.mainview.centralwidget, "Select Nifti", self.config['default']['NifTiDir'])
-        print(filename)
         if not filename:
             return
         try:
@@ -110,7 +109,6 @@ class MainController:
         Exits the app and save configuration
         preferences
         """
-        print("quit")
         with open('config.ini', 'w') as configfile:
             self.config.write(configfile)
         self.app.quit()
