@@ -1,5 +1,5 @@
-from src.qt.maincontroller import MainController
-from src.qt.mainview import Ui_MainView
+from src.maincontroller import MainController
+from src.mainview import Ui_MainView
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout
 import sys

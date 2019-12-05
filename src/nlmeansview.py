@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'src/qt/nlmeansview.ui'
+# Form implementation generated from reading ui file 'ui/nlmeansview.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.2
 #

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'src/qt/tpcview.ui'
+# Form implementation generated from reading ui file 'ui/tpcview.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.2
 #

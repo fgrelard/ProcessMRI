@@ -1,6 +1,6 @@
-from src.qt.nlmeansview import Ui_NLMeans_View
+from src.nlmeansview import Ui_NLMeans_View
 from PyQt5.QtWidgets import QDialog, QMainWindow, QToolTip, QApplication
-from src.qt.signal import Signal
+from src.signal import Signal
 from PyQt5 import QtCore
 import numpy as np
 import src.exponentialfit as expfit

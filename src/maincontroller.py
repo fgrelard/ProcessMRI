@@ -3,11 +3,11 @@ import numpy as np
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
-from src.qt.signal import Signal
+from src.signal import Signal
 
-from src.qt.expfitcontroller import ExpFitController, WorkerExpFit
-from src.qt.nlmeanscontroller import NLMeansController, WorkerNLMeans
-from src.qt.tpccontroller import TPCController, WorkerTPC
+from src.expfitcontroller import ExpFitController, WorkerExpFit
+from src.nlmeanscontroller import NLMeansController, WorkerNLMeans
+from src.tpccontroller import TPCController, WorkerTPC
 import src.imageio as io
 import src.exponentialfit as expfit
 
