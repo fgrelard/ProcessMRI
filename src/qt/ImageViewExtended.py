@@ -22,12 +22,14 @@ class WorkerExport(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def work(self):
-        for i in range(self.ive.imageDisp.shape[0]):
+        print(self.ive.imageDisp.shape[0])
+        indexExportSlice = 0
+        while indexExportSlice < self.ive.imageDisp.shape[0]:
             QApplication.processEvents()
             if self.is_abort:
                 break
-            self.ive.export(self.path + os.path.sep + str(self.ive.currentIndex) + ".png")
-            self.ive.currentIndex += 1
+            self.ive.export(self.path + os.path.sep + str(self.ive.currentIndex) + ".png", indexExportSlice)
+            indexExportSlice += 1
         self.signal_end.emit()
 
     def abort(self):
@@ -69,7 +71,7 @@ class ImageViewExtended(pg.ImageView):
         self.label = pg.LabelItem(justify='right')
         self.scene.addItem(self.label)
         self.scene.sigMouseMoved.connect(self.on_hover_image)
-
+        
         self.threads = []
 
 
@@ -174,11 +176,11 @@ class ImageViewExtended(pg.ImageView):
 
         return norm
 
-    def export(self, filename):
+    def export(self, filename, index):
         if self.imageDisp.ndim == 2:
             img = self.imageDisp
         else:
-            img = self.imageDisp[self.currentIndex, ...]
+            img = self.imageDisp[index, ...]
         current_cm = self.ui.histogram.gradient.colorMap().getColors()
         current_cm = current_cm.astype(float)
         current_cm /= 255.0
@@ -218,7 +220,7 @@ class ImageViewExtended(pg.ImageView):
             if "pdf" in image_format:
                 ext = ".pdf"
         if ext == ".png" or ext == ".svg" or ext == ".pdf":
-            self.export(root + ext)
+            self.export(root + ext, self.currentIndex)
         else:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
