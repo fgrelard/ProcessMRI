@@ -20,13 +20,13 @@ class MainController:
         self.app = app
         self.sig_abort_workers = Signal()
 
-        self.expfitcontroller = ExpFitController(mainview)
+        self.expfitcontroller = ExpFitController(mainview.centralWidget())
         self.expfitcontroller.trigger.signal.connect(self.exp_fit_estimation)
 
-        self.nlmeanscontroller = NLMeansController(mainview)
+        self.nlmeanscontroller = NLMeansController(mainview.centralWidget())
         self.nlmeanscontroller.trigger.signal.connect(self.nl_means_denoising)
 
-        self.tpccontroller = TPCController(mainview)
+        self.tpccontroller = TPCController(mainview.centralWidget())
         self.tpccontroller.trigger.signal.connect(self.tpc_denoising)
 
         self.mainview.actionExit.triggered.connect(self.exit_app)
@@ -51,14 +51,9 @@ class MainController:
         """
         Opens Bruker directory
         """
-        filedialog = QtWidgets.QFileDialog(None, "Select Bruker directory")
-        filedialog.setOption(filedialog.DontUseNativeDialog)
-        self.mainview.parent.move_dialog(filedialog)
-        filedialog.setDirectory(self.config['default']['NifTiDir'])
-        filedialog.setFileMode(filedialog.Directory)
-        filedialog.setModal(False)
-        if filedialog.exec():
-            dirname = filedialog.selectedFiles()[0]
+        dirname = QtWidgets.QFileDialog.getExistingDirectory(self.mainview.centralwidget, "Select Bruker directory", self.config['default']['NifTiDir'])
+        if not dirname:
+            return
         try:
             list_filenames = io.open_generic_image(dirname)
         except Exception as e:
@@ -73,12 +68,10 @@ class MainController:
         """
         Opens nifti file and reads metadata
         """
-        filedialog = QtWidgets.QFileDialog(None, "Select Nifti")
-        filedialog.setOption(filedialog.DontUseNativeDialog)
-        self.mainview.parent.move_dialog(filedialog)
-        filedialog.setDirectory(self.config['default']['NifTiDir'])
-        if filedialog.exec():
-            filename = filedialog.selectedFiles()[0]
+        filename, ext = QtWidgets.QFileDialog.getOpenFileName(self.mainview.centralwidget, "Select Nifti", self.config['default']['NifTiDir'])
+        print(filename)
+        if not filename:
+            return
         try:
             self.config['default']['NifTiDir'] = os.path.dirname(filename)
             img = io.open_generic_image(filename)
@@ -107,20 +100,17 @@ class MainController:
 
 
     def save_nifti(self):
-        filedialog = QtWidgets.QFileDialog(None, "Save Nifti")
-        filedialog.setOption(filedialog.DontUseNativeDialog)
-        filedialog.setAcceptMode(filedialog.AcceptSave)
-        self.mainview.parent.move_dialog(filedialog)
-        filedialog.setDirectory(self.config['default']['NifTiDir'])
-        if filedialog.exec():
-            filename = filedialog.selectedFiles()[0]
-            io.save_nifti_with_metadata(self.img_data, self.echotime, filename)
+        filename = QtWidgets.QFileDialog.getSaveFileName(self.mainview.centralwidget, "Save Nifti", self.config['default']['NifTiDir'])
+        if not filename:
+            return
+        io.save_nifti_with_metadata(self.img_data, self.echotime, filename)
 
     def exit_app(self):
         """
         Exits the app and save configuration
         preferences
         """
+        print("quit")
         with open('config.ini', 'w') as configfile:
             self.config.write(configfile)
         self.app.quit()

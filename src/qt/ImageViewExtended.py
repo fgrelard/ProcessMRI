@@ -22,7 +22,7 @@ class WorkerExport(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def work(self):
-        print(self.ive.imageDisp.shape[0])
+
         indexExportSlice = 0
         while indexExportSlice < self.ive.imageDisp.shape[0]:
             QApplication.processEvents()
@@ -259,7 +259,6 @@ class ImageViewExtended(pg.ImageView):
             for thread, worker in self.threads:
                 thread.quit()
                 thread.wait()
-            print("quit")
         if not path:
             return
         self.previousIndex = self.currentIndex

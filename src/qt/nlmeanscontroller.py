@@ -47,12 +47,8 @@ class WorkerNLMeans(QtCore.QObject):
         self.is_abort = True
 
 class NLMeansController:
-    def __init__(self, app):
-        self.dialog = QDialog()
-        self.dialog.parent = app
-
-        #Move dialog
-        app.move_dialog(self.dialog)
+    def __init__(self, parent):
+        self.dialog = QDialog(parent)
 
         #Init ui
         self.view = Ui_NLMeans_View()

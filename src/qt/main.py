@@ -18,10 +18,6 @@ class AppWindow(QMainWindow):
         self.ui.setupUi(self)
         self.show()
 
-    def move_dialog(self, dialog):
-        dialog_rect = dialog.mapToGlobal(dialog.rect().center())
-        parent_rect = self.mapToGlobal(self.rect().center())
-        dialog.move(parent_rect - dialog_rect)
 
 def init_configuration():
     """
