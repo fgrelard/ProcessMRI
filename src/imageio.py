@@ -83,10 +83,7 @@ def open_metadata(input_name):
         dictionary (key-val) metadata
 
     """
-    filename_stripped = os.path.splitext(input_name)[0]
-    if input_name.endswith(".nii.gz"):
-        filename_stripped = os.path.splitext(filename_stripped)[0]
-    dic =  np.load(filename_stripped + "_visu_pars.npy", allow_pickle=True)
+    dic =  np.load(input_name, allow_pickle=True)
     return dic.item()
 
 def extract_metadata(metadata, key):
@@ -189,4 +186,4 @@ def save_nifti_with_metadata(img, echotime, filename):
     image_name = root + ".nii"
     metadata_name = root + "_visu_pars.npy"
     save_nifti(img, image_name)
-    save_metadata(metadata_name, echotime)
+    save_metadata_by_keyval(metadata_name, "VisuAcqEchoTime", echotime)

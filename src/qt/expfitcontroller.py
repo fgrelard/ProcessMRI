@@ -1,5 +1,5 @@
 from src.qt.expfitview import Ui_ExpFit_View
-from PyQt5.QtWidgets import QDialog, QMainWindow, QToolTip
+from PyQt5.QtWidgets import QDialog, QMainWindow, QToolTip, QApplication
 from src.qt.signal import Signal
 from PyQt5 import QtCore
 import numpy as np
@@ -13,9 +13,10 @@ class WorkerExpFit(QtCore.QObject):
     signal_progress = QtCore.pyqtSignal(int)
     number = 1
 
-    def __init__(self, maincontroller, parent=None, threshold=None, lreg=True, n=1):
+    def __init__(self, img_data, echotime, parent=None, threshold=None, lreg=True, n=1):
         super().__init__()
-        self.maincontroller = maincontroller
+        self.img_data = img_data
+        self.echotime = echotime
         self.threshold = threshold
         self.lreg = lreg
         self.n = n
@@ -24,8 +25,8 @@ class WorkerExpFit(QtCore.QObject):
     @QtCore.pyqtSlot()
     def work(self):
         self.signal_start.emit()
-        echotime = self.maincontroller.echotime
-        image = self.maincontroller.img_data
+        echotime = self.echotime
+        image = self.img_data
         threshold = self.threshold
         lreg = self.lreg
         n = self.n
@@ -40,7 +41,7 @@ class WorkerExpFit(QtCore.QObject):
         for i in np.ndindex(density_data.shape):
             if self.is_abort:
                 break
-            self.maincontroller.app.processEvents()
+            QApplication.processEvents()
             pixel_values = image[i + (slice(None),)]
             if pixel_values[0] > threshold:
                 p0 = expfit.n_to_p0(n, pixel_values[0])
@@ -57,8 +58,8 @@ class WorkerExpFit(QtCore.QObject):
             progress = float(index/length*100)
             self.signal_progress.emit(progress)
         if not self.is_abort:
-            self.signal_end.emit(density_data, t2_data, self.number)
-            self.number += 1
+            self.signal_end.emit(density_data, t2_data, WorkerExpFit.number)
+            WorkerExpFit.number += 1
 
 
     def abort(self):
@@ -73,28 +74,30 @@ class ExpFitController:
         app.move_dialog(self.dialog)
 
         #Init ui
-        self.expfitview = Ui_ExpFit_View()
-        self.expfitview.setupUi(self.dialog)
-        self.expfitview.retranslateUi(self.dialog)
-        self.expfitview.pushButton.setFixedWidth(20)
-        self.expfitview.pushButton_2.setFixedWidth(20)
+        self.view = Ui_ExpFit_View()
+        self.view.setupUi(self.dialog)
+        self.view.retranslateUi(self.dialog)
+        self.view.pushButton.setFixedWidth(20)
+        self.view.pushButton_2.setFixedWidth(20)
 
         #Tooltips
-        self.expfitview.pushButton.enterEvent = lambda event : QToolTip.showText(event.globalPos(), self.expfitview.pushButton.toolTip())
-        self.expfitview.pushButton_2.enterEvent = lambda event : QToolTip.showText(event.globalPos(), self.expfitview.pushButton_2.toolTip())
+        t1 = self.view.pushButton.toolTip()
+        t2 = self.view.pushButton_2.toolTip()
+        self.view.pushButton.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t1)
+        self.view.pushButton_2.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t2)
         #Reset tooltips to avoid overlap of events
-        self.expfitview.pushButton.setToolTip("")
-        self.expfitview.pushButton_2.setToolTip("")
+        self.view.pushButton.setToolTip("")
+        self.view.pushButton_2.setToolTip("")
 
         #Events
-        self.signal = Signal()
-        self.expfitview.buttonBox.accepted.connect(self.exp_fit_parameters)
+        self.trigger = Signal()
+        self.view.buttonBox.accepted.connect(self.update_parameters)
 
 
-    def exp_fit_parameters(self):
-        self.fit_method = self.expfitview.comboBox.currentText()
-        self.threshold = self.expfitview.lineEdit.text()
-        self.signal.compute_signal.emit()
+    def update_parameters(self):
+        self.fit_method = self.view.comboBox.currentText()
+        self.threshold = self.view.lineEdit.text()
+        self.trigger.signal.emit()
 
 
     def show(self):

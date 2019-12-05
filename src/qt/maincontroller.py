@@ -1,17 +1,14 @@
-from src.qt.expfitcontroller import ExpFitController, WorkerExpFit
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
-import src.imageio as io
 import os
 import numpy as np
+
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from src.qt.signal import Signal
+
+from src.qt.expfitcontroller import ExpFitController, WorkerExpFit
+from src.qt.nlmeanscontroller import NLMeansController, WorkerNLMeans
+import src.imageio as io
 import src.exponentialfit as expfit
-from threading import Thread
-
-class Signal(QObject):
-    signal = pyqtSignal()
-
-    def trigger(self):
-        self.signal.emit()
 
 
 class MainController:
@@ -23,15 +20,18 @@ class MainController:
         self.sig_abort_workers = Signal()
 
         self.expfitcontroller = ExpFitController(mainview)
-        self.expfitcontroller.signal.compute_signal.connect(self.exp_fit_estimation)
+        self.expfitcontroller.trigger.signal.connect(self.exp_fit_estimation)
+
+        self.nlmeanscontroller = NLMeansController(mainview)
+        self.nlmeanscontroller.trigger.signal.connect(self.nl_means_denoising)
 
         self.mainview.actionExit.triggered.connect(self.exit_app)
         self.mainview.actionBruker_directory.triggered.connect(self.open_bruker)
         self.mainview.actionNifti.triggered.connect(self.open_nifti)
         self.mainview.actionSave.triggered.connect(self.save_nifti)
         self.mainview.actionExponential_fitting.triggered.connect(self.expfitcontroller.show)
-        self.mainview.actionDenoising_NL_means.triggered.connect(self.display_nl_means)
-        self.mainview.actionDenoising_TPC.triggered.connect(self.display_tpc)
+        self.mainview.actionDenoising_NL_means.triggered.connect(self.nlmeanscontroller.show)
+        # self.mainview.actionDenoising_TPC.triggered.connect(self.display_tpc)
 
         self.mainview.stopButton.clicked.connect(self.abort_computation)
         self.mainview.combobox.activated[str].connect(self.choose_image)
@@ -79,7 +79,7 @@ class MainController:
         except Exception as e:
             print(e)
         else:
-            self.filename = os.path.split(filename)[1]
+            root, self.filename = os.path.split(filename)
             self.filename = self.filename.replace('.nii', '')
             self.filename = self.filename.replace('.gz', '')
             self.img_data = img.get_fdata()
@@ -87,7 +87,7 @@ class MainController:
             self.mainview.combobox.setCurrentIndex(self.mainview.combobox.findText(self.filename))
             self.choose_image(self.filename)
         try:
-            metadata = io.open_metadata(filename)
+            metadata = io.open_metadata(root + os.path.sep + self.filename + "_visu_pars.npy")
         except Exception as e:
             print("No metadata or echotimes")
             answer, _ = QtWidgets.QInputDialog.getText(None, "No echotimes found", "Echotimes separated by a semi-colon", QtWidgets.QLineEdit.Normal, "")
@@ -136,6 +136,7 @@ class MainController:
                 print("Automatic threshold with gaussian mixture")
                 threshold = None
             finally:
+                self.update_progressbar(0)
                 lreg = True
                 n=1
                 if fit_method != "Linear regression":
@@ -146,7 +147,7 @@ class MainController:
                         n=2
                     else:
                         n=3
-                worker = WorkerExpFit(maincontroller=self, threshold=threshold, lreg=lreg, n=n)
+                worker = WorkerExpFit(img_data=self.img_data, echotime=self.echotime, threshold=threshold, lreg=lreg, n=n)
                 thread = QThread()
                 worker.moveToThread(thread)
                 worker.signal_start.connect(self.mainview.show_run)
@@ -157,27 +158,58 @@ class MainController:
                 thread.start()
                 self.threads.append((thread, worker))
 
+    def nl_means_denoising(self):
+        size = self.nlmeanscontroller.patch_size
+        distance = self.nlmeanscontroller.patch_distance
+        spread = self.nlmeanscontroller.noise_spread
+        outname = self.config['default']['NifTiDir']
+
+        if self.img_data is not None:
+            try:
+                size = int(size)
+                distance = int(distance)
+                spread = float(spread)
+            except:
+                print("Defaulting.")
+                size = 5
+                distance = 6
+                spread = 1.5
+            finally:
+                self.update_progressbar(0)
+                worker = WorkerNLMeans(img_data=self.img_data, patch_size=size, patch_distance=distance, noise_spread=spread)
+                thread = QThread()
+                worker.moveToThread(thread)
+                worker.signal_start.connect(self.mainview.show_run)
+                worker.signal_end.connect(self.end_denoise)
+                worker.signal_progress.connect(self.update_progressbar)
+                self.sig_abort_workers.signal.connect(worker.abort)
+                thread.started.connect(worker.work)
+                thread.start()
+                self.threads.append((thread, worker))
+
+    def end_denoise(self, denoised, number):
+        self.mainview.hide_run()
+        out_name = "denoised_"+ str(number)
+        self.add_image(denoised, out_name)
+        self.choose_image(out_name)
+
     def update_progressbar(self, progress):
         self.mainview.progressBar.setValue(progress)
 
     def end_expfit(self, density, t2, number):
         self.mainview.hide_run()
-        self.add_image(density, "density_" + str(number))
-        self.add_image(t2, "t2_" + str(number))
-        self.choose_image("density_" + str(number))
+        density_name = "density_" + str(number)
+        t2_name = "t2_" + str(number)
+        self.add_image(density, density_name)
+        self.add_image(t2, t2_name)
+        self.choose_image(density_name)
 
     def abort_computation(self):
-        self.sig_abort_workers.trigger()
+        self.sig_abort_workers.signal.emit()
         for thread, worker in self.threads:
             thread.quit()
             thread.wait()
         self.mainview.hide_run()
-
-    def display_nl_means(self):
-        pass
-
-    def display_tpc(self):
-        pass
 
     def add_image(self, image, name):
         self.mainview.combobox.addItem(name)
