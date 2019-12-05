@@ -74,6 +74,9 @@ class ImageViewExtended(pg.ImageView):
         
         self.threads = []
 
+        self.mouse_x = 0
+        self.mouse_y = 0
+
 
     def hide_partial(self):
         self.ui.roiBtn.hide()
@@ -96,16 +99,36 @@ class ImageViewExtended(pg.ImageView):
     def on_hover_image(self, evt):
         pos = evt
         mousePoint = self.view.mapSceneToView(pos)
-        x = int(mousePoint.x())
-        y = int(mousePoint.y())
+        self.mouse_x = int(mousePoint.x())
+        self.mouse_y = int(mousePoint.y())
         image = self.imageDisp
         if image is None:
             return
-        if x >= 0 and x < image.shape[2] and y >= 0 and y < image.shape[1]:
-            t = self.currentIndex
-            self.label.setText("<span>(%d, %d): </span><span style='font-weight: bold; color: green;'>%0.3f</span>" % (x, y, image[(t,y,x)]))
+        self.update_label()
 
+    def update_label(self):
+        if not (self.mouse_x >= 0 and self.mouse_x < self.imageDisp.shape[-1] and
+            self.mouse_y >= 0 and self.mouse_y < self.imageDisp.shape[-2]):
+            self.mouse_x = 0
+            self.mouse_y = 0
+        self.display_label()
 
+    def display_label(self):
+        position = "(" + str(self.mouse_x) + ", " + str(self.mouse_y)
+        if self.imageDisp.ndim == 2:
+            value = self.imageDisp[(self.mouse_y, self.mouse_x)]
+        if self.imageDisp.ndim == 3:
+            position += ", " + str(self.currentIndex) + ")"
+            value = str(self.imageDisp[(self.currentIndex,self.mouse_y,self.mouse_x)])
+        self.label.setText("<span>" + position + "</span><span style='font-weight:bold; color: green;'>: " + value + "</span>")
+
+    def setCurrentIndex(self, ind):
+        super().setCurrentIndex(ind)
+        self.update_label()
+
+    def timeLineChanged(self):
+        super().timeLineChanged()
+        self.update_label()
 
     def getProcessedImage(self):
         if self.imageDisp is None:

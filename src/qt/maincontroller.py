@@ -7,6 +7,7 @@ from src.qt.signal import Signal
 
 from src.qt.expfitcontroller import ExpFitController, WorkerExpFit
 from src.qt.nlmeanscontroller import NLMeansController, WorkerNLMeans
+from src.qt.tpccontroller import TPCController, WorkerTPC
 import src.imageio as io
 import src.exponentialfit as expfit
 
@@ -25,13 +26,16 @@ class MainController:
         self.nlmeanscontroller = NLMeansController(mainview)
         self.nlmeanscontroller.trigger.signal.connect(self.nl_means_denoising)
 
+        self.tpccontroller = TPCController(mainview)
+        self.tpccontroller.trigger.signal.connect(self.tpc_denoising)
+
         self.mainview.actionExit.triggered.connect(self.exit_app)
         self.mainview.actionBruker_directory.triggered.connect(self.open_bruker)
         self.mainview.actionNifti.triggered.connect(self.open_nifti)
         self.mainview.actionSave.triggered.connect(self.save_nifti)
         self.mainview.actionExponential_fitting.triggered.connect(self.expfitcontroller.show)
         self.mainview.actionDenoising_NL_means.triggered.connect(self.nlmeanscontroller.show)
-        # self.mainview.actionDenoising_TPC.triggered.connect(self.display_tpc)
+        self.mainview.actionDenoising_TPC.triggered.connect(self.tpccontroller.show)
 
         self.mainview.stopButton.clicked.connect(self.abort_computation)
         self.mainview.combobox.activated[str].connect(self.choose_image)
@@ -40,6 +44,8 @@ class MainController:
         self.images = {}
         self.mainview.hide_run()
         self.threads = []
+        self.img_data = None
+        self.echotime = None
 
     def open_bruker(self):
         """
@@ -187,14 +193,38 @@ class MainController:
                 thread.start()
                 self.threads.append((thread, worker))
 
-    def end_denoise(self, denoised, number):
-        self.mainview.hide_run()
-        out_name = "denoised_"+ str(number)
-        self.add_image(denoised, out_name)
-        self.choose_image(out_name)
+    def tpc_denoising(self):
+        """
+        Temporal phase correction
+        see tpc.correct_phase_temporally
+        """
+        order = self.tpccontroller.polynomial_order
+        threshold = self.tpccontroller.threshold
+        outname = self.config['default']['NifTiDir']
+        if self.img_data is not None:
+            try:
+                order = int(order)
+                threshold = int(threshold)
+            except:
+                print("Defaulting to order=4 and noise=0")
+                order = 4
+                threshold = 0
+            finally:
+                self.update_progressbar(0)
+                worker = WorkerTPC(img_data=self.img_data, echotime=self.echotime, order=order, threshold=threshold)
+                thread = QThread()
+                worker.moveToThread(thread)
+                worker.signal_start.connect(self.mainview.show_run)
+                worker.signal_end.connect(self.end_tpc)
+                worker.signal_progress.connect(self.update_progressbar)
+                self.sig_abort_workers.signal.connect(worker.abort)
+                thread.started.connect(worker.work)
+                thread.start()
+                self.threads.append((thread, worker))
 
     def update_progressbar(self, progress):
         self.mainview.progressBar.setValue(progress)
+
 
     def end_expfit(self, density, t2, number):
         self.mainview.hide_run()
@@ -203,6 +233,25 @@ class MainController:
         self.add_image(density, density_name)
         self.add_image(t2, t2_name)
         self.choose_image(density_name)
+
+    def end_denoise(self, denoised, number):
+        self.mainview.hide_run()
+        out_name = "denoised_"+ str(number)
+        self.add_image(denoised, out_name)
+        self.choose_image(out_name)
+
+    def end_tpc(self, real, imaginary, magnitude, phase, number):
+        self.mainview.hide_run()
+        real_name = "real_" + str(number)
+        imaginary_name = "imaginary_" + str(number)
+        magnitude_name = "magnitude_" + str(number)
+        phase_name = "phase_" + str(number)
+        self.add_image(real, real_name)
+        self.add_image(imaginary, imaginary_name)
+        self.add_image(magnitude, magnitude_name)
+        self.add_image(phase, phase_name)
+        self.choose_image(real_name)
+
 
     def abort_computation(self):
         self.sig_abort_workers.signal.emit()
