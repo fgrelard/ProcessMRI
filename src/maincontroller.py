@@ -11,6 +11,7 @@ from src.tpccontroller import TPCController, WorkerTPC
 import src.imageio as io
 import src.exponentialfit as expfit
 
+import webbrowser
 
 class MainController:
 
@@ -36,6 +37,7 @@ class MainController:
         self.mainview.actionExponential_fitting.triggered.connect(self.expfitcontroller.show)
         self.mainview.actionDenoising_NL_means.triggered.connect(self.nlmeanscontroller.show)
         self.mainview.actionDenoising_TPC.triggered.connect(self.tpccontroller.show)
+        self.mainview.actionUser_manual_FR.triggered.connect(lambda event : webbrowser.open_new('file://' + os.path.realpath('docs/manual.pdf')))
 
         self.mainview.stopButton.clicked.connect(self.abort_computation)
         self.mainview.combobox.activated[str].connect(self.choose_image)
