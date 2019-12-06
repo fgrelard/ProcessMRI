@@ -91,10 +91,20 @@ class ImageViewExtended(pg.ImageView):
         self.ui.gridLayout_2.addWidget(self.ui.normTimeRangeCheck, 1, 2, 1, 1)
 
     def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True):
+        previousIndex = self.currentIndex
+        is_shown = False
+        if self.imageDisp is not None:
+            previousShape = self.imageDisp.shape
+            is_shown = True
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
         self.ui.roiPlot.setMouseEnabled(True, True)
         max_t = img.shape[0]
         self.normRgn.setRegion((1, max_t//2))
+        if not is_shown:
+            return
+        if previousIndex < self.imageDisp.shape[0]:
+            self.setCurrentIndex(previousIndex)
+
 
     def on_hover_image(self, evt):
         pos = evt
