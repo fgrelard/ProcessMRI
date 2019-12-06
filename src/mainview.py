@@ -7,7 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QFrame
 import src.ImageViewExtended as ive
 
 
@@ -26,6 +26,7 @@ class Ui_MainView(object):
         self.stopButton = QtWidgets.QPushButton(self.gridLayoutWidget)
 
         self.textEdit = QtWidgets.QTextEdit(self.gridLayoutWidget)
+        self.textEdit.setFrameStyle(QFrame.NoFrame)
         self.labelCombo = QtWidgets.QLabel(self.gridLayoutWidget)
         self.horizontalSpace = QtWidgets.QSpacerItem(20, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Maximum)
         self.combobox = QtWidgets.QComboBox(self.gridLayoutWidget)
@@ -180,7 +181,7 @@ class Ui_MainView(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">- denoising with temporal phase correction</p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">- denoising with non-local means</p></body></html>"))
         self.textEdit.setStyleSheet("background: rgba(0,0,0,0%)")
-        self.textEdit.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        self.textEdit.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.menuFile.setTitle(_translate("MainView", "File"))
         self.menuOpen.setTitle(_translate("MainView", "Open"))
         self.menuProcess.setTitle(_translate("MainView", "Process"))
