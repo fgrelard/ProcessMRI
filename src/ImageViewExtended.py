@@ -98,12 +98,17 @@ class ImageViewExtended(pg.ImageView):
             is_shown = True
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
         self.ui.roiPlot.setMouseEnabled(True, True)
+        self.ui.roiPlot.wheelEvent = self.roi_scroll_bar
         max_t = img.shape[0]
         self.normRgn.setRegion((1, max_t//2))
         if not is_shown:
             return
         if previousIndex < self.imageDisp.shape[0]:
             self.setCurrentIndex(previousIndex)
+
+    def roi_scroll_bar(self, ev):
+        new_index = self.currentIndex + 1 if ev.angleDelta().y() < 0 else self.currentIndex - 1
+        self.setCurrentIndex(new_index)
 
 
     def on_hover_image(self, evt):
