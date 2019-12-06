@@ -51,6 +51,7 @@ class Ui_TPC_View(object):
         self.textEdit.setBaseSize(QtCore.QSize(0, 0))
         self.textEdit.setAutoFillBackground(True)
         self.textEdit.setStyleSheet("background: rgba(0,0,0,0%)")
+        self.textEdit.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("textEdit")
         self.gridLayout.addWidget(self.textEdit, 0, 0, 2, 3)
