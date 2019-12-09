@@ -48,7 +48,7 @@ class WorkerExport(QtCore.QObject):
             QApplication.processEvents()
             if self.is_abort:
                 break
-            self.ive.export(self.path + os.path.sep + str(self.ive.currentIndex) + ".png", indexExportSlice)
+            self.ive.export(self.path + os.path.sep + str(indexExportSlice) + ".png", indexExportSlice)
             indexExportSlice += 1
         self.signal_end.emit()
 
