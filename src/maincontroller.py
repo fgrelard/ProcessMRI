@@ -64,9 +64,13 @@ class MainController:
         self.mainview.actionDenoising_NL_means.triggered.connect(self.nlmeanscontroller.show)
         self.mainview.actionDenoising_TPC.triggered.connect(self.tpccontroller.show)
         self.mainview.actionUser_manual_FR.triggered.connect(lambda event : webbrowser.open_new('file://' + os.path.realpath('docs/manual.pdf')))
-
         self.mainview.stopButton.clicked.connect(self.abort_computation)
         self.mainview.combobox.activated[str].connect(self.choose_image)
+
+        self.mainview.imageview.signal_progress_export.connect(self.update_progressbar)
+        self.mainview.imageview.signal_start_export.connect(self.mainview.show_run)
+        self.mainview.imageview.signal_end_export.connect(self.mainview.hide_run)
+
         self.app.aboutToQuit.connect(self.exit_app)
         self.config = config
         self.images = {}
@@ -339,7 +343,11 @@ class MainController:
         Hides the progress bar and stop button
         """
         self.sig_abort_workers.signal.emit()
+        self.mainview.imageview.signal_abort.emit()
         for thread, worker in self.threads:
+            thread.quit()
+            thread.wait()
+        for thread, worker in self.mainview.imageview.threads:
             thread.quit()
             thread.wait()
         self.mainview.hide_run()

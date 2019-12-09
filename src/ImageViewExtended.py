@@ -22,7 +22,9 @@ class WorkerExport(QtCore.QObject):
     Worker for the export of all the slices
     corresponding to the image
     """
+    signal_start = QtCore.pyqtSignal()
     signal_end = QtCore.pyqtSignal()
+    signal_progress = QtCore.pyqtSignal(int)
 
     def __init__(self, ive, path):
         """
@@ -44,12 +46,16 @@ class WorkerExport(QtCore.QObject):
         Export function with progress value signalled
         """
         indexExportSlice = 0
-        while indexExportSlice < self.ive.imageDisp.shape[0]:
+        length = self.ive.imageDisp.shape[0]
+        self.signal_start.emit()
+        while indexExportSlice < length:
             QApplication.processEvents()
             if self.is_abort:
                 break
             self.ive.export(self.path + os.path.sep + str(indexExportSlice) + ".png", indexExportSlice)
             indexExportSlice += 1
+            progress = float(indexExportSlice / length * 100)
+            self.signal_progress.emit(progress)
         self.signal_end.emit()
 
     def abort(self):
@@ -93,6 +99,9 @@ class ImageViewExtended(pg.ImageView):
     """
 
     signal_abort = QtCore.pyqtSignal()
+    signal_progress_export = QtCore.pyqtSignal(int)
+    signal_start_export = QtCore.pyqtSignal()
+    signal_end_export = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, name="ImageView", view=None, imageItem=None, *args):
         pg.setConfigOptions(imageAxisOrder='row-major')
@@ -381,6 +390,9 @@ class ImageViewExtended(pg.ImageView):
         thread = QtCore.QThread()
         worker.moveToThread(thread)
         worker.signal_end.connect(self.reset_index)
+        worker.signal_start.connect(self.signal_start_export.emit)
+        worker.signal_end.connect(self.signal_end_export.emit)
+        worker.signal_progress.connect(lambda progress: self.signal_progress_export.emit(progress))
         self.signal_abort.connect(worker.abort)
         thread.started.connect(worker.work)
         thread.start()
