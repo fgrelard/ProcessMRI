@@ -7,12 +7,17 @@ import sys
 import configparser
 import os
 
+# For high DPI screens
 if hasattr(QtCore.Qt, 'AA_EnableHighDpiScaling'):
     QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 if hasattr(QtCore.Qt, 'AA_UseHighDpiPixmaps'):
     QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
 class AppWindow(QMainWindow):
+    """
+    Main window class
+    Sets up the main widget
+    """
     def __init__(self):
         super().__init__()
         self.ui = Ui_MainView()

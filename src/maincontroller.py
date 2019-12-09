@@ -14,8 +14,34 @@ import src.exponentialfit as expfit
 import webbrowser
 
 class MainController:
+    """
+    Main controller connecting all controllers and events
 
+    Attributes
+    ----------
+    app: QApplication
+        application
+    mainview: AppWindow
+        QMainWindow
+    config: configparser.ConfigParser
+        configuration file
+    img_data: np.ndarray
+        current displayed image
+    echotimes: np.ndarray
+        sequence of echo times
+    images: dict
+        dictionary mapping filename to open images
+    threads: list
+        thread pool
+    expfitcontroller: ExpFitController
+        controller for expfit dialog
+    nlmeanscontroller: NLMeansController
+        controller for nlmeans dialog
+    tpccontroller: TPCController
+        controller for tpc dialog
+    """
     def __init__(self, app, mainview, config):
+
         self.mainview = mainview.ui
         self.mainview.parent = mainview
         self.app = app
@@ -101,6 +127,9 @@ class MainController:
 
 
     def save_nifti(self):
+        """
+        Saves as Nifti file
+        """
         filename = QtWidgets.QFileDialog.getSaveFileName(self.mainview.centralwidget, "Save Nifti", self.config['default']['NifTiDir'])
         if not filename:
             return
@@ -155,6 +184,10 @@ class MainController:
                 self.threads.append((thread, worker))
 
     def nl_means_denoising(self):
+        """
+        Image denoising through nl means
+        see expfit.denoise_image
+        """
         size = self.nlmeanscontroller.patch_size
         distance = self.nlmeanscontroller.patch_distance
         spread = self.nlmeanscontroller.noise_spread
@@ -213,10 +246,35 @@ class MainController:
                 self.threads.append((thread, worker))
 
     def update_progressbar(self, progress):
+        """
+        Updates the progress bar each time
+        An iteration in a controller has passed
+
+        Parameters
+        ----------
+        progress: int
+            progress value (/100)
+
+        """
         self.mainview.progressBar.setValue(progress)
 
 
     def end_expfit(self, density, t2, number):
+        """
+        Callback function called when expfit end signal
+        is emitted
+        Adds two new images to the view :
+        density and T2*
+
+        Parameters
+        ----------
+        density: np.ndarray
+            density image
+        t2: np.ndarray
+            t2 image
+        number: int
+            image number
+        """
         self.mainview.hide_run()
         density_name = "density_" + str(number)
         t2_name = "t2_" + str(number)
@@ -225,12 +283,44 @@ class MainController:
         self.choose_image(density_name)
 
     def end_denoise(self, denoised, number):
+        """
+        Callback function called when denoise end signal
+        is emitted
+        Adds a new image: denoised
+
+        Parameters
+        ----------
+        denoised: np.ndarray
+            denoised image
+        number: int
+            image number
+        """
         self.mainview.hide_run()
         out_name = "denoised_"+ str(number)
         self.add_image(denoised, out_name)
         self.choose_image(out_name)
 
     def end_tpc(self, real, imaginary, magnitude, phase, number):
+        """
+        Callback function called when tpc end signal
+        is emitted
+
+        Adds four new images: real, imaginary,
+        phase and magnitude tpc corrected images
+
+        Parameters
+        ----------
+        real: np.ndarray
+            real image
+        imaginary: np.ndarray
+            imaginary image
+        magnitude: np.ndarray
+            magnitude image
+        phase: np.ndarray
+            phase image
+        number: int
+            image number
+        """
         self.mainview.hide_run()
         real_name = "real_" + str(number)
         imaginary_name = "imaginary_" + str(number)
@@ -244,6 +334,10 @@ class MainController:
 
 
     def abort_computation(self):
+        """
+        Stops any computation in progress
+        Hides the progress bar and stop button
+        """
         self.sig_abort_workers.signal.emit()
         for thread, worker in self.threads:
             thread.quit()
@@ -251,10 +345,31 @@ class MainController:
         self.mainview.hide_run()
 
     def add_image(self, image, name):
+        """
+        Adds an image to the combobox
+        and to the self.images dictionary
+
+        Parameters
+        ----------
+        image: np.ndarray
+            the image
+        name: str
+            combobox name
+
+        """
         self.mainview.combobox.addItem(name)
         self.images[name] = image
 
     def choose_image(self, name):
+        """
+        Choose an image among available image
+        The name must be in self.images
+
+        Parameters
+        ----------
+        name: str
+            name of the image, must be in self.images.keys()
+        """
         if name == "No image":
             return
         if name not in self.images:
@@ -265,6 +380,15 @@ class MainController:
         self.mainview.imageview.setImage(vis)
 
     def image_to_visualization(self, img):
+        """
+        Modifies the image so it can be rendered
+        Converts n-D image to 3D
+
+        Parameters
+        ----------
+        img: np.ndarray
+            n-D image loaded by the imageio module
+        """
         img2 = np.reshape(img, (img.shape[0], img.shape[1]) + (-1,), order='F')
         img2 = img2.transpose()
         return img2

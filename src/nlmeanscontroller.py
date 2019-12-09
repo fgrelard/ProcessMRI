@@ -7,9 +7,33 @@ import src.exponentialfit as expfit
 
 
 class WorkerNLMeans(QtCore.QObject):
+    """
+    Worker class for the NL means denoising
+    Instances of this class can be moved to a thread
 
+    Attributes
+    ----------
+    img_data: np.ndarray
+        the image
+    patch_size: int
+        size of the patch n*n
+    patch_distance: int
+        distance in pixels to search for patch
+    noise_spread: float
+        multiplication factor for estimated noise variance
+    is_abort: bool
+        whether the computation was aborted and should be stopped
+    """
+
+    #PyQt5 signals
+    #Signal emitted at the start of the computation
     signal_start = QtCore.pyqtSignal()
+
+    #Signal emitted at the end of the computation
     signal_end = QtCore.pyqtSignal(np.ndarray, int)
+
+    #Signal emitted during the computation, to keep
+    #track of its progress
     signal_progress = QtCore.pyqtSignal(int)
     number = 1
 
@@ -23,6 +47,11 @@ class WorkerNLMeans(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def work(self):
+        """
+        Computation of NL means denoising
+
+        Analogous to expfit.denoise_image
+        """
         self.signal_start.emit()
         denoised = np.zeros_like(self.img_data)
         dim = len(self.img_data.shape)
@@ -47,6 +76,16 @@ class WorkerNLMeans(QtCore.QObject):
         self.is_abort = True
 
 class NLMeansController:
+    """
+    Controller handling the NLMeansView dialog
+
+    Attributes
+     ----------
+     view: Ui_NLMeans_View
+        the view
+     trigger: Signal
+        signal raised when clicking on the "OK" button
+     """
     def __init__(self, parent):
         self.dialog = QDialog(parent)
 
@@ -77,6 +116,9 @@ class NLMeansController:
 
 
     def update_parameters(self):
+        """
+        Gets the values in the GUI and updates the attributes
+        """
         self.patch_size = self.view.lineEdit.text()
         self.patch_distance = self.view.lineEdit_2.text()
         self.noise_spread = self.view.lineEdit_3.text()

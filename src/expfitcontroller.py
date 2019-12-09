@@ -7,9 +7,37 @@ import src.exponentialfit as expfit
 
 
 class WorkerExpFit(QtCore.QObject):
+    """
+    Worker class for the exponential fitting
+    Instances of this class can be moved to a thread
 
+    Attributes
+    ----------
+    img_data: np.ndarray
+        the image
+    echotime: np.ndarray
+        echotimes
+    parent: QWidget
+        parent widget
+    threshold: int
+        threshold for exponential fitting
+    lreg: bool
+        whether to use linear regression or nnls
+    n: int
+        number of exponentials
+    is_abort: bool
+        whether the computation was aborted and should be stopped
+    """
+
+    #PyQt5 signals
+    #Signal emitted at the start of the computation
     signal_start = QtCore.pyqtSignal()
+
+    #Signal emitted at the end of the computation
     signal_end = QtCore.pyqtSignal(np.ndarray, np.ndarray, int)
+
+    #Signal emitted during the computation, to keep
+    #track of its progress
     signal_progress = QtCore.pyqtSignal(int)
     number = 1
 
@@ -24,6 +52,11 @@ class WorkerExpFit(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def work(self):
+        """
+        Computation of exponential fitting
+
+        Analogous to expfit.exponentialfit_image
+        """
         self.signal_start.emit()
         echotime = self.echotime
         image = self.img_data
@@ -33,7 +66,7 @@ class WorkerExpFit(QtCore.QObject):
         density_data = np.zeros(shape=image.shape[:-1])
         t2_data = np.zeros(shape=image.shape[:-1])
 
-    #Auto threshold with mixture of gaussian (EM alg.)
+        #Auto threshold with mixture of gaussian (EM alg.)
         if threshold is None:
             threshold = expfit.auto_threshold_gmm(np.expand_dims(image[...,0].ravel(), 1), 3)
 
@@ -58,6 +91,7 @@ class WorkerExpFit(QtCore.QObject):
             progress = float(index/length*100)
             self.signal_progress.emit(progress)
         if not self.is_abort:
+            #Send images as a signal
             self.signal_end.emit(density_data, t2_data, WorkerExpFit.number)
             WorkerExpFit.number += 1
 
@@ -66,6 +100,16 @@ class WorkerExpFit(QtCore.QObject):
         self.is_abort = True
 
 class ExpFitController:
+    """
+    Controller handling the ExpFitView dialog
+
+    Attributes
+    ----------
+    view: Ui_ExpFit_View
+        the view
+    trigger: Signal
+        signal raised when clicking on the "OK" button
+    """
     def __init__(self, parent):
         self.dialog = QDialog(parent)
 
@@ -91,6 +135,9 @@ class ExpFitController:
 
 
     def update_parameters(self):
+        """
+        Gets the values in the GUI and updates the attributes
+        """
         self.fit_method = self.view.comboBox.currentText()
         self.threshold = self.view.lineEdit.text()
         self.trigger.signal.emit()

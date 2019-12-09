@@ -178,10 +178,33 @@ def bruker2nifti(input_name, output_name=None):
 
 
 def save_nifti(img, filename):
+    """
+    Save numpy to NIFTI
+
+    Parameters
+    ----------
+    img: np.ndarray
+        the image
+    filename: str
+        the filename
+
+    """
     nibimg = nib.Nifti1Image(img, np.eye(4))
     nibimg.to_filename(filename)
 
 def save_nifti_with_metadata(img, echotime, filename):
+    """
+    Save numpy to NIFTI and saves echotimes to numpy format
+
+    Parameters
+    ----------
+    img: np.ndarray
+        the image
+    echotime: np.ndarray
+        the echotimes
+    filename: str
+        the image name, used as well for echotimes
+    """
     root, ext = os.path.splitext(filename)
     image_name = root + ".nii"
     metadata_name = root + "_visu_pars.npy"

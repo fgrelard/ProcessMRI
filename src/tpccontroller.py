@@ -8,9 +8,33 @@ import src.compleximage as ci
 import cmath
 
 class WorkerTPC(QtCore.QObject):
+    """
+    Worker class for TPC
+    Instances of this class can be moved to a thread
 
+    Attributes
+    ----------
+    img_data: np.ndarray
+        the image
+    echotime: np.ndarray
+        echotimes
+    order: int
+        polynomial order
+    threshold: int
+        threshold for exponential fitting
+    is_abort: bool
+        whether the computation was aborted and should be stopped
+    """
+
+    #PyQt5 signals
+    #Signal emitted at the start of the computation
     signal_start = QtCore.pyqtSignal()
+
+    #Signal emitted at the end of the computation
     signal_end = QtCore.pyqtSignal(np.ndarray, np.ndarray, np.ndarray, np.ndarray, int)
+
+    #Signal emitted during the computation, to keep
+    #track of its progress
     signal_progress = QtCore.pyqtSignal(int)
     number = 1
 
@@ -24,6 +48,11 @@ class WorkerTPC(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def work(self):
+        """
+        Computation of exponential fitting
+
+        Analogous to tpc.correct_phase_temporally
+        """
         self.signal_start.emit()
         out_img_data = np.zeros(shape=(self.img_data.shape[:-1]+ (self.img_data.shape[-1]//2, )), dtype=complex)
         ri = self.img_data.shape[-1]
@@ -75,6 +104,16 @@ class WorkerTPC(QtCore.QObject):
         self.is_abort = True
 
 class TPCController:
+    """
+    Controller handling the TPCView dialog
+
+    Attributes
+    ----------
+    view: Ui_TPC_View
+        the view
+    trigger: Signal
+        signal raised when clicking on the "OK" button
+    """
     def __init__(self, parent):
         self.dialog = QDialog(parent)
 
@@ -101,6 +140,9 @@ class TPCController:
 
 
     def update_parameters(self):
+        """
+        Gets the values in the GUI and updates the attributes
+        """
         self.polynomial_order = self.view.lineEdit.text()
         self.threshold = self.view.lineEdit_2.text()
         self.trigger.signal.emit()

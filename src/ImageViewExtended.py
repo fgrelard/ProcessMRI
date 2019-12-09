@@ -1,7 +1,11 @@
 import pyqtgraph as pg
 import numpy as np
 import matplotlib
+
+#Allows to use QThreads without freezing
+#the main application
 matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -11,10 +15,24 @@ from PyQt5.QtWidgets import QMessageBox, QApplication
 import os
 import pyqtgraph as pg
 import time
+
+
 class WorkerExport(QtCore.QObject):
+    """
+    Worker for the export of all the slices
+    corresponding to the image
+    """
     signal_end = QtCore.pyqtSignal()
 
     def __init__(self, ive, path):
+        """
+        Parameters
+        ----------
+        ive: ImageViewExtended
+            the image view
+        path: str
+            path to the filename
+        """
         super().__init__()
         self.ive = ive
         self.path = path
@@ -22,7 +40,9 @@ class WorkerExport(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def work(self):
-
+        """
+        Export function with progress value signalled
+        """
         indexExportSlice = 0
         while indexExportSlice < self.ive.imageDisp.shape[0]:
             QApplication.processEvents()
@@ -38,6 +58,15 @@ class WorkerExport(QtCore.QObject):
 
 
 def addNewGradientFromMatplotlib( name):
+    """
+    Generic function to add a gradient from a
+    matplotlib colormap
+
+    Parameters
+    ----------
+    name: str
+        name of matplotlib colormap
+    """
     gradient = cm.get_cmap(name)
     L = []
     nb = 10
@@ -48,6 +77,20 @@ def addNewGradientFromMatplotlib( name):
     pg.graphicsItems.GradientEditorItem.Gradients[name] = {'ticks':L, 'mode': 'rgb'}
 
 class ImageViewExtended(pg.ImageView):
+    """
+    Image view extending pyqtgraph.ImageView
+
+    Attributes
+    ----------
+    label: pg.LabelItem
+        Display pixel values and positions
+    threads: list
+        List of threads
+    mouse_x: int
+        Mouse position x
+    mouse_y: int
+        Mouse position y
+    """
 
     signal_abort = QtCore.pyqtSignal()
 
@@ -79,6 +122,9 @@ class ImageViewExtended(pg.ImageView):
 
 
     def hide_partial(self):
+        """
+        Hide some elements from the parent GUI
+        """
         self.ui.roiBtn.hide()
         self.ui.label_4.hide()
         self.ui.label_8.hide()
@@ -91,27 +137,59 @@ class ImageViewExtended(pg.ImageView):
         self.ui.gridLayout_2.addWidget(self.ui.normTimeRangeCheck, 1, 2, 1, 1)
 
     def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True):
+        """
+        Sets a new image
+
+        When changing an image, tries to keep the old z-index
+
+        Changes the wheel-event from zoom-out
+        to slice change
+        """
+
+        #Saves previous z-index
         previousIndex = self.currentIndex
         is_shown = False
         if self.imageDisp is not None:
             previousShape = self.imageDisp.shape
             is_shown = True
+
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
+
+        #Changes wheel event
         self.ui.roiPlot.setMouseEnabled(True, True)
         self.ui.roiPlot.wheelEvent = self.roi_scroll_bar
         max_t = img.shape[0]
         self.normRgn.setRegion((1, max_t//2))
         if not is_shown:
             return
+        #Shows image at previous z-index if in range
         if previousIndex < self.imageDisp.shape[0]:
             self.setCurrentIndex(previousIndex)
 
     def roi_scroll_bar(self, ev):
+        """
+        Changes the z-index of the 3D image
+        when scrolling the z-bar
+
+        Parameters
+        ----------
+        ev: QWheelEvent
+            the wheel event
+        """
         new_index = self.currentIndex + 1 if ev.angleDelta().y() < 0 else self.currentIndex - 1
         self.setCurrentIndex(new_index)
 
 
     def on_hover_image(self, evt):
+        """
+        Updates the mouse positions and pixel values
+        when hovering over the image
+
+        Parameters
+        ----------
+        evt: QMouseEvent
+            the mouse event
+        """
         pos = evt
         mousePoint = self.view.mapSceneToView(pos)
         self.mouse_x = int(mousePoint.x())
@@ -122,13 +200,14 @@ class ImageViewExtended(pg.ImageView):
         self.update_label()
 
     def update_label(self):
+        """
+        Updates the label with mouse position
+        and pixel values relative to the image
+        """
         if not (self.mouse_x >= 0 and self.mouse_x < self.imageDisp.shape[-1] and
             self.mouse_y >= 0 and self.mouse_y < self.imageDisp.shape[-2]):
             self.mouse_x = 0
             self.mouse_y = 0
-        self.display_label()
-
-    def display_label(self):
         position = "(" + str(self.mouse_x) + ", " + str(self.mouse_y)
         if self.imageDisp.ndim == 2:
             value = self.imageDisp[(self.mouse_y, self.mouse_x)]
@@ -136,6 +215,8 @@ class ImageViewExtended(pg.ImageView):
             position += ", " + str(self.currentIndex) + ")"
             value = str(self.imageDisp[(self.currentIndex,self.mouse_y,self.mouse_x)])
         self.label.setText("<span>" + position + "</span><span style='font-weight:bold; color: green;'>: " + value + "</span>")
+
+
 
     def setCurrentIndex(self, ind):
         super().setCurrentIndex(ind)
@@ -163,23 +244,22 @@ class ImageViewExtended(pg.ImageView):
         control panel.
 
         This can be repurposed to process any data through the same filter.
+
+        Makes it so ROI + timeline normalization is the
+        intersection of both as opposed to timeline being
+        favored in the parent class
         """
         if self.ui.normOffRadio.isChecked():
             return image
 
         div = self.ui.normDivideRadio.isChecked()
         norm = image.view(np.ndarray).copy()
-        #if div:
-            #norm = ones(image.shape)
-        #else:
-            #norm = zeros(image.shape)
         if div:
             norm = norm.astype(np.float32)
 
         if self.ui.normTimeRangeCheck.isChecked() and image.ndim == 3:
             (sind, start) = self.timeIndex(self.normRgn.lines[0])
             (eind, end) = self.timeIndex(self.normRgn.lines[1])
-            #print start, end, sind, eind
             n = image[sind:eind+1].mean(axis=0)
             n.shape = (1,) + n.shape
             if div:
@@ -196,17 +276,18 @@ class ImageViewExtended(pg.ImageView):
                 norm -= n
 
         if self.ui.normROICheck.isChecked() and image.ndim == 3:
+            #If ROI checked, only work on this part of the image
             if self.ui.normTimeRangeCheck.isChecked() and image.ndim == 3:
                 norm = image.view(np.ndarray).copy()
                 if div:
                     norm = norm.astype(np.float32)
                 roi = norm[sind:eind+1]
                 n = self.normRoi.getArrayRegion(roi, self.imageItem, (1, 2)).mean(axis=1).mean(axis=1).mean(axis=0)
+            #Other case : no ROI checked
             else:
                 n = self.normRoi.getArrayRegion(norm, self.imageItem, (1, 2)).mean(axis=1).mean(axis=1)
                 n = n[:,np.newaxis,np.newaxis]
 
-            #print start, end, sind, eind
             if div:
                 norm /= n
             else:
@@ -215,6 +296,20 @@ class ImageViewExtended(pg.ImageView):
         return norm
 
     def export(self, filename, index):
+        """
+        Export image view to file through Matplotlib
+        Saves a scalebar on the side
+        Accepted formats are .pdf, .png and .svg
+
+        Parameters
+        ----------
+        self: type
+            description
+        filename: str
+            image name
+        index: int
+            z-index of the image to save
+        """
         if self.imageDisp.ndim == 2:
             img = self.imageDisp
         else:
@@ -236,7 +331,6 @@ class ImageViewExtended(pg.ImageView):
         plt.colorbar()
         plt.clim(self.levelMin, self.levelMax)
         plt.axis('off')
-        # plt.gca().set_axis_off()
         plt.margins(0,0)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
@@ -246,6 +340,9 @@ class ImageViewExtended(pg.ImageView):
 
 
     def exportClicked(self):
+        """
+        Called when the "Export" button is clicked
+        """
         fileName, image_format = QtGui.QFileDialog.getSaveFileName(self.parentWidget(), "Save image as...", "", "PNG images (.png);;Portable Document Format (.pdf);; Scalable Vector Graphics (.svg)")
         if not fileName:
             return
@@ -268,6 +365,9 @@ class ImageViewExtended(pg.ImageView):
             msg.exec_()
 
     def exportSlicesClicked(self):
+        """
+        Called when the "Export all slices" button is clicked
+        """
         path = QtGui.QFileDialog.getExistingDirectory(self.parentWidget(), "Select a directory", "")
         if len(self.threads) > 0:
             self.signal_abort.emit()
@@ -287,13 +387,21 @@ class ImageViewExtended(pg.ImageView):
         self.threads.append((thread, worker))
 
     def reset_index(self):
+        """
+        Called when the end signal of export slices is emitted
+        """
         self.currentIndex = self.previousIndex
 
-
     def levelsChanged(self):
+        """
+        Called when the levels of the histogram are changed
+        """
         self.levelMin, self.levelMax = self.ui.histogram.getLevels()
 
     def buildMenu(self):
+        """
+        Adds the "Export all slices" option to the menu
+        """
         super().buildMenu()
         self.exportSlicesAction = QtGui.QAction("Export all slices", self.menu)
         self.exportSlicesAction.triggered.connect(self.exportSlicesClicked)
