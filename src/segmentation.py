@@ -4,6 +4,8 @@ from skimage.filters import threshold_otsu, rank
 from skimage.draw import circle
 from skimage.feature import canny
 from skimage import measure
+from skimage.util import img_as_ubyte
+
 import cv2
 import matplotlib.pyplot as plt
 import math
@@ -14,10 +16,11 @@ def detect_circle(image, threshold, min_radius, max_radius):
     cond = np.where(image < threshold)
     image_copy = np.copy(image)
     image_copy[cond] = 0
-    edges = canny(image_copy, sigma=3, low_threshold=10, high_threshold=40)
+    edges = canny(image_copy, sigma=3, low_threshold=10, high_threshold=30)
     # Detect two radii
     hough_radii = np.arange(min_radius, max_radius, 10)
     hough_res = hough_circle(edges, hough_radii)
+    circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, 1, 20, param1=30, param2=30, minRadius=0, maxRadius=0)
 
     # Select the most prominent 3 circles
     accums, cx, cy, radii = hough_circle_peaks(hough_res, hough_radii,
@@ -26,7 +29,21 @@ def detect_circle(image, threshold, min_radius, max_radius):
         return cx[0], cy[0], radii[0]
     return -1, -1, -1
 
-
+def median_circle(image):
+    depth = image.shape[0]
+    L = np.zeros(shape=(depth, 3))
+    for i in range(depth):
+        image_current = image[i, ...]
+        image_current = img_as_ubyte(image_current * 1.0 / image_current.max())
+        threshold = threshold_otsu(image_current)
+        cx, cy, r = detect_circle(image_current, threshold,10,20)
+        L[i, 0] = cx
+        L[i, 1] = cy
+        L[i, 2] = r
+        circx, circy = circle(cx, cy, r, shape=image_current.shape)
+        image_current[circy, circx] = 0
+    cx, cy, r = np.median(L, axis=0)
+    return cx, cy, r
 
 def detect_tube(image, threshold=150, min_radius=10, max_radius=50):
     cy, cx, radii = [], [], []
@@ -41,7 +58,7 @@ def detect_tube(image, threshold=150, min_radius=10, max_radius=50):
     radius = np.median(radii)
     return center_x, center_y, radius
 
-def detect_grain(image):
+def binarize(image):
     threshold = threshold_otsu(image)
     cond = np.where(image > threshold)
     image_copy = np.zeros_like(image)
