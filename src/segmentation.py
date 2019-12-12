@@ -20,7 +20,6 @@ def detect_circle(image, threshold, min_radius, max_radius):
     # Detect two radii
     hough_radii = np.arange(min_radius, max_radius, 10)
     hough_res = hough_circle(edges, hough_radii)
-    circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, 1, 20, param1=30, param2=30, minRadius=0, maxRadius=0)
 
     # Select the most prominent 3 circles
     accums, cx, cy, radii = hough_circle_peaks(hough_res, hough_radii,
@@ -45,18 +44,11 @@ def median_circle(image):
     cx, cy, r = np.median(L, axis=0)
     return cx, cy, r
 
-def detect_tube(image, threshold=150, min_radius=10, max_radius=50):
-    cy, cx, radii = [], [], []
-    for i in range(image.shape[0]):
-        center_x, center_y, radius = detect_circle(image[i, :,:], threshold, min_radius, max_radius)
-        if center_y >= 0:
-            cy.append(center_y)
-            cx.append(center_x)
-            radii.append(radius)
-    center_y = np.median(cy)
-    center_x = np.median(cx)
-    radius = np.median(radii)
-    return center_x, center_y, radius
+def remove_circle(image, cx, cy, r):
+    circx, circy = circle(cx, cy, r, shape=image[0,...].shape)
+    image[..., circy, circx] = 0
+    return image
+
 
 def binarize(image):
     threshold = threshold_otsu(image)
@@ -255,6 +247,8 @@ def neighbors(im, p, d=1):
     i = p[1]
     j = p[0]
     n = im[i-d:i+d+1, j-d:j+d+1].copy()
+    if n.size != 9:
+        return None
     return n
 
 def find_local_maximum_dt(dt, point, r=1):
@@ -263,14 +257,17 @@ def find_local_maximum_dt(dt, point, r=1):
     is_max = True
     while index != (0,0) and is_max:
         n = neighbors(dt, new_point, r)
+        if n is None:
+            break
         center_value = n[r, r]
         n[r, r] = 0
         max_dt = np.amax(n)
         index = np.unravel_index(np.argmax(n.T, axis=None), n.shape)
         index = tuple(x - r for x in index)
-        is_max = (max_dt >= center_value)
+        is_max = (max_dt > center_value)
         if is_max:
-            new_point = tuple(int(x + y) for x, y in zip(new_point, index))
+            new_point = tuple(x + y for x, y in zip(new_point, index))
+    new_point = tuple(int(x) for x in new_point)
     return new_point
 
 def detect_cavity(image):
@@ -287,3 +284,26 @@ def detect_cavity(image):
     seg_array = sitk.GetArrayFromImage(seg)
     seg_array = ndi.morphology.binary_fill_holes(seg_array)
     return seg_array
+
+
+def detect_grain_3D(image):
+    image_copy = image.copy()
+    depth = image.shape[0]
+    image8 = img_as_ubyte(image_copy * 1.0 / image_copy.max())
+    for i in range(depth):
+        binarized = binarize(image8[i, ...])
+        grain = largest_connected_component(binarized)
+        cond = (i, ) + np.where(grain == 0)
+        image_copy[cond] = 0
+    return image_copy
+
+
+def detect_cavity_3D(image):
+    image_copy = image.copy()
+    depth = image.shape[0]
+    image8 = img_as_ubyte(image * 1.0 / image.max())
+    for i in range(depth):
+        cavity = detect_cavity(image8[i, ...])
+        cond = (i, ) + np.where(cavity == 0)
+        image_copy[cond] = 0
+    return image_copy

@@ -26,23 +26,15 @@ img_data = img.get_fdata()
 image = np.reshape(img_data, (img_data.shape[0], img_data.shape[1]) + (-1,), order='F')
 image = image.transpose(2, 1, 0)
 
-image8 = img_as_ubyte(image * 1.0 / image.max())
-image8 = image8[6, ...]
+
 
 cx, cy, r = segmentation.median_circle(image)
-circx, circy = circle(cx, cy, r, shape=image8.shape)
-image8[circy, circx] = 0
+image = segmentation.remove_circle(image, cx, cy, r+1)
+grain = segmentation.detect_grain_3D(image)
+cavity = segmentation.detect_cavity_3D(grain)
 
-mask = segmentation.binarize(image8)
-grain = segmentation.largest_connected_component(mask)
-cond = np.where(grain == 0)
-
-grain = image8.copy()
-grain[cond] = 0
-plt.imshow(grain)
-plt.show()
-image_display = segmentation.detect_cavity(grain)
-fig, ax = plt.subplots(1, 2)
-ax[0].imshow(image_display, cmap=plt.cm.gray)
-ax[1].imshow(grain)
-plt.show()
+for i in range(cavity.shape[0]):
+    fig, ax = plt.subplots(1, 2)
+    ax[0].imshow(cavity[i, ...])
+    ax[1].imshow(image[i, ...])
+    plt.show()
