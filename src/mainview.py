@@ -42,6 +42,8 @@ class Ui_MainView(object):
 
         self.menuProcess = QtWidgets.QMenu(self.menubar)
 
+        self.menuAnalyze = QtWidgets.QMenu(self.menubar)
+
         self.menuOpen = QtWidgets.QMenu(self.menuFile)
 
         self.actionBruker_directory = QtWidgets.QAction(MainView)
@@ -54,6 +56,10 @@ class Ui_MainView(object):
         self.actionDenoising_TPC = QtWidgets.QAction(MainView)
 
         self.actionNifti = QtWidgets.QAction(MainView)
+
+        self.actionSegmentCavity = QtWidgets.QAction(MainView)
+
+        self.actionSegmentGrain = QtWidgets.QAction(MainView)
 
         self.menuFile = QtWidgets.QMenu(self.menubar)
 
@@ -138,6 +144,7 @@ class Ui_MainView(object):
         self.menuFile.setObjectName("menuFile")
         self.menuOpen.setObjectName("menuOpen")
         self.menuProcess.setObjectName("menuProcess")
+        self.menuAnalyze.setObjectName("menuAnalyze")
         self.menuHelp.setObjectName("menuHelp")
         MainView.setMenuBar(self.menubar)
         self.statusbar.setObjectName("statusbar")
@@ -159,9 +166,12 @@ class Ui_MainView(object):
         self.menuProcess.addAction(self.actionExponential_fitting)
         self.menuProcess.addAction(self.actionDenoising_TPC)
         self.menuProcess.addAction(self.actionDenoising_NL_means)
+        self.menuAnalyze.addAction(self.actionSegmentGrain)
+        self.menuAnalyze.addAction(self.actionSegmentCavity)
         self.menuHelp.addAction(self.actionUser_manual_FR)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuProcess.menuAction())
+        self.menubar.addAction(self.menuAnalyze.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
 
@@ -185,6 +195,7 @@ class Ui_MainView(object):
         self.menuFile.setTitle(_translate("MainView", "File"))
         self.menuOpen.setTitle(_translate("MainView", "Open"))
         self.menuProcess.setTitle(_translate("MainView", "Process"))
+        self.menuAnalyze.setTitle(_translate("MainView", "Analyze"))
         self.menuHelp.setTitle(_translate("MainView", "Help"))
         self.actionSave.setText(_translate("MainView", "Save Nifti"))
         self.actionExit.setText(_translate("MainView", "Exit"))
@@ -193,4 +204,6 @@ class Ui_MainView(object):
         self.actionExponential_fitting.setText(_translate("MainView", "Exponential fitting"))
         self.actionDenoising_TPC.setText(_translate("MainView", "Denoising TPC"))
         self.actionDenoising_NL_means.setText(_translate("MainView", "Denoising NL-means"))
+        self.actionSegmentGrain.setText(_translate("MainView", "Segment grain"))
+        self.actionSegmentCavity.setText(_translate("MainView", "Segment cavity"))
         self.actionUser_manual_FR.setText(_translate("MainView", "User manual (FR)"))

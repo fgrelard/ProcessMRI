@@ -280,9 +280,9 @@ def detect_cavity(image):
     distance = ndi.distance_transform_edt(image_copy)
     distance =  cv2.blur(distance, (3, 3)) # blur the image
     seed = find_local_maximum_dt(distance, point)
-    seg = sitk.ConfidenceConnected(sitk.GetImageFromArray(distance), seedList=[seed], numberOfIterations=1, multiplier=3, initialNeighborhoodRadius=1, replaceValue=255)
+    seg = sitk.ConfidenceConnected(sitk.GetImageFromArray(distance), seedList=[seed], numberOfIterations=1, multiplier=2.5, initialNeighborhoodRadius=1, replaceValue=255)
     seg_array = sitk.GetArrayFromImage(seg)
-    seg_array = ndi.morphology.binary_fill_holes(seg_array)
+    #seg_array = ndi.morphology.binary_fill_holes(seg_array)
     return seg_array
 
 

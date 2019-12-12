@@ -7,6 +7,7 @@ from src.signal import Signal
 
 from src.expfitcontroller import ExpFitController, WorkerExpFit
 from src.nlmeanscontroller import NLMeansController, WorkerNLMeans
+from src.cavitycontroller import CavityController, WorkerCavity
 from src.tpccontroller import TPCController, WorkerTPC
 import src.imageio as io
 import src.exponentialfit as expfit
@@ -56,6 +57,10 @@ class MainController:
         self.tpccontroller = TPCController(mainview.centralWidget())
         self.tpccontroller.trigger.signal.connect(self.tpc_denoising)
 
+
+        self.cavitycontroller = CavityController(mainview.centralWidget())
+        self.cavitycontroller.trigger.signal.connect(self.segment_cavity)
+
         self.mainview.actionExit.triggered.connect(self.exit_app)
         self.mainview.actionBruker_directory.triggered.connect(self.open_bruker)
         self.mainview.actionNifti.triggered.connect(self.open_nifti)
@@ -63,6 +68,7 @@ class MainController:
         self.mainview.actionExponential_fitting.triggered.connect(self.expfitcontroller.show)
         self.mainview.actionDenoising_NL_means.triggered.connect(self.nlmeanscontroller.show)
         self.mainview.actionDenoising_TPC.triggered.connect(self.tpccontroller.show)
+        self.mainview.actionSegmentCavity.triggered.connect(self.cavitycontroller.show)
         self.mainview.actionUser_manual_FR.triggered.connect(lambda event : webbrowser.open_new('file://' + os.path.realpath('docs/manual.pdf')))
         self.mainview.stopButton.clicked.connect(self.abort_computation)
         self.mainview.combobox.activated[str].connect(self.choose_image)
@@ -249,6 +255,21 @@ class MainController:
                 thread.start()
                 self.threads.append((thread, worker))
 
+    def segment_cavity(self):
+        multiplier = self.cavitycontroller.multiplier
+        if self.img_data is not None:
+            self.update_progressbar(0)
+            worker = WorkerCavity(img_data=self.img_data, multiplier=multiplier)
+            thread=QThread()
+            worker.moveToThread(thread)
+            worker.signal_start.connect(self.mainview.show_run)
+            worker.signal_end.connect(self.end_segment_cavity)
+            worker.signal_progress.connect(self.update_progressbar)
+            self.sig_abort_workers.signal.connect(worker.abort)
+            thread.started.connect(worker.work)
+            thread.start()
+            self.threads.append((thread, worker))
+
     def update_progressbar(self, progress):
         """
         Updates the progress bar each time
@@ -335,6 +356,12 @@ class MainController:
         self.add_image(magnitude, magnitude_name)
         self.add_image(phase, phase_name)
         self.choose_image(real_name)
+
+    def end_segment_cavity(self, cavity, number):
+        self.mainview.hide_run()
+        cavity_name = "cavity_" + str(number)
+        self.add_image(cavity, cavity_name)
+        self.choose_image(cavity_name)
 
 
     def abort_computation(self):

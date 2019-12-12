@@ -32,7 +32,7 @@ cx, cy, r = segmentation.median_circle(image)
 image = segmentation.remove_circle(image, cx, cy, r+1)
 grain = segmentation.detect_grain_3D(image)
 cavity = segmentation.detect_cavity_3D(grain)
-
+io.save_nifti(grain.transpose(2, 1, 0), "/mnt/d/IRM/nifti/BLE/250/50/50_grain.nii.gz")
 for i in range(cavity.shape[0]):
     fig, ax = plt.subplots(1, 2)
     ax[0].imshow(cavity[i, ...])
