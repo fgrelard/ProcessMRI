@@ -257,18 +257,28 @@ class MainController:
 
     def segment_cavity(self):
         multiplier = self.cavitycontroller.multiplier
+        start_slice = self.cavitycontroller.start_slice
+        end_slice = self.cavitycontroller.end_slice
         if self.img_data is not None:
-            self.update_progressbar(0)
-            worker = WorkerCavity(img_data=self.img_data, multiplier=multiplier)
-            thread=QThread()
-            worker.moveToThread(thread)
-            worker.signal_start.connect(self.mainview.show_run)
-            worker.signal_end.connect(self.end_segment_cavity)
-            worker.signal_progress.connect(self.update_progressbar)
-            self.sig_abort_workers.signal.connect(worker.abort)
-            thread.started.connect(worker.work)
-            thread.start()
-            self.threads.append((thread, worker))
+            try:
+                start_slice = int(start_slice)
+                end_slice = int(end_slice) + 1
+            except:
+                print("Defaulting")
+                start_slice = 1
+                end_slice =  0
+            finally:
+                self.update_progressbar(0)
+                worker = WorkerCavity(img_data=self.img_data, multiplier=multiplier, start=start_slice, end=end_slice)
+                thread=QThread()
+                worker.moveToThread(thread)
+                worker.signal_start.connect(self.mainview.show_run)
+                worker.signal_end.connect(self.end_segment_cavity)
+                worker.signal_progress.connect(self.update_progressbar)
+                self.sig_abort_workers.signal.connect(worker.abort)
+                thread.started.connect(worker.work)
+                thread.start()
+                self.threads.append((thread, worker))
 
     def update_progressbar(self, progress):
         """

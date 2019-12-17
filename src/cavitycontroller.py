@@ -51,7 +51,7 @@ class WorkerCavity(QtCore.QObject):
         Analogous to cavity.exponentialfit_image
         """
         self.signal_start.emit()
-        depth = image_copy.shape[-1]
+        depth = self.img_data.shape[-1]
         if self.end_slice > depth:
             self.end_slice = depth
         if self.start_slice > depth:
@@ -59,7 +59,7 @@ class WorkerCavity(QtCore.QObject):
         if self.end_slice < self.start_slice:
             self.start_slice = 0
             self.end_slice = depth
-        image8 = img_as_ubyte(image_copy * 1.0 / image_copy.max())
+        image8 = img_as_ubyte(self.img_data * 1.0 / self.img_data.max())
         image8 = image8[..., self.start_slice:self.end_slice]
         image_copy = self.img_data.copy()[..., self.start_slice:self.end_slice]
         length = image8.shape[-1]

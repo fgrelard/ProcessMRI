@@ -282,7 +282,7 @@ def detect_cavity(image):
     seed = find_local_maximum_dt(distance, point)
     seg = sitk.ConfidenceConnected(sitk.GetImageFromArray(distance), seedList=[seed], numberOfIterations=1, multiplier=2.5, initialNeighborhoodRadius=1, replaceValue=255)
     seg_array = sitk.GetArrayFromImage(seg)
-    #seg_array = ndi.morphology.binary_fill_holes(seg_array)
+    seg_array = ndi.morphology.binary_fill_holes(seg_array)
     return seg_array
 
 
