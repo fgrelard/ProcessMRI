@@ -1,5 +1,5 @@
 from src.cavityview import Ui_Cavity_View
-from PyQt5.QtWidgets import QDialog, QMainWindow, QToolTip, QApplication
+from PyQt5.QtWidgets import QDialog, QMainWindow, QToolTip, QApplication, QSlider
 from src.signal import Signal
 from PyQt5 import QtCore
 import numpy as np
@@ -56,7 +56,7 @@ class WorkerCavity(QtCore.QObject):
             self.end_slice = depth
         if self.start_slice > depth:
             self.start_slice = 0
-        if self.end_slice < self.start_slice:
+        if self.end_slice <= self.start_slice:
             self.start_slice = 0
             self.end_slice = depth
         image8 = img_as_ubyte(self.img_data * 1.0 / self.img_data.max())
@@ -100,6 +100,9 @@ class CavityController:
         self.view.setupUi(self.dialog)
         self.view.retranslateUi(self.dialog)
         self.view.pushButton.setFixedWidth(20)
+        self.view.pushButton_2.setFixedWidth(20)
+        self.view.pushButton_3.setFixedWidth(20)
+
 
         #Tooltips
         t1 = self.view.pushButton.toolTip()
@@ -115,15 +118,29 @@ class CavityController:
 
         #Events
         self.trigger = Signal()
+        # self.view.horizontalSlider.valueChanged.connect(self.update_tooltip)
+        self.view.horizontalSlider.mouseMoveEvent = self.slider_event
         self.view.buttonBox.accepted.connect(self.update_parameters)
 
+    def update_tooltip(self):
+        value = self.view.horizontalSlider.value()
+        value = self.slidervalue_to_multvalue(value)
+        self.view.horizontalSlider.setToolTip(str(value))
+
+    def slider_event(self, event):
+        self.update_tooltip()
+        QToolTip.showText(event.globalPos(), self.view.horizontalSlider.toolTip())
+        QSlider.mouseMoveEvent(self.view.horizontalSlider, event)
+
+    def slidervalue_to_multvalue(self, value):
+        return float(value/10) + 1
 
     def update_parameters(self):
         """
         Gets the values in the GUI and updates the attributes
         """
         value = self.view.horizontalSlider.value()
-        self.multiplier = float(value/10) + 1
+        self.multiplier = self.slidervalue_to_multvalue(value)
         self.start_slice = self.view.lineEdit.text()
         self.end_slice = self.view.lineEdit_2.text()
         self.trigger.signal.emit()

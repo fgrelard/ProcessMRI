@@ -85,6 +85,10 @@ class MainController:
         self.img_data = None
         self.echotime = None
 
+        self.open_image("/mnt/d/IRM/nifti/BLE/250/50/50_grain.nii.gz")
+        self.cavitycontroller.show()
+
+
     def open_bruker(self):
         """
         Opens Bruker directory
@@ -102,15 +106,9 @@ class MainController:
                 self.config['default']['NifTiDir'] = dirname
                 self.open_nifti()
 
-    def open_nifti(self):
-        """
-        Opens nifti file and reads metadata
-        """
-        filename, ext = QtWidgets.QFileDialog.getOpenFileName(self.mainview.centralwidget, "Select Nifti", self.config['default']['NifTiDir'])
-        if not filename:
-            return
+
+    def open_image(self, filename):
         try:
-            self.config['default']['NifTiDir'] = os.path.dirname(filename)
             img = io.open_generic_image(filename)
         except Exception as e:
             print(e)
@@ -122,6 +120,18 @@ class MainController:
             self.add_image(img.get_fdata(), self.filename)
             self.mainview.combobox.setCurrentIndex(self.mainview.combobox.findText(self.filename))
             self.choose_image(self.filename)
+
+    def open_nifti(self):
+        """
+        Opens nifti file and reads metadata
+        """
+        filename, ext = QtWidgets.QFileDialog.getOpenFileName(self.mainview.centralwidget, "Select Nifti", self.config['default']['NifTiDir'])
+        if not filename:
+            return
+
+        self.config['default']['NifTiDir'] = os.path.dirname(filename)
+        self.open_image(filename)
+
         try:
             metadata = io.open_metadata(root + os.path.sep + self.filename + "_visu_pars.npy")
         except Exception as e:
