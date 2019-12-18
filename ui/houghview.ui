@@ -51,6 +51,12 @@
     </item>
     <item row="1" column="1">
      <widget class="QLabel" name="label">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Minimum radius</string>
       </property>
@@ -58,6 +64,12 @@
     </item>
     <item row="2" column="1">
      <widget class="QLabel" name="label_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Maximum radius</string>
       </property>
@@ -166,14 +178,20 @@ p, li { white-space: pre-wrap; }
       </property>
      </widget>
     </item>
-    <item row="3" column="1">
-     <widget class="QPushButton" name="pushButton_3">
-      <property name="text">
-       <string>Preview</string>
-      </property>
-     </widget>
-    </item>
    </layout>
+  </widget>
+  <widget class="QPushButton" name="pushButton_3">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>330</y>
+     <width>81</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Preview</string>
+   </property>
   </widget>
  </widget>
  <resources/>

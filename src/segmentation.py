@@ -25,6 +25,9 @@ def detect_circle(image, threshold, min_radius, max_radius):
     accums, cx, cy, radii = hough_circle_peaks(hough_res, hough_radii,
                                                total_num_peaks=3)
     if len(cx) > 0:
+        cx = np.pad(cx, (0,3-cx.shape[0]), "constant", constant_values=(-1))
+        cy = np.pad(cy, (0,3-cy.shape[0]), "constant", constant_values=(-1))
+        radii = np.pad(radii, (0,3-radii.shape[0]), "constant", constant_values=(-1))
         return cx, cy, radii
     return -1, -1, -1
 
@@ -39,9 +42,13 @@ def closest_circle_to_median_circle(image, min_radius=10, max_radius=20):
         L[i, 0] = cx
         L[i, 1] = cy
         L[i, 2] = r
-    frequent_circle = np.median(L[..., 0], axis=0)
+    print(L[:10])
+    frequent_circle = np.median(L[:10, 0], axis=0)
     coordinates = np.delete(np.transpose(L, (0, 2, 1)), -1, axis=2)
+    print(coordinates[0])
     distance_to_frequent_circle = np.linalg.norm(frequent_circle[:-1].T - coordinates, axis=2, ord=2)
+    print(frequent_circle, frequent_circle[:-1])
+    print(distance_to_frequent_circle[0])
     index = np.argmin(distance_to_frequent_circle, axis=1)
     coordinates_circle = np.choose(index, L.T).T
     return coordinates_circle

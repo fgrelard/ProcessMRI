@@ -5,6 +5,8 @@ from PyQt5 import QtCore
 import numpy as np
 from skimage.util import img_as_ubyte
 import src.segmentation as seg
+from skimage.draw import circle
+from skimage.filters import threshold_otsu, rank
 
 class WorkerHough(QtCore.QObject):
     """
@@ -51,27 +53,43 @@ class WorkerHough(QtCore.QObject):
         Analogous to cavity.exponentialfit_image
         """
         self.signal_start.emit()
+
         image8 = img_as_ubyte(self.img_data * 1.0 / self.img_data.max())
-        image_copy = self.img_data.copy()
+        image8 = np.reshape(image8, (image8.shape[0], image8.shape[1]) + (-1,), order='C')
         length = image8.shape[-1]
-        L = np.zeros(shape=(length, 3))
+        L = np.zeros(shape=(length, 3, 3))
         for i in range(length):
             if self.is_abort:
                 break
             QApplication.processEvents()
             image_current = image8[..., i]
             threshold = threshold_otsu(image_current)
-            cavity = seg.detect_circle(image_current, threshold, self.min_radius, self.max_radius)
+            cx, cy, r = seg.detect_circle(image_current, threshold, self.min_radius, self.max_radius)
             L[i, 0] = cx
             L[i, 1] = cy
             L[i, 2] = r
             progress = float(i/length*100)
             self.signal_progress.emit(progress)
-        median_circle = np.median(L, axis=0)
-        np.linalg.norm(median_circle.T - L, axis=1, ord=2)
+        frequent_circle = np.median(L[..., 0], axis=0)
+        coordinates = np.delete(np.transpose(L, (0, 2, 1)), -1, axis=2)
+        distance_to_frequent_circle = np.linalg.norm(frequent_circle[:-1].T - coordinates, axis=2, ord=2)
+        index = np.argmin(distance_to_frequent_circle, axis=1)
+        coordinates_circle = np.choose(index, L.T).T
+
+        image_copy = np.zeros_like(self.img_data)
+        for i in range(length):
+            cx, cy, r = coordinates_circle[i]
+            if cx == -1:
+                continue
+            x, y = circle(cx, cy, r+1, shape=image8[...,0].shape)
+            old_index = np.unravel_index(i, self.img_data.shape[2:])
+            for j in range(len(x)):
+                current_index = (y[j], x[j]) + old_index
+                image_copy[current_index] = self.img_data[current_index]
+
         if not self.is_abort:
             #Send images as a signal
-            self.signal_end.emit(median_circle, WorkerHough.number)
+            self.signal_end.emit(image_copy, WorkerHough.number)
             if not self.is_preview:
                 WorkerHough.number += 1
 
@@ -120,9 +138,8 @@ class HoughController:
         """
         Gets the values in the GUI and updates the attributes
         """
-        value = self.view.horizontalSlider.value()
-        self.min_radius = self.slidervalue_to_multvalue(value)
-        self.max_radius = self.view.lineEdit.text()
+        self.min_radius = self.view.lineEdit.text()
+        self.max_radius = self.view.lineEdit_2.text()
         if not preview:
             self.trigger.signal.emit()
 

@@ -71,6 +71,7 @@ class MainController:
         self.mainview.actionExponential_fitting.triggered.connect(self.expfitcontroller.show)
         self.mainview.actionDenoising_NL_means.triggered.connect(self.nlmeanscontroller.show)
         self.mainview.actionDenoising_TPC.triggered.connect(self.tpccontroller.show)
+        self.mainview.actionHoughTransform.triggered.connect(self.houghcontroller.show)
         self.mainview.actionSegmentGrain.triggered.connect(self.largest_component)
         self.mainview.actionSegmentCavity.triggered.connect(self.cavitycontroller.show)
 
@@ -95,6 +96,7 @@ class MainController:
         self.echotime = None
 
         self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
+        self.houghcontroller.show()
 
     def open_bruker(self):
         """
@@ -314,32 +316,18 @@ class MainController:
                 thread.start()
                 self.threads.append((thread, worker))
 
-    def largest_component(self, preview=False):
-        if not preview:
-            key = "Preview"
-            if key in self.images:
-                del self.images[key]
-            index = self.mainview.combobox.findText(key)
-            self.mainview.combobox.removeItem(index)
-        if preview:
-            self.cavitycontroller.update_parameters(preview)
-
+    def largest_component(self):
         if self.img_data is not None:
-            if preview:
-                self.abort_computation()
-            else:
-                self.update_progressbar(0)
+            self.update_progressbar(0)
 
-            worker = WorkerLargestComponent(img_data=self.img_data, preview=preview)
+            worker = WorkerLargestComponent(img_data=self.img_data)
             thread = QThread()
             worker.moveToThread(thread)
 
-            if not preview:
-                worker.signal_start.connect(self.mainview.show_run)
-                worker.signal_end.connect(self.end_largest_component)
-                worker.signal_progress.connect(self.update_progressbar)
-            else:
-                worker.signal_end.connect(self.end_preview)
+            worker.signal_start.connect(self.mainview.show_run)
+            worker.signal_end.connect(self.end_largest_component)
+            worker.signal_progress.connect(self.update_progressbar)
+
             self.sig_abort_workers.signal.connect(worker.abort)
             thread.started.connect(worker.work)
             thread.start()
@@ -353,10 +341,10 @@ class MainController:
             index = self.mainview.combobox.findText(key)
             self.mainview.combobox.removeItem(index)
         if preview:
-            self.cavitycontroller.update_parameters(preview)
+            self.houghcontroller.update_parameters(preview)
 
-        min_radius = self.cavitycontroller.min_radius
-        max_radius = self.cavitycontroller.max_radius
+        min_radius = self.houghcontroller.min_radius
+        max_radius = self.houghcontroller.max_radius
         if self.img_data is not None:
             try:
                 min_radius = int(min_radius)
@@ -371,7 +359,7 @@ class MainController:
                 else:
                     self.update_progressbar(0)
 
-                worker = WorkerHough(img_data=self.img_data, minçradius=min_radius, max_radius=max_radius, preview=preview)
+                worker = WorkerHough(img_data=self.img_data, min_radius=min_radius, max_radius=max_radius, preview=preview)
                 thread = QThread()
                 worker.moveToThread(thread)
 
@@ -486,9 +474,11 @@ class MainController:
         self.add_image(threshold, largest_name)
         self.choose_image(largest_name)
 
-    def end_hough_transform(self, coordinates, number):
+    def end_hough_transform(self, circle, number):
         self.mainview.hide_run()
         hough_name = "hough_" + str(number)
+        self.add_image(circle, hough_name)
+        self.choose_image(hough_name)
 
     def end_preview(self, image, number):
         name = "Preview"
