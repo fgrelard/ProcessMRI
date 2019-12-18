@@ -208,6 +208,6 @@ class Ui_MainView(object):
         self.actionDenoising_TPC.setText(_translate("MainView", "Denoising TPC"))
         self.actionDenoising_NL_means.setText(_translate("MainView", "Denoising NL-means"))
         self.actionHoughTransform.setText(_translate("MainView", "Hough transform"))
-        self.actionSegmentGrain.setText(_translate("MainView", "Otsu threshold"))
+        self.actionSegmentGrain.setText(_translate("MainView", "Largest component"))
         self.actionSegmentCavity.setText(_translate("MainView", "Segment cavity"))
         self.actionUser_manual_FR.setText(_translate("MainView", "User manual (FR)"))

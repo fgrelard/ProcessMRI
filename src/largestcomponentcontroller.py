@@ -1,4 +1,3 @@
-from src.otsuview import Ui_Otsu_View
 from PyQt5.QtWidgets import QDialog, QMainWindow, QToolTip, QApplication, QSlider
 from src.signal import Signal
 from PyQt5 import QtCore
@@ -6,7 +5,7 @@ import numpy as np
 from skimage.util import img_as_ubyte
 import src.segmentation as seg
 
-class WorkerOtsu(QtCore.QObject):
+class WorkerLargestComponent(QtCore.QObject):
     """
     Worker class for the exponential fitting
     Instances of this class can be moved to a thread
@@ -64,42 +63,10 @@ class WorkerOtsu(QtCore.QObject):
             self.signal_progress.emit(progress)
         if not self.is_abort:
             #Send images as a signal
-            self.signal_end.emit(image_copy, WorkerOtsu.number)
+            self.signal_end.emit(image_copy, WorkerLargestComponent.number)
             if not self.is_preview:
-                WorkerOtsu.number += 1
+                WorkerLargestComponent.number += 1
 
 
     def abort(self):
         self.is_abort = True
-
-class OtsuController:
-    """
-    Controller handling the OtsuView dialog
-
-    Attributes
-    ----------
-    view: Ui_Otsu_View
-        the view
-    trigger: Signal
-        signal raised when clicking on the "OK" button
-    """
-    def __init__(self, parent):
-        self.dialog = QDialog(parent)
-
-        #Init ui
-        self.view = Ui_Otsu_View()
-        self.view.setupUi(self.dialog)
-        self.view.retranslateUi(self.dialog)
-
-
-        #Events
-        self.trigger = Signal()
-        self.view.buttonBox.accepted.connect(self.update_parameters)
-
-
-    def update_parameters(self, preview=False):
-        if not preview:
-            self.trigger.signal.emit()
-
-    def show(self):
-        self.dialog.show()

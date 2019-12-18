@@ -10,6 +10,7 @@ from src.nlmeanscontroller import NLMeansController, WorkerNLMeans
 from src.cavitycontroller import CavityController, WorkerCavity
 from src.tpccontroller import TPCController, WorkerTPC
 from src.houghcontroller import HoughController, WorkerHough
+from src.largestcomponentcontroller import WorkerLargestComponent
 import src.imageio as io
 import src.exponentialfit as expfit
 
@@ -70,12 +71,12 @@ class MainController:
         self.mainview.actionExponential_fitting.triggered.connect(self.expfitcontroller.show)
         self.mainview.actionDenoising_NL_means.triggered.connect(self.nlmeanscontroller.show)
         self.mainview.actionDenoising_TPC.triggered.connect(self.tpccontroller.show)
-        self.mainview.actionSegmentGrain.triggered.connect(self.otsu_threshold)
+        self.mainview.actionSegmentGrain.triggered.connect(self.largest_component)
         self.mainview.actionSegmentCavity.triggered.connect(self.cavitycontroller.show)
 
         self.cavitycontroller.view.horizontalSlider.valueChanged.connect(lambda: self.segment_cavity(preview=True))
 
-        self.houghcontroller.view.pushButton_3.triggered.connect(lambda: self.hough_transform(preview=True))
+        self.houghcontroller.view.pushButton_3.clicked.connect(lambda: self.hough_transform(preview=True))
 
         self.mainview.actionUser_manual_FR.triggered.connect(lambda event : webbrowser.open_new('file://' + os.path.realpath('docs/manual.pdf')))
         self.mainview.stopButton.clicked.connect(self.abort_computation)
@@ -313,7 +314,7 @@ class MainController:
                 thread.start()
                 self.threads.append((thread, worker))
 
-    def otsu_threshold(self, preview=False):
+    def largest_component(self, preview=False):
         if not preview:
             key = "Preview"
             if key in self.images:
@@ -329,13 +330,13 @@ class MainController:
             else:
                 self.update_progressbar(0)
 
-            worker = WorkerOtsu(img_data=self.img_data, preview=preview)
+            worker = WorkerLargestComponent(img_data=self.img_data, preview=preview)
             thread = QThread()
             worker.moveToThread(thread)
 
             if not preview:
                 worker.signal_start.connect(self.mainview.show_run)
-                worker.signal_end.connect(self.end_otsu_threshold)
+                worker.signal_end.connect(self.end_largest_component)
                 worker.signal_progress.connect(self.update_progressbar)
             else:
                 worker.signal_end.connect(self.end_preview)
@@ -479,15 +480,15 @@ class MainController:
         self.add_image(cavity, cavity_name)
         self.choose_image(cavity_name)
 
-    def end_otsu_threshold(self, threshold, number):
+    def end_largest_component(self, threshold, number):
         self.mainview.hide_run()
-        otsu_name = "threshold_" + str(number)
-        self.add_image(threshold, otsu_name)
-        self.choose_image(otsu_name)
+        largest_name = "large_component_" + str(number)
+        self.add_image(threshold, largest_name)
+        self.choose_image(largest_name)
 
     def end_hough_transform(self, coordinates, number):
         self.mainview.hide_run()
-        hough_name = "hough
+        hough_name = "hough_" + str(number)
 
     def end_preview(self, image, number):
         name = "Preview"
