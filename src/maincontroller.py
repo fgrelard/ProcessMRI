@@ -9,6 +9,7 @@ from src.expfitcontroller import ExpFitController, WorkerExpFit
 from src.nlmeanscontroller import NLMeansController, WorkerNLMeans
 from src.cavitycontroller import CavityController, WorkerCavity
 from src.tpccontroller import TPCController, WorkerTPC
+from src.houghcontroller import HoughController, WorkerHough
 import src.imageio as io
 import src.exponentialfit as expfit
 
@@ -57,9 +58,10 @@ class MainController:
         self.tpccontroller = TPCController(mainview.centralWidget())
         self.tpccontroller.trigger.signal.connect(self.tpc_denoising)
 
-
         self.cavitycontroller = CavityController(mainview.centralWidget())
         self.cavitycontroller.trigger.signal.connect(self.segment_cavity)
+        self.houghcontroller = HoughController(mainview.centralWidget())
+        self.houghcontroller.trigger.signal.connect(self.hough_transform)
 
         self.mainview.actionExit.triggered.connect(self.exit_app)
         self.mainview.actionBruker_directory.triggered.connect(self.open_bruker)
@@ -68,7 +70,13 @@ class MainController:
         self.mainview.actionExponential_fitting.triggered.connect(self.expfitcontroller.show)
         self.mainview.actionDenoising_NL_means.triggered.connect(self.nlmeanscontroller.show)
         self.mainview.actionDenoising_TPC.triggered.connect(self.tpccontroller.show)
+        self.mainview.actionSegmentGrain.triggered.connect(self.otsu_threshold)
         self.mainview.actionSegmentCavity.triggered.connect(self.cavitycontroller.show)
+
+        self.cavitycontroller.view.horizontalSlider.valueChanged.connect(lambda: self.segment_cavity(preview=True))
+
+        self.houghcontroller.view.pushButton_3.triggered.connect(lambda: self.hough_transform(preview=True))
+
         self.mainview.actionUser_manual_FR.triggered.connect(lambda event : webbrowser.open_new('file://' + os.path.realpath('docs/manual.pdf')))
         self.mainview.stopButton.clicked.connect(self.abort_computation)
         self.mainview.combobox.activated[str].connect(self.choose_image)
@@ -85,9 +93,7 @@ class MainController:
         self.img_data = None
         self.echotime = None
 
-        self.open_image("/mnt/d/IRM/nifti/BLE/250/50/50_grain.nii.gz")
-        self.cavitycontroller.show()
-
+        self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
 
     def open_bruker(self):
         """
@@ -265,7 +271,16 @@ class MainController:
                 thread.start()
                 self.threads.append((thread, worker))
 
-    def segment_cavity(self):
+    def segment_cavity(self, preview=False):
+        if not preview:
+            key = "Preview"
+            if key in self.images:
+                del self.images[key]
+            index = self.mainview.combobox.findText(key)
+            self.mainview.combobox.removeItem(index)
+        if preview:
+            self.cavitycontroller.update_parameters(preview)
+
         multiplier = self.cavitycontroller.multiplier
         start_slice = self.cavitycontroller.start_slice
         end_slice = self.cavitycontroller.end_slice
@@ -278,17 +293,98 @@ class MainController:
                 start_slice = 1
                 end_slice =  0
             finally:
-                self.update_progressbar(0)
-                worker = WorkerCavity(img_data=self.img_data, multiplier=multiplier, start=start_slice, end=end_slice)
-                thread=QThread()
+                if preview:
+                    self.abort_computation()
+                else:
+                    self.update_progressbar(0)
+
+                worker = WorkerCavity(img_data=self.img_data, multiplier=multiplier, start=start_slice, end=end_slice, preview=preview)
+                thread = QThread()
                 worker.moveToThread(thread)
-                worker.signal_start.connect(self.mainview.show_run)
-                worker.signal_end.connect(self.end_segment_cavity)
-                worker.signal_progress.connect(self.update_progressbar)
+
+                if not preview:
+                    worker.signal_start.connect(self.mainview.show_run)
+                    worker.signal_end.connect(self.end_segment_cavity)
+                    worker.signal_progress.connect(self.update_progressbar)
+                else:
+                    worker.signal_end.connect(self.end_preview)
                 self.sig_abort_workers.signal.connect(worker.abort)
                 thread.started.connect(worker.work)
                 thread.start()
                 self.threads.append((thread, worker))
+
+    def otsu_threshold(self, preview=False):
+        if not preview:
+            key = "Preview"
+            if key in self.images:
+                del self.images[key]
+            index = self.mainview.combobox.findText(key)
+            self.mainview.combobox.removeItem(index)
+        if preview:
+            self.cavitycontroller.update_parameters(preview)
+
+        if self.img_data is not None:
+            if preview:
+                self.abort_computation()
+            else:
+                self.update_progressbar(0)
+
+            worker = WorkerOtsu(img_data=self.img_data, preview=preview)
+            thread = QThread()
+            worker.moveToThread(thread)
+
+            if not preview:
+                worker.signal_start.connect(self.mainview.show_run)
+                worker.signal_end.connect(self.end_otsu_threshold)
+                worker.signal_progress.connect(self.update_progressbar)
+            else:
+                worker.signal_end.connect(self.end_preview)
+            self.sig_abort_workers.signal.connect(worker.abort)
+            thread.started.connect(worker.work)
+            thread.start()
+            self.threads.append((thread, worker))
+
+    def hough_transform(self, preview=False):
+        if not preview:
+            key = "Preview"
+            if key in self.images:
+                del self.images[key]
+            index = self.mainview.combobox.findText(key)
+            self.mainview.combobox.removeItem(index)
+        if preview:
+            self.cavitycontroller.update_parameters(preview)
+
+        min_radius = self.cavitycontroller.min_radius
+        max_radius = self.cavitycontroller.max_radius
+        if self.img_data is not None:
+            try:
+                min_radius = int(min_radius)
+                max_radius = int(max_radius) + 1
+            except:
+                print("Defaulting")
+                min_radius = 7
+                max_radius =  20
+            finally:
+                if preview:
+                    self.abort_computation()
+                else:
+                    self.update_progressbar(0)
+
+                worker = WorkerHough(img_data=self.img_data, minçradius=min_radius, max_radius=max_radius, preview=preview)
+                thread = QThread()
+                worker.moveToThread(thread)
+
+                if not preview:
+                    worker.signal_start.connect(self.mainview.show_run)
+                    worker.signal_end.connect(self.end_hough_transform)
+                    worker.signal_progress.connect(self.update_progressbar)
+                else:
+                    worker.signal_end.connect(self.end_preview)
+                self.sig_abort_workers.signal.connect(worker.abort)
+                thread.started.connect(worker.work)
+                thread.start()
+                self.threads.append((thread, worker))
+
 
     def update_progressbar(self, progress):
         """
@@ -383,6 +479,24 @@ class MainController:
         self.add_image(cavity, cavity_name)
         self.choose_image(cavity_name)
 
+    def end_otsu_threshold(self, threshold, number):
+        self.mainview.hide_run()
+        otsu_name = "threshold_" + str(number)
+        self.add_image(threshold, otsu_name)
+        self.choose_image(otsu_name)
+
+    def end_hough_transform(self, coordinates, number):
+        self.mainview.hide_run()
+        hough_name = "hough
+
+    def end_preview(self, image, number):
+        name = "Preview"
+        if name in self.images:
+            self.images[name] = image
+        else:
+            self.add_image(image, name)
+        self.choose_image(name, preview=True)
+
 
     def abort_computation(self):
         """
@@ -415,7 +529,7 @@ class MainController:
         self.mainview.combobox.addItem(name)
         self.images[name] = image
 
-    def choose_image(self, name):
+    def choose_image(self, name, preview=False):
         """
         Choose an image among available image
         The name must be in self.images
@@ -429,9 +543,10 @@ class MainController:
             return
         if name not in self.images:
             return
-        self.img_data = self.images[name]
+        if not preview:
+            self.img_data = self.images[name]
         self.mainview.combobox.setCurrentIndex(self.mainview.combobox.findText(name))
-        vis = self.image_to_visualization(self.img_data)
+        vis = self.image_to_visualization(self.images[name])
         self.mainview.imageview.setImage(vis)
 
     def image_to_visualization(self, img):

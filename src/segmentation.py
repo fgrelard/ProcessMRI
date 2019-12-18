@@ -16,7 +16,7 @@ def detect_circle(image, threshold, min_radius, max_radius):
     cond = np.where(image < threshold)
     image_copy = np.copy(image)
     image_copy[cond] = 0
-    edges = canny(image_copy, sigma=3, low_threshold=10, high_threshold=30)
+    edges = canny(image_copy, sigma=1.5, low_threshold=10, high_threshold=30)
     # Detect two radii
     hough_radii = np.arange(min_radius, max_radius, 10)
     hough_res = hough_circle(edges, hough_radii)
@@ -25,30 +25,40 @@ def detect_circle(image, threshold, min_radius, max_radius):
     accums, cx, cy, radii = hough_circle_peaks(hough_res, hough_radii,
                                                total_num_peaks=3)
     if len(cx) > 0:
-        return cx[0], cy[0], radii[0]
+        return cx, cy, radii
     return -1, -1, -1
 
-def median_circle(image):
+def closest_circle_to_median_circle(image, min_radius=10, max_radius=20):
     depth = image.shape[0]
-    L = np.zeros(shape=(depth, 3))
+    L = np.zeros(shape=(depth, 3, 3))
     for i in range(depth):
         image_current = image[i, ...]
         image_current = img_as_ubyte(image_current * 1.0 / image_current.max())
         threshold = threshold_otsu(image_current)
-        cx, cy, r = detect_circle(image_current, threshold,10,20)
+        cx, cy, r = detect_circle(image_current, threshold, min_radius, max_radius)
         L[i, 0] = cx
         L[i, 1] = cy
         L[i, 2] = r
-        circx, circy = circle(cx, cy, r, shape=image_current.shape)
-        image_current[circy, circx] = 0
-    cx, cy, r = np.median(L, axis=0)
-    return cx, cy, r
+    frequent_circle = np.median(L[..., 0], axis=0)
+    coordinates = np.delete(np.transpose(L, (0, 2, 1)), -1, axis=2)
+    distance_to_frequent_circle = np.linalg.norm(frequent_circle[:-1].T - coordinates, axis=2, ord=2)
+    index = np.argmin(distance_to_frequent_circle, axis=1)
+    coordinates_circle = np.choose(index, L.T).T
+    return coordinates_circle
 
 def remove_circle(image, cx, cy, r):
     circx, circy = circle(cx, cy, r, shape=image[0,...].shape)
     image[..., circy, circx] = 0
     return image
 
+
+def remove_circle_3D(image, coordinates_circle):
+    length = image.shape[0]
+    for i in range(length):
+        cx, cy, r = coordinates_circle[i]
+        circx, circy = circle(cx, cy, r+1, shape=image[0,...].shape)
+        image[i, circy, circx] = 0
+    return image
 
 def binarize(image):
     threshold = threshold_otsu(image)
@@ -97,6 +107,8 @@ def region_property_to_cc(ccs, regionprop):
     numpy.ndarray
         the binary image (mask) of the desired region
     """
+    if regionprop == -1:
+        return ccs.shape
     label = regionprop.label
     cc = np.where(ccs == label, 255, 0)
     return cc
@@ -142,10 +154,14 @@ def find_location_cavity(image):
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE,
                                            cv2.CHAIN_APPROX_NONE)
     cnt = find_largest_contour(contours)
-    hull = cv2.convexHull(cnt, returnPoints=False)
-    conv_defect = cv2.convexityDefects(cnt,hull)
-    point = find_farthest_convexity_defect(cnt, conv_defect)
-    return point
+    try:
+        hull = cv2.convexHull(cnt, returnPoints=False)
+        conv_defect = cv2.convexityDefects(cnt,hull)
+        point = find_farthest_convexity_defect(cnt, conv_defect)
+    except Exception as e:
+        return None
+    else:
+        return point
 
 
 
@@ -270,17 +286,26 @@ def find_local_maximum_dt(dt, point, r=1):
     new_point = tuple(int(x) for x in new_point)
     return new_point
 
-def detect_cavity(image):
+def detect_cavity(image, multiplier):
     point = find_location_cavity(image)
     cond = np.where(image > 0)
+    if point is None or np.all(image[cond] == image[cond][0]):
+        return np.zeros_like(image)
     threshold = threshold_otsu(image[cond])
     cond = np.where(image > threshold)
     image_copy = np.zeros_like(image)
     image_copy[cond] = 255
+    # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
+    # seg_array = cv2.morphologyEx(image_copy, cv2.MORPH_OPEN, kernel)
+    # distance = ndi.distance_transform_edt(image_copy)
+    # distance =  cv2.blur(distance, (3, 3)) # blur the image
+    # seed = find_local_maximum_dt(distance, point)
+    # seg = sitk.ConfidenceConnected(sitk.GetImageFromArray(image), seedList=[seed], numberOfIterations=1, multiplier=multiplier, initialNeighborhoodRadius=1, replaceValue=255)
+    # seg_array = sitk.GetArrayFromImage(seg)
     distance = ndi.distance_transform_edt(image_copy)
-    distance =  cv2.blur(distance, (3, 3)) # blur the image
+    distance =  cv2.blur(distance, (3, 3))
     seed = find_local_maximum_dt(distance, point)
-    seg = sitk.ConfidenceConnected(sitk.GetImageFromArray(distance), seedList=[seed], numberOfIterations=1, multiplier=2.5, initialNeighborhoodRadius=1, replaceValue=255)
+    seg = sitk.ConfidenceConnected(sitk.GetImageFromArray(distance), seedList=[seed], numberOfIterations=1, multiplier=multiplier, initialNeighborhoodRadius=1, replaceValue=255)
     seg_array = sitk.GetArrayFromImage(seg)
     seg_array = ndi.morphology.binary_fill_holes(seg_array)
     return seg_array
@@ -298,12 +323,14 @@ def detect_grain_3D(image):
     return image_copy
 
 
-def detect_cavity_3D(image):
+def detect_cavity_3D(image, multiplier):
     image_copy = image.copy()
     depth = image.shape[0]
     image8 = img_as_ubyte(image * 1.0 / image.max())
     for i in range(depth):
-        cavity = detect_cavity(image8[i, ...])
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+        current = cv2.morphologyEx(image8[i, ...], cv2.MORPH_OPEN, kernel)
+        cavity = detect_cavity(current, multiplier)
         cond = (i, ) + np.where(cavity == 0)
         image_copy[cond] = 0
     return image_copy

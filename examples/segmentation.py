@@ -1,6 +1,5 @@
 import nibabel as nib
 import src.segmentation as segmentation
-import src.maincontroller as mc
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import data, color
@@ -21,20 +20,23 @@ def detect_circles(image, threshold=150, min_radius=10, max_radius=50):
     return image_display
 
 
-img = nib.load("/mnt/d/IRM/nifti/BLE/250/50/50_subscan_1.nii.gz")
+img = nib.load("/mnt/d/IRM/nifti/BLE/650/35/35.nii.gz")
 img_data = img.get_fdata()
 image = np.reshape(img_data, (img_data.shape[0], img_data.shape[1]) + (-1,), order='F')
 image = image.transpose(2, 1, 0)
 
-
-
-cx, cy, r = segmentation.median_circle(image)
-image = segmentation.remove_circle(image, cx, cy, r+1)
+coordinates = segmentation.closest_circle_to_median_circle(image, 7, 20)
+image = segmentation.remove_circle_3D(image, coordinates)
 grain = segmentation.detect_grain_3D(image)
-cavity = segmentation.detect_cavity_3D(grain)
+cavity = segmentation.detect_cavity_3D(grain, 3.5)
 io.save_nifti(grain.transpose(2, 1, 0), "/mnt/d/IRM/nifti/BLE/250/50/50_grain.nii.gz")
+
 for i in range(cavity.shape[0]):
-    fig, ax = plt.subplots(1, 2)
-    ax[0].imshow(cavity[i, ...])
-    ax[1].imshow(image[i, ...])
+    fig, ax = plt.subplots(1, 3)
+    ax[0].imshow(image[i, ...])
+    ax[0].set_xlabel("Image")
+    ax[1].imshow(grain[i, ...])
+    ax[1].set_xlabel("Grain")
+    ax[2].imshow(cavity[i, ...])
+    ax[2].set_xlabel("Cavity")
     plt.show()

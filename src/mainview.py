@@ -57,6 +57,8 @@ class Ui_MainView(object):
 
         self.actionNifti = QtWidgets.QAction(MainView)
 
+        self.actionHoughTransform = QtWidgets.QAction(MainView)
+
         self.actionSegmentCavity = QtWidgets.QAction(MainView)
 
         self.actionSegmentGrain = QtWidgets.QAction(MainView)
@@ -166,6 +168,7 @@ class Ui_MainView(object):
         self.menuProcess.addAction(self.actionExponential_fitting)
         self.menuProcess.addAction(self.actionDenoising_TPC)
         self.menuProcess.addAction(self.actionDenoising_NL_means)
+        self.menuAnalyze.addAction(self.actionHoughTransform)
         self.menuAnalyze.addAction(self.actionSegmentGrain)
         self.menuAnalyze.addAction(self.actionSegmentCavity)
         self.menuHelp.addAction(self.actionUser_manual_FR)
@@ -204,6 +207,7 @@ class Ui_MainView(object):
         self.actionExponential_fitting.setText(_translate("MainView", "Exponential fitting"))
         self.actionDenoising_TPC.setText(_translate("MainView", "Denoising TPC"))
         self.actionDenoising_NL_means.setText(_translate("MainView", "Denoising NL-means"))
-        self.actionSegmentGrain.setText(_translate("MainView", "Segment grain"))
+        self.actionHoughTransform.setText(_translate("MainView", "Hough transform"))
+        self.actionSegmentGrain.setText(_translate("MainView", "Otsu threshold"))
         self.actionSegmentCavity.setText(_translate("MainView", "Segment cavity"))
         self.actionUser_manual_FR.setText(_translate("MainView", "User manual (FR)"))

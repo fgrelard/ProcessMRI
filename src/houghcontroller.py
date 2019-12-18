@@ -1,4 +1,4 @@
-from src.cavityview import Ui_Cavity_View
+from src.houghview import Ui_Hough_View
 from PyQt5.QtWidgets import QDialog, QMainWindow, QToolTip, QApplication, QSlider
 from src.signal import Signal
 from PyQt5 import QtCore
@@ -6,7 +6,7 @@ import numpy as np
 from skimage.util import img_as_ubyte
 import src.segmentation as seg
 
-class WorkerCavity(QtCore.QObject):
+class WorkerHough(QtCore.QObject):
     """
     Worker class for the exponential fitting
     Instances of this class can be moved to a thread
@@ -35,12 +35,11 @@ class WorkerCavity(QtCore.QObject):
     signal_progress = QtCore.pyqtSignal(int)
     number = 1
 
-    def __init__(self, img_data, parent=None, multiplier=2.5, start=1, end=0, preview=False):
+    def __init__(self, img_data, parent=None, min_radius=7, max_radius=20, preview=False):
         super().__init__()
         self.img_data = img_data
-        self.multiplier = multiplier
-        self.start_slice = start
-        self.end_slice = end
+        self.min_radius = min_radius
+        self.max_radius = max_radius
         self.is_preview = preview
         self.is_abort = False
 
@@ -52,44 +51,41 @@ class WorkerCavity(QtCore.QObject):
         Analogous to cavity.exponentialfit_image
         """
         self.signal_start.emit()
-        depth = self.img_data.shape[-1]
-        if self.end_slice > depth:
-            self.end_slice = depth
-        if self.start_slice > depth:
-            self.start_slice = 0
-        if self.end_slice <= self.start_slice:
-            self.start_slice = 0
-            self.end_slice = depth
         image8 = img_as_ubyte(self.img_data * 1.0 / self.img_data.max())
-        image8 = image8[..., self.start_slice:self.end_slice]
-        image_copy = self.img_data.copy()[..., self.start_slice:self.end_slice]
+        image_copy = self.img_data.copy()
         length = image8.shape[-1]
+        L = np.zeros(shape=(length, 3))
         for i in range(length):
             if self.is_abort:
                 break
             QApplication.processEvents()
-            cavity = seg.detect_cavity(image8[ ..., i], multiplier=self.multiplier)
-            cond = np.where(cavity == 0) + (i, )
-            image_copy[cond] = 0
-            progress = float(i/depth*100)
+            image_current = image8[..., i]
+            threshold = threshold_otsu(image_current)
+            cavity = seg.detect_circle(image_current, threshold, self.min_radius, self.max_radius)
+            L[i, 0] = cx
+            L[i, 1] = cy
+            L[i, 2] = r
+            progress = float(i/length*100)
             self.signal_progress.emit(progress)
+        median_circle = np.median(L, axis=0)
+        np.linalg.norm(median_circle.T - L, axis=1, ord=2)
         if not self.is_abort:
             #Send images as a signal
-            self.signal_end.emit(image_copy, WorkerCavity.number)
+            self.signal_end.emit(median_circle, WorkerHough.number)
             if not self.is_preview:
-                WorkerCavity.number += 1
+                WorkerHough.number += 1
 
 
     def abort(self):
         self.is_abort = True
 
-class CavityController:
+class HoughController:
     """
-    Controller handling the CavityView dialog
+    Controller handling the HoughView dialog
 
     Attributes
     ----------
-    view: Ui_Cavity_View
+    view: Ui_Hough_View
         the view
     trigger: Signal
         signal raised when clicking on the "OK" button
@@ -98,53 +94,35 @@ class CavityController:
         self.dialog = QDialog(parent)
 
         #Init ui
-        self.view = Ui_Cavity_View()
+        self.view = Ui_Hough_View()
         self.view.setupUi(self.dialog)
         self.view.retranslateUi(self.dialog)
         self.view.pushButton.setFixedWidth(20)
         self.view.pushButton_2.setFixedWidth(20)
-        self.view.pushButton_3.setFixedWidth(20)
 
 
         #Tooltips
         t1 = self.view.pushButton.toolTip()
         t2 = self.view.pushButton_2.toolTip()
-        t3 = self.view.pushButton_3.toolTip()
         self.view.pushButton.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t1)
         self.view.pushButton_2.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t2)
-        self.view.pushButton_3.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t3)
         #Reset tooltips to avoid overlap of events
         self.view.pushButton.setToolTip("")
         self.view.pushButton_2.setToolTip("")
-        self.view.pushButton_3.setToolTip("")
 
         #Events
         self.trigger = Signal()
-        self.view.horizontalSlider.mouseMoveEvent = self.slider_event
+
         self.view.buttonBox.accepted.connect(self.update_parameters)
 
-
-    def update_tooltip(self):
-        value = self.view.horizontalSlider.value()
-        value = self.slidervalue_to_multvalue(value)
-        self.view.horizontalSlider.setToolTip(str(value))
-
-    def slider_event(self, event):
-        self.update_tooltip()
-        QToolTip.showText(event.globalPos(), self.view.horizontalSlider.toolTip())
-        QSlider.mouseMoveEvent(self.view.horizontalSlider, event)
-
-    def slidervalue_to_multvalue(self, value):
-        return float(value/10) + 1
 
     def update_parameters(self, preview=False):
         """
         Gets the values in the GUI and updates the attributes
         """
         value = self.view.horizontalSlider.value()
-        self.multiplier = self.slidervalue_to_multvalue(value)
-        self.start_slice = self.view.lineEdit.text()
-        self.end_slice = self.view.lineEdit_2.text()
+        self.min_radius = self.slidervalue_to_multvalue(value)
+        self.max_radius = self.view.lineEdit.text()
         if not preview:
             self.trigger.signal.emit()
 
