@@ -11,6 +11,8 @@ from src.cavitycontroller import CavityController, WorkerCavity
 from src.tpccontroller import TPCController, WorkerTPC
 from src.houghcontroller import HoughController, WorkerHough
 from src.largestcomponentcontroller import WorkerLargestComponent
+from src.measurementcontroller import MeasurementController, WorkerMeasurement
+
 import src.imageio as io
 import src.exponentialfit as expfit
 
@@ -64,6 +66,9 @@ class MainController:
         self.houghcontroller = HoughController(mainview.centralWidget())
         self.houghcontroller.trigger.signal.connect(self.hough_transform)
 
+        self.measurementcontroller = MeasurementController(mainview.centralWidget())
+        self.measurementcontroller.trigger.signal.connect(self.measurements)
+
         self.mainview.actionExit.triggered.connect(self.exit_app)
         self.mainview.actionBruker_directory.triggered.connect(self.open_bruker)
         self.mainview.actionNifti.triggered.connect(self.open_nifti)
@@ -74,6 +79,7 @@ class MainController:
         self.mainview.actionHoughTransform.triggered.connect(self.houghcontroller.show)
         self.mainview.actionSegmentGrain.triggered.connect(self.largest_component)
         self.mainview.actionSegmentCavity.triggered.connect(self.cavitycontroller.show)
+        self.mainview.actionMeasurements.triggered.connect(lambda : self.measurementcontroller.show(self.images.keys()))
 
         self.cavitycontroller.view.horizontalSlider.valueChanged.connect(lambda: self.segment_cavity(preview=True))
 
@@ -96,7 +102,7 @@ class MainController:
         self.echotime = None
 
         self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
-        self.houghcontroller.show()
+        self.measurementcontroller.show()
 
     def open_bruker(self):
         """
@@ -374,6 +380,28 @@ class MainController:
                 thread.start()
                 self.threads.append((thread, worker))
 
+    def measurements(self):
+        image = self.measurementcontroller.image
+        slice_range = self.measurementcontroller.slice_range
+        try:
+            image = self.images[image]
+            slice_range = [list(map(int, x.split(":"))) for x in slice_range.split(",")]
+            slice_range = np.concatenate([np.arange(x[0], x[1]) for x in slice_range])
+            print(slice_range)
+        except Exception as e:
+            slice_range = -1
+        finally:
+            worker = WorkerMeasurement(img_data=self.img_data, slice_range=slice_range)
+            thread = QThread()
+            worker.moveToThread(thread)
+            worker.signal_start.connect(self.mainview.show_run)
+            worker.signal_end.connect(self.end_measurements)
+            worker.signal_progress.connect(self.update_progressbar)
+            self.sig_abort_workers.signal.connect(worker.abort)
+            thread.started.connect(worker.work)
+            thread.start()
+            self.threads.append((thread, worker))
+
 
     def update_progressbar(self, progress):
         """
@@ -479,6 +507,9 @@ class MainController:
         hough_name = "hough_" + str(number)
         self.add_image(circle, hough_name)
         self.choose_image(hough_name)
+
+    def end_measurements(self, area_pix, area_unit, average, min, max):
+        print(area_pix, " ", area_unit, " ", average, " ", min, " ", max)
 
     def end_preview(self, image, number):
         name = "Preview"
