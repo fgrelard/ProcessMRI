@@ -42,6 +42,8 @@ class Ui_MainView(object):
 
         self.menuProcess = QtWidgets.QMenu(self.menubar)
 
+        self.menuSegmentation = QtWidgets.QMenu(self.menubar)
+
         self.menuAnalyze = QtWidgets.QMenu(self.menubar)
 
         self.menuOpen = QtWidgets.QMenu(self.menuFile)
@@ -62,6 +64,8 @@ class Ui_MainView(object):
         self.actionSegmentCavity = QtWidgets.QAction(MainView)
 
         self.actionSegmentGrain = QtWidgets.QAction(MainView)
+
+        self.actionMeasurements = QtWidgets.QAction(MainView)
 
         self.menuFile = QtWidgets.QMenu(self.menubar)
 
@@ -146,6 +150,7 @@ class Ui_MainView(object):
         self.menuFile.setObjectName("menuFile")
         self.menuOpen.setObjectName("menuOpen")
         self.menuProcess.setObjectName("menuProcess")
+        self.menuSegmentation.setObjectName("menuSegmentation")
         self.menuAnalyze.setObjectName("menuAnalyze")
         self.menuHelp.setObjectName("menuHelp")
         MainView.setMenuBar(self.menubar)
@@ -168,12 +173,14 @@ class Ui_MainView(object):
         self.menuProcess.addAction(self.actionExponential_fitting)
         self.menuProcess.addAction(self.actionDenoising_TPC)
         self.menuProcess.addAction(self.actionDenoising_NL_means)
-        self.menuAnalyze.addAction(self.actionHoughTransform)
-        self.menuAnalyze.addAction(self.actionSegmentGrain)
-        self.menuAnalyze.addAction(self.actionSegmentCavity)
+        self.menuSegmentation.addAction(self.actionHoughTransform)
+        self.menuSegmentation.addAction(self.actionSegmentGrain)
+        self.menuSegmentation.addAction(self.actionSegmentCavity)
+        self.menuAnalyze.addAction(self.actionMeasurements)
         self.menuHelp.addAction(self.actionUser_manual_FR)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuProcess.menuAction())
+        self.menubar.addAction(self.menuSegmentation.menuAction())
         self.menubar.addAction(self.menuAnalyze.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
@@ -198,6 +205,7 @@ class Ui_MainView(object):
         self.menuFile.setTitle(_translate("MainView", "File"))
         self.menuOpen.setTitle(_translate("MainView", "Open"))
         self.menuProcess.setTitle(_translate("MainView", "Process"))
+        self.menuSegmentation.setTitle(_translate("MainView", "Segmentation"))
         self.menuAnalyze.setTitle(_translate("MainView", "Analyze"))
         self.menuHelp.setTitle(_translate("MainView", "Help"))
         self.actionSave.setText(_translate("MainView", "Save Nifti"))
@@ -210,4 +218,5 @@ class Ui_MainView(object):
         self.actionHoughTransform.setText(_translate("MainView", "Hough transform"))
         self.actionSegmentGrain.setText(_translate("MainView", "Largest component"))
         self.actionSegmentCavity.setText(_translate("MainView", "Segment cavity"))
+        self.actionMeasurements.setText(_translate("MainView", "Measurements"))
         self.actionUser_manual_FR.setText(_translate("MainView", "User manual (FR)"))

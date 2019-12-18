@@ -42,13 +42,9 @@ def closest_circle_to_median_circle(image, min_radius=10, max_radius=20):
         L[i, 0] = cx
         L[i, 1] = cy
         L[i, 2] = r
-    print(L[:10])
     frequent_circle = np.median(L[:10, 0], axis=0)
     coordinates = np.delete(np.transpose(L, (0, 2, 1)), -1, axis=2)
-    print(coordinates[0])
     distance_to_frequent_circle = np.linalg.norm(frequent_circle[:-1].T - coordinates, axis=2, ord=2)
-    print(frequent_circle, frequent_circle[:-1])
-    print(distance_to_frequent_circle[0])
     index = np.argmin(distance_to_frequent_circle, axis=1)
     coordinates_circle = np.choose(index, L.T).T
     return coordinates_circle
