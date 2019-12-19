@@ -1,5 +1,5 @@
 from src.measurementview import Ui_Measurement_View
-from PyQt5.QtWidgets import QDialog, QMainWindow, QToolTip, QApplication, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QDialog, QMainWindow, QToolTip, QApplication
 from src.signal import Signal
 from PyQt5 import QtCore
 import numpy as np
@@ -30,18 +30,20 @@ class WorkerMeasurement(QtCore.QObject):
     signal_start = QtCore.pyqtSignal()
 
     #Signal emitted at the end of the computation
-    signal_end = QtCore.pyqtSignal(float, float, float, float, float)
+    signal_end = QtCore.pyqtSignal(list, np.ndarray)
 
     #Signal emitted during the computation, to keep
     #track of its progress
     signal_progress = QtCore.pyqtSignal(int)
     number = 1
 
-    def __init__(self, img_data, parent=None, slice_range=-1, resolution=(1,1,1)):
+    def __init__(self, images, parent=None, names=[], slice_range=-1, resolution=(1,1,1)):
         super().__init__()
-        self.img_data = img_data
+        self.images = images
+        self.names = names
         self.slice_range = slice_range
         self.resolution = resolution
+        self.parent = parent
         self.is_abort = False
 
     @QtCore.pyqtSlot()
@@ -52,20 +54,28 @@ class WorkerMeasurement(QtCore.QObject):
         Analogous to cavity.exponentialfit_image
         """
         self.signal_start.emit()
-        image = np.reshape(self.img_data, (self.img_data.shape[0], self.img_data.shape[1]) + (-1,), order='C')
-        if self.slice_range != -1:
-            self.slice_range = [x for x in self.slice_range if x in range(image.shape[-1])]
-            image = image[..., self.slice_range]
-        print(image.shape)
-        area_pix = measurements.area_pixels(image)
-        area_unit = measurements.area_unit(image, self.resolution)
-        average = measurements.average_value(image)
-        min = measurements.min_value(image)
-        max = measurements.max_value(image)
-
+        out = np.zeros(shape=(len(self.names), 5))
+        i = 0
+        for name in self.names:
+            image = self.images[name]
+            image = np.reshape(image, (image.shape[0], image.shape[1]) + (-1,), order='C')
+            if isinstance(self.slice_range, (np.ndarray, list)):
+                self.slice_range = [x for x in self.slice_range if x in range(image.shape[-1])]
+                image = image[..., self.slice_range]
+            area_pix = measurements.area_pixels(image)
+            area_unit = measurements.area_unit(image, self.resolution)
+            average = measurements.average_value(image)
+            min = measurements.min_value(image)
+            max = measurements.max_value(image)
+            out[i, 0] = area_pix
+            out[i, 1] = area_unit
+            out[i, 2] = average
+            out[i, 3] = min
+            out[i, 4] = max
+            i +=1
         if not self.is_abort:
             #Send images as a signal
-            self.signal_end.emit(area_pix, area_unit, average, min, max)
+            self.signal_end.emit(self.names, out)
 
 
     def abort(self):

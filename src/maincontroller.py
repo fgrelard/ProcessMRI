@@ -1,9 +1,13 @@
 import os
+import sys
 import numpy as np
 
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
+
 from src.signal import Signal
+from src.tableview import TableView
 
 from src.expfitcontroller import ExpFitController, WorkerExpFit
 from src.nlmeanscontroller import NLMeansController, WorkerNLMeans
@@ -102,7 +106,6 @@ class MainController:
         self.echotime = None
 
         self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
-        self.measurementcontroller.show()
 
     def open_bruker(self):
         """
@@ -381,19 +384,17 @@ class MainController:
                 self.threads.append((thread, worker))
 
     def measurements(self):
-        image = self.measurementcontroller.image
+        names = [self.measurementcontroller.image]
         slice_range = self.measurementcontroller.slice_range
-        try:
-            image = self.images[image]
-        except:
-            image = self.img_data
+        if names == ["All"]:
+            names = list(self.images.keys())
         try:
             slice_range = [list(map(int, x.split(":"))) for x in slice_range.split(",")]
             slice_range = np.concatenate([np.arange(x[0], x[1]) for x in slice_range])
         except Exception as e:
             slice_range = -1
 
-        worker = WorkerMeasurement(img_data=image, slice_range=slice_range)
+        worker = WorkerMeasurement(images=self.images, slice_range=slice_range, parent=self.mainview.parent.centralWidget(), names=names)
         thread = QThread()
         worker.moveToThread(thread)
         worker.signal_start.connect(self.mainview.show_run)
@@ -510,8 +511,20 @@ class MainController:
         self.add_image(circle, hough_name)
         self.choose_image(hough_name)
 
-    def end_measurements(self, area_pix, area_unit, average, min, max):
-        print(area_pix, " ", area_unit, " ", average, " ", min, " ", max)
+    def end_measurements(self, names, array):
+        self.mainview.hide_run()
+        table = TableView(len(names)+1, 6, parent=self.mainview.parent.centralWidget())
+        table.resize(640,320)
+        table.set_headers(["Area (pixels)", "Area (µm^3)", "Average intensity", "Min intensity", "Max intensity"])
+        for i in range(len(names)):
+            name = names[i]
+            table.set_item(name, i+1, 0)
+            table.set_item(str(array[i, 0]), i+1, 1)
+            table.set_item(str(array[i, 1]), i+1, 2)
+            table.set_item(str(array[i, 2]), i+1, 3)
+            table.set_item(str(array[i, 3]), i+1, 4)
+            table.set_item(str(array[i, 4]), i+1, 5)
+        table.show()
 
     def end_preview(self, image, number):
         name = "Preview"

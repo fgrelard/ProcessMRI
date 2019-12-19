@@ -1,21 +1,25 @@
 import sys, csv
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget,QTableWidgetItem,QVBoxLayout, QPushButton, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QAction, QTableWidget,QTableWidgetItem,QVBoxLayout, QPushButton, QFileDialog
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot
 
-class TableView(QWidget):
-    def __init__(self, rows, columns):
-        QWidget.__init__(self)
+class TableView(QDialog):
+    def __init__(self, rows, columns, parent=None):
+        QDialog.__init__(self, parent)
         self.table = QTableWidget(rows, columns, self)
-        for column in range(columns - 1):
-            for row in range(rows - 1):
-                item = QTableWidgetItem('Text%d' % row)
-                self.table.setItem(row, column, item)
         self.buttonSave = QPushButton('Save', self)
         self.buttonSave.clicked.connect(self.handleSave)
         layout = QVBoxLayout(self)
         layout.addWidget(self.table)
         layout.addWidget(self.buttonSave)
+
+    def set_headers(self, headers):
+        for i in range(len(headers)):
+            self.set_item(headers[i], 0, i+1)
+
+    def set_item(self, item, row, column):
+        item = QTableWidgetItem(item)
+        self.table.setItem(row, column, item)
 
     def handleSave(self):
         path, ext = QFileDialog.getSaveFileName(
