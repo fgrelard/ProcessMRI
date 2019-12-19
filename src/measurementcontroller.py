@@ -52,11 +52,16 @@ class WorkerMeasurement(QtCore.QObject):
         Analogous to cavity.exponentialfit_image
         """
         self.signal_start.emit()
-        area_pix = measurements.area_pixels(self.img_data)
-        area_unit = measurements.area_unit(self.img_data, self.resolution)
-        average = measurements.average_value(self.img_data)
-        min = measurements.min_value(self.img_data)
-        max = measurements.max_value(self.img_data)
+        image = np.reshape(self.img_data, (self.img_data.shape[0], self.img_data.shape[1]) + (-1,), order='C')
+        if self.slice_range != -1:
+            self.slice_range = [x for x in self.slice_range if x in range(image.shape[-1])]
+            image = image[..., self.slice_range]
+        print(image.shape)
+        area_pix = measurements.area_pixels(image)
+        area_unit = measurements.area_unit(image, self.resolution)
+        average = measurements.average_value(image)
+        min = measurements.min_value(image)
+        max = measurements.max_value(image)
 
         if not self.is_abort:
             #Send images as a signal

@@ -385,22 +385,24 @@ class MainController:
         slice_range = self.measurementcontroller.slice_range
         try:
             image = self.images[image]
+        except:
+            image = self.img_data
+        try:
             slice_range = [list(map(int, x.split(":"))) for x in slice_range.split(",")]
             slice_range = np.concatenate([np.arange(x[0], x[1]) for x in slice_range])
-            print(slice_range)
         except Exception as e:
             slice_range = -1
-        finally:
-            worker = WorkerMeasurement(img_data=self.img_data, slice_range=slice_range)
-            thread = QThread()
-            worker.moveToThread(thread)
-            worker.signal_start.connect(self.mainview.show_run)
-            worker.signal_end.connect(self.end_measurements)
-            worker.signal_progress.connect(self.update_progressbar)
-            self.sig_abort_workers.signal.connect(worker.abort)
-            thread.started.connect(worker.work)
-            thread.start()
-            self.threads.append((thread, worker))
+
+        worker = WorkerMeasurement(img_data=image, slice_range=slice_range)
+        thread = QThread()
+        worker.moveToThread(thread)
+        worker.signal_start.connect(self.mainview.show_run)
+        worker.signal_end.connect(self.end_measurements)
+        worker.signal_progress.connect(self.update_progressbar)
+        self.sig_abort_workers.signal.connect(worker.abort)
+        thread.started.connect(worker.work)
+        thread.start()
+        self.threads.append((thread, worker))
 
 
     def update_progressbar(self, progress):
