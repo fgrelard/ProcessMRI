@@ -111,6 +111,9 @@ class ImageViewExtended(pg.ImageView):
         addNewGradientFromMatplotlib("inferno")
         addNewGradientFromMatplotlib("magma")
         addNewGradientFromMatplotlib("cividis")
+        grayclip = pg.graphicsItems.GradientEditorItem.Gradients["greyclip"]
+        pg.graphicsItems.GradientEditorItem.Gradients["segmentation"] = {'ticks': [(0.0, (0, 0, 0, 255)), (1.0-np.finfo(float).eps, (255, 255, 255, 255)), (1.0, (255, 0, 0, 255))], 'mode': 'rgb'}
+
         super().__init__(parent, name, view, imageItem, *args)
         self.timeLine.setPen('g')
 
@@ -132,7 +135,7 @@ class ImageViewExtended(pg.ImageView):
         self.label = pg.LabelItem(justify='right')
         self.scene.addItem(self.label)
         self.scene.sigMouseMoved.connect(self.on_hover_image)
-        
+
         self.threads = []
 
         self.mouse_x = 0
@@ -154,6 +157,25 @@ class ImageViewExtended(pg.ImageView):
         self.ui.normFrameCheck.hide()
         self.ui.gridLayout_2.addWidget(self.ui.normTimeRangeCheck, 1, 2, 1, 1)
 
+
+    def drawAt(self, pos, ev=None):
+        order = pg.getConfigOption("imageAxisOrder")
+        if order == 'row-major':
+            pos = QtCore.QPoint(pos[1], pos[0])
+        pg.ImageItem.drawAt(self.imageItem, pos, ev)
+
+    def setDraw(self, is_draw, pen_width=1):
+        if is_draw:
+            array = np.full((pen_width, pen_width), np.amax(self.imageDisp)+1)
+            self.imageItem.drawAt = self.drawAt
+            self.imageItem.setDrawKernel(kernel=array, center=(pen_width//2, pen_width//2), mode='set')
+            self.ui.histogram.gradient.loadPreset("segmentation")
+        else:
+            self.imageItem.setDrawKernel(kernel=None)
+            self.ui.histogram.gradient.loadPreset("viridis")
+
+
+
     def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True):
         """
         Sets a new image
@@ -172,6 +194,8 @@ class ImageViewExtended(pg.ImageView):
             is_shown = True
 
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
+
+        self.levelMax += 1
 
         #Changes wheel event
         self.ui.roiPlot.setMouseEnabled(True, True)
