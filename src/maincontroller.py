@@ -100,6 +100,7 @@ class MainController:
         self.app.aboutToQuit.connect(self.exit_app)
         self.config = config
         self.images = {}
+        self.metadata = {}
         self.mainview.hide_run()
         self.threads = []
         self.img_data = None
@@ -131,13 +132,15 @@ class MainController:
         except Exception as e:
             print(e)
         else:
-            root, self.filename = os.path.split(filename)
-            self.filename = self.filename.replace('.nii', '')
-            self.filename = self.filename.replace('.gz', '')
+            root, name = os.path.split(filename)
+            name = name.replace('.nii', '')
+            name = name.replace('.gz', '')
             self.img_data = img.get_fdata()
-            self.add_image(img.get_fdata(), self.filename)
-            self.mainview.combobox.setCurrentIndex(self.mainview.combobox.findText(self.filename))
-            self.choose_image(self.filename)
+            self.add_image(img.get_fdata(), name)
+            self.mainview.combobox.setCurrentIndex(self.mainview.combobox.findText(name))
+            self.choose_image(name)
+            return root, name
+        return None, None
 
     def open_nifti(self):
         """
@@ -148,7 +151,8 @@ class MainController:
             return
 
         self.config['default']['NifTiDir'] = os.path.dirname(filename)
-        self.open_image(filename)
+        root, name = self.open_image(filename)
+        self.filename = name
 
         try:
             metadata = io.open_metadata(root + os.path.sep + self.filename + "_visu_pars.npy")
@@ -159,9 +163,11 @@ class MainController:
             echostring = filter(None, echostring)
             echotime = [int(i) for i in echostring]
             self.echotime = echotime
+            self.metadata[self.filename] = None
         else:
             echotime = io.extract_metadata(metadata, 'VisuAcqEchoTime')
             self.echotime = echotime
+            self.metadata[self.filename] = metadata
 
 
     def save_nifti(self):
@@ -393,8 +399,7 @@ class MainController:
             slice_range = np.concatenate([np.arange(x[0], x[1]) for x in slice_range])
         except Exception as e:
             slice_range = -1
-
-        worker = WorkerMeasurement(images=self.images, slice_range=slice_range, parent=self.mainview.parent.centralWidget(), names=names)
+        worker = WorkerMeasurement(images=self.images, slice_range=slice_range, parent=self.mainview.parent.centralWidget(), names=names, metadata=self.metadata)
         thread = QThread()
         worker.moveToThread(thread)
         worker.signal_start.connect(self.mainview.show_run)
@@ -511,19 +516,21 @@ class MainController:
         self.add_image(circle, hough_name)
         self.choose_image(hough_name)
 
-    def end_measurements(self, names, array):
+    def end_measurements(self, names, units, array):
         self.mainview.hide_run()
-        table = TableView(len(names)+1, 6, parent=self.mainview.parent.centralWidget())
+        table = TableView(len(names)+1, 7, parent=self.mainview.parent.centralWidget())
         table.resize(640,320)
-        table.set_headers(["Area (pixels)", "Area (µm^3)", "Average intensity", "Min intensity", "Max intensity"])
+        table.set_headers(["Area (pixels)", "Area (unit)", "Average intensity", "Min intensity", "Max intensity", "Unit"])
         for i in range(len(names)):
             name = names[i]
+            unit = units[i]
             table.set_item(name, i+1, 0)
             table.set_item(str(array[i, 0]), i+1, 1)
             table.set_item(str(array[i, 1]), i+1, 2)
             table.set_item(str(array[i, 2]), i+1, 3)
             table.set_item(str(array[i, 3]), i+1, 4)
             table.set_item(str(array[i, 4]), i+1, 5)
+            table.set_item(str(unit), i+1, 6)
         table.show()
 
     def end_preview(self, image, number):

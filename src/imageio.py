@@ -104,7 +104,9 @@ def extract_metadata(metadata, key):
         metadata associated with key
 
     """
-    return metadata[key]
+    if key in metadata:
+        return metadata[key]
+    return None
 
 def save_metadata_by_keyval(output_name, key, val):
     """
@@ -210,3 +212,17 @@ def save_nifti_with_metadata(img, echotime, filename):
     metadata_name = root + "_visu_pars.npy"
     save_nifti(img, image_name)
     save_metadata_by_keyval(metadata_name, "VisuAcqEchoTime", echotime)
+
+
+def extract_resolution(metadata):
+    try:
+        units = extract_metadata(metadata, "VisuCoreUnits")
+        unit = units[0] + "^3"
+        thickness = extract_metadata(metadata, "VisuCoreFrameThickness")
+        slice_size_units = extract_metadata(metadata, "VisuCoreExtent")
+        slice_size_pixels = extract_metadata(metadata, "VisuCoreSize")
+        resolution_units = np.divide(slice_size_units, slice_size_pixels)
+        resolution_tuple = (resolution_units[0], resolution_units[1], thickness)
+        return resolution_tuple, unit
+    except Exception as e:
+        return (0, 0, 0), "N/A"

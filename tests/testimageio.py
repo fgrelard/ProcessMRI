@@ -18,7 +18,13 @@ class TestImageIO(unittest.TestCase):
         io.bruker2nifti("/mnt/d/IRM/raw/BLE/250/50")
 
     def test_open_metadata(self):
-        io.open_metadata("/mnt/d/IRM/raw/50/nifti/50_subscan_1.nii.gz")
+        metadata = io.open_metadata("/mnt/d/IRM/nifti/BLE/250/50/50_subscan_1_visu_pars.npy")
+        print(metadata)
+
+    def test_extract_resolution(self):
+        metadata = io.open_metadata("/mnt/d/IRM/nifti/BLE/250/50/50_subscan_1_visu_pars.npy")
+        res, unit = io.extract_resolution(metadata)
+        print(res, unit)
 
     def test_open_bruker(self):
         l = io.open_bruker("/mnt/d/IRM/raw/50")
