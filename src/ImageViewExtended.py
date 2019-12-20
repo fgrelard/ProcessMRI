@@ -118,6 +118,15 @@ class ImageViewExtended(pg.ImageView):
         self.ui.histogram.gradient.loadPreset("viridis")
         self.ui.histogram.gradient.updateGradient()
         self.ui.histogram.gradientChanged()
+
+        self.ui.normAutoRadio = QtGui.QRadioButton(self.ui.normGroup)
+        self.ui.normAutoRadio.setChecked(False)
+        self.ui.normAutoRadio.setObjectName("normAutoRadio")
+        self.ui.gridLayout_2.addWidget(self.ui.normAutoRadio, 0, 3, 1, 1)
+        self.ui.gridLayout_2.addWidget(self.ui.normOffRadio, 0, 4, 1, 1)
+        self.ui.normAutoRadio.setText(QtGui.QApplication.translate("Form", "Auto", None))
+        self.ui.normAutoRadio.clicked.connect(self.normRadioChanged)
+
         self.hide_partial()
 
         self.label = pg.LabelItem(justify='right')
@@ -241,7 +250,10 @@ class ImageViewExtended(pg.ImageView):
             self.imageDisp = image
             if self.axes['t'] is not None:
                 curr_img = self.imageDisp[self.currentIndex, ...]
-                self.levelMin, self.levelMax = np.amin(curr_img), np.amax(curr_img)
+                if self.ui.normAutoRadio.isChecked():
+                    self.levelMin, self.levelMax = list(map(float, self.quickMinMax(self.imageDisp)))
+                else:
+                    self.levelMin, self.levelMax = np.amin(curr_img), np.amax(curr_img)
             else:
                 self.levelMin, self.levelMax = list(map(float, self.quickMinMax(self.imageDisp)))
         return self.imageDisp
@@ -271,16 +283,16 @@ class ImageViewExtended(pg.ImageView):
             (eind, end) = self.timeIndex(self.normRgn.lines[1])
             n = image[sind:eind+1].mean(axis=0)
             n.shape = (1,) + n.shape
-            if div:
-                norm /= n
+            if div and n.any():
+                norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
             else:
                 norm -= n
 
         if self.ui.normFrameCheck.isChecked() and image.ndim == 3:
             n = image.mean(axis=1).mean(axis=1)
             n.shape = n.shape + (1, 1)
-            if div:
-                norm /= n
+            if div and n.any():
+                norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
             else:
                 norm -= n
 
@@ -296,9 +308,8 @@ class ImageViewExtended(pg.ImageView):
             else:
                 n = self.normRoi.getArrayRegion(norm, self.imageItem, (1, 2)).mean(axis=1).mean(axis=1)
                 n = n[:,np.newaxis,np.newaxis]
-
-            if div:
-                norm /= n
+            if div and n.any():
+                norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
             else:
                 norm -= n
 
