@@ -104,6 +104,8 @@ def extract_metadata(metadata, key):
         metadata associated with key
 
     """
+    if not metadata:
+        return
     if key in metadata:
         return metadata[key]
     return None
@@ -194,7 +196,7 @@ def save_nifti(img, filename):
     nibimg = nib.Nifti1Image(img, np.eye(4))
     nibimg.to_filename(filename)
 
-def save_nifti_with_metadata(img, echotime, filename):
+def save_nifti_with_metadata(img, metadata, filename):
     """
     Save numpy to NIFTI and saves echotimes to numpy format
 
@@ -207,11 +209,12 @@ def save_nifti_with_metadata(img, echotime, filename):
     filename: str
         the image name, used as well for echotimes
     """
+    print(filename)
     root, ext = os.path.splitext(filename)
     image_name = root + ".nii"
     metadata_name = root + "_visu_pars.npy"
     save_nifti(img, image_name)
-    save_metadata_by_keyval(metadata_name, "VisuAcqEchoTime", echotime)
+    save_metadata(metadata_name, metadata)
 
 
 def extract_resolution(metadata):

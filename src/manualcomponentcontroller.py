@@ -52,7 +52,7 @@ class WorkerManualComponent(QtCore.QObject):
             current = image[..., i]
             try:
                 threshold = threshold_otsu(current)
-                threshold = max(0, min(int(threshold*self.multiplier), 255))
+                threshold = max(1, min(int(threshold*self.multiplier), 255))
             except:
                 threshold = 50
             seg_con = sitk.ConnectedThreshold(sitk.GetImageFromArray(current), seedList=[self.seed], lower=int(threshold), upper=255)

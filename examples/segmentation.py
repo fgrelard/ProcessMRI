@@ -20,9 +20,9 @@ def detect_circles(image, threshold=150, min_radius=10, max_radius=50):
     return image_display
 
 
-img = nib.load("/mnt/d/IRM/nifti/BLE/250/50/50_subscan_1.nii.gz")
+img = nib.load("/mnt/d/IRM/nifti/BLE/250/50/tmp.nii")
 img_data = img.get_fdata()
-seg = segmentation.region_growing(img_data, (55,83,0))
+seg = segmentation.region_growing(img_data, (84,54,0))
 sys.exit(0)
 
 image = np.reshape(img_data, (img_data.shape[0], img_data.shape[1]) + (-1,), order='F')

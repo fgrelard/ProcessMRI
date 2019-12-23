@@ -192,10 +192,11 @@ class MainController:
         """
         Saves as Nifti file
         """
-        filename = QtWidgets.QFileDialog.getSaveFileName(self.mainview.centralwidget, "Save Nifti", self.config['default']['NifTiDir'])
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.mainview.centralwidget, "Save Nifti", self.config['default']['NifTiDir'])
         if not filename:
             return
-        io.save_nifti_with_metadata(self.img_data, self.echotime, filename)
+        img_data_name = self.current_name(self.img_data)
+        io.save_nifti_with_metadata(self.img_data, self.metadata[img_data_name], filename)
 
     def exit_app(self):
         """
@@ -649,11 +650,15 @@ class MainController:
         """
         self.mainview.combobox.addItem(name)
         self.images[name] = image
+        img_data_name = self.current_name(self.img_data)
+        self.metadata[name] = self.metadata[img_data_name] if img_data_name in self.metadata else None
+
+    def current_name(self, image):
         list_keys = list(self.images.keys())
         list_values = list(self.images.values())
-        key = [np.all(self.img_data == array) for array in list_values].index(True)
+        key = [np.all(image == array) for array in list_values].index(True)
         img_data_name = list_keys[key]
-        self.metadata[name] = self.metadata[img_data_name] if img_data_name in self.metadata else None
+        return img_data_name
 
     def remove_image(self,  name):
         if name in self.images:
