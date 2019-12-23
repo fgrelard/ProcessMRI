@@ -38,7 +38,6 @@ class WorkerManualSegmentation(QtCore.QObject):
 
     @QtCore.pyqtSlot()
     def work(self):
-        print(self.img_data.shape)
         while True:
             QApplication.processEvents()
             if self.is_abort:

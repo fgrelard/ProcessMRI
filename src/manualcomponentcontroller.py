@@ -33,10 +33,11 @@ class WorkerManualComponent(QtCore.QObject):
 
     number = 1
 
-    def __init__(self, img_data, seed, parent=None):
+    def __init__(self, img_data, seed, multiplier=1.0, parent=None):
         super().__init__()
         self.img_data = img_data
         self.seed = seed
+        self.multiplier = multiplier
         self.is_abort = False
 
     @QtCore.pyqtSlot()
@@ -49,7 +50,11 @@ class WorkerManualComponent(QtCore.QObject):
         for i in range(length):
             QApplication.processEvents()
             current = image[..., i]
-            threshold = threshold_otsu(current)
+            try:
+                threshold = threshold_otsu(current)
+                threshold = max(0, min(int(threshold*self.multiplier), 255))
+            except:
+                threshold = 50
             seg_con = sitk.ConnectedThreshold(sitk.GetImageFromArray(current), seedList=[self.seed], lower=int(threshold), upper=255)
             seg_con_array = sitk.GetArrayFromImage(seg_con)
             out_image[..., i] = seg_con_array
@@ -81,10 +86,36 @@ class ManualComponentController:
         self.view = Ui_ManualComponent_View()
         self.view.setupUi(self.dialog)
         self.view.retranslateUi(self.dialog)
+        self.view.pushButton_2.setFixedWidth(20)
+
+
+        t1 = self.view.pushButton_2.toolTip()
+        self.view.pushButton_2.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t1)
+        #Reset tooltips to avoid overlap of events
+        self.view.pushButton_2.setToolTip("")
 
         #Events
         self.trigger = Signal()
-        self.view.pushButton.clicked.connect(self.trigger.signal.emit)
+        self.view.pushButton.clicked.connect(self.update_parameters)
+        self.view.horizontalSlider.mouseMoveEvent = self.slider_event
+
+    def update_parameters(self):
+        value = self.view.horizontalSlider.value()
+        self.multiplier = self.slidervalue_to_multvalue(value)
+        self.trigger.signal.emit()
 
     def show(self):
         self.dialog.show()
+
+    def slider_event(self, event):
+        self.update_tooltip()
+        QToolTip.showText(event.globalPos(), self.view.horizontalSlider.toolTip())
+        QSlider.mouseMoveEvent(self.view.horizontalSlider, event)
+
+    def update_tooltip(self):
+        value = self.view.horizontalSlider.value()
+        value = self.slidervalue_to_multvalue(value)
+        self.view.horizontalSlider.setToolTip(str(value))
+
+    def slidervalue_to_multvalue(self, value):
+        return float(value/10)

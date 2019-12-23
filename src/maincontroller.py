@@ -78,6 +78,7 @@ class MainController:
         self.manualcomponentcontroller = ManualComponentController(mainview.centralWidget())
         self.manualcomponentcontroller.trigger.signal.connect(lambda: self.mainview.imageview.setClickable(True))
         self.manualcomponentcontroller.view.buttonBox.accepted.connect(self.end_manual_component)
+        self.manualcomponentcontroller.view.horizontalSlider.valueChanged.connect(lambda: self.manual_component(evt=None, click=False))
 
         self.mainview.imageview.scene.sigMouseClicked.connect(self.manual_component)
 
@@ -118,6 +119,9 @@ class MainController:
         self.threads = []
         self.img_data = None
         self.echotime = None
+
+        self.mouse_x = 0
+        self.mouse_y = 0
 
         self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
         self.manualcomponentcontroller.show()
@@ -414,22 +418,34 @@ class MainController:
         thread.start()
         self.threads.append((thread, worker))
 
-    def manual_component(self, evt):
+
+    def register_position_on_click(self, evt):
+        pos = evt.pos()
+        mousePoint = self.mainview.imageview.view.mapSceneToView(pos)
+        self.mouse_x = int(mousePoint.x())
+        self.mouse_y = int(mousePoint.y())
+
+    def manual_component(self, evt, click=True):
         if not self.mainview.imageview.is_clickable:
             return
 
-        pos = evt.pos()
-        mousePoint = self.mainview.imageview.view.mapSceneToView(pos)
-        mouse_x = int(mousePoint.x())
-        mouse_y = int(mousePoint.y())
+        if click:
+            self.register_position_on_click(evt)
+        self.manualcomponentcontroller.update_parameters()
+        multiplier = self.manualcomponentcontroller.multiplier
+        try:
+            multiplier = float(multiplier)
+        except Exception as e:
+            multiplier = 1.0
 
-        worker = WorkerManualComponent(self.img_data.copy(), (mouse_x, mouse_y))
+        worker = WorkerManualComponent(self.img_data.copy(), seed=(self.mouse_x, self.mouse_y), multiplier=multiplier)
         thread = QThread()
         worker.moveToThread(thread)
         worker.signal_end.connect(self.end_preview)
         thread.started.connect(worker.work)
         thread.start()
         self.threads.append((thread, worker))
+
 
     def measurements(self):
         names = [self.measurementcontroller.image]
@@ -558,6 +574,12 @@ class MainController:
         self.add_image(circle, hough_name)
         self.choose_image(hough_name)
 
+    def end_manual_seg(self, image, number):
+        self.remove_image("Manual_segmentation")
+        manual_name = "manual_" + str(number)
+        self.add_image(image, manual_name)
+        self.choose_image(manual_name)
+        self.mainview.imageview.setDrawable(False)
 
     def end_manual_component(self):
         number = 1
@@ -624,13 +646,13 @@ class MainController:
             the image
         name: str
             combobox name
-
         """
         self.mainview.combobox.addItem(name)
         self.images[name] = image
         list_keys = list(self.images.keys())
         list_values = list(self.images.values())
-        img_data_name = list_keys[list_values.index(self.img_data)]
+        key = [np.all(self.img_data == array) for array in list_values].index(True)
+        img_data_name = list_keys[key]
         self.metadata[name] = self.metadata[img_data_name] if img_data_name in self.metadata else None
 
     def remove_image(self,  name):
