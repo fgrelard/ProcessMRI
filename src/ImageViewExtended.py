@@ -145,8 +145,9 @@ class ImageViewExtended(pg.ImageView):
         self.is_clickable = False
         self.is_drawable = False
 
-        self.imageItem.drawAt = self.drawAt
+        self.pen_size = 1
 
+        self.imageItem.drawAt = self.drawAt
 
 
     def hide_partial(self):
@@ -182,9 +183,10 @@ class ImageViewExtended(pg.ImageView):
             self.ui.histogram.gradient.loadPreset("viridis")
 
     def update_pen_size(self, pen_size):
+        self.pen_size = pen_size
         if self.is_drawable:
-            array = np.full((pen_size, pen_size), np.amax(self.imageDisp))
-            self.imageItem.setDrawKernel(kernel=array, center=(pen_size//2, pen_size//2), mode='set')
+            array = np.full((self.pen_size, self.pen_size), np.amax(self.imageDisp))
+            self.imageItem.setDrawKernel(kernel=array, center=(self.pen_size//2, self.pen_size//2), mode='set')
 
     def setClickable(self, is_clickable):
         self.is_clickable = is_clickable

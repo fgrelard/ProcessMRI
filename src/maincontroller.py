@@ -122,8 +122,6 @@ class MainController:
         self.img_data = None
         self.echotime = None
 
-        self.pen_size = 1
-
         self.mouse_x = 0
         self.mouse_y = 0
 
@@ -407,7 +405,7 @@ class MainController:
     def manual_segmentation(self):
         key = "Manual_segmentation"
         self.remove_image(key)
-        self.mainview.imageview.setDrawable(True, self.pen_size)
+        self.mainview.imageview.setDrawable(True, self.mainview.imageview.pen_size)
 
         manual_seg = self.img_data.copy()
 
