@@ -72,10 +72,34 @@ class ManualSegmentationController:
         self.view = Ui_ManualSegmentation_View()
         self.view.setupUi(self.dialog)
         self.view.retranslateUi(self.dialog)
+        self.view.pushButton_2.setFixedWidth(20)
+
+        t1 = self.view.pushButton_2.toolTip()
+        self.view.pushButton_2.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t1)
+        #Reset tooltips to avoid overlap of events
+        self.view.pushButton_2.setToolTip("")
 
         #Events
         self.trigger = Signal()
         self.view.pushButton.clicked.connect(self.trigger.signal.emit)
+        self.view.horizontalSlider.mouseMoveEvent = self.slider_event
 
     def show(self):
         self.dialog.show()
+
+    def update_parameters(self):
+        value = self.view.horizontalSlider.value()
+        self.pencil_size = self.slidervalue_to_multvalue(value)
+
+    def slider_event(self, event):
+        self.update_tooltip()
+        QToolTip.showText(event.globalPos(), self.view.horizontalSlider.toolTip())
+        QSlider.mouseMoveEvent(self.view.horizontalSlider, event)
+
+    def update_tooltip(self):
+        value = self.view.horizontalSlider.value()
+        value = self.slidervalue_to_multvalue(value)
+        self.view.horizontalSlider.setToolTip(str(value))
+
+    def slidervalue_to_multvalue(self, value):
+        return int(value)

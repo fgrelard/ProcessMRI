@@ -74,6 +74,8 @@ class MainController:
 
         self.manualsegmentationcontroller = ManualSegmentationController(mainview.centralWidget())
         self.manualsegmentationcontroller.trigger.signal.connect(self.manual_segmentation)
+        self.manualsegmentationcontroller.view.horizontalSlider.valueChanged.connect(self.update_pen_size)
+
 
         self.manualcomponentcontroller = ManualComponentController(mainview.centralWidget())
         self.manualcomponentcontroller.trigger.signal.connect(lambda: self.mainview.imageview.setClickable(True))
@@ -119,6 +121,8 @@ class MainController:
         self.threads = []
         self.img_data = None
         self.echotime = None
+
+        self.pen_size = 1
 
         self.mouse_x = 0
         self.mouse_y = 0
@@ -403,7 +407,7 @@ class MainController:
     def manual_segmentation(self):
         key = "Manual_segmentation"
         self.remove_image(key)
-        self.mainview.imageview.setDrawable(True)
+        self.mainview.imageview.setDrawable(True, self.pen_size)
 
         manual_seg = self.img_data.copy()
 
@@ -574,6 +578,10 @@ class MainController:
         hough_name = "hough_" + str(number)
         self.add_image(circle, hough_name)
         self.choose_image(hough_name)
+
+    def update_pen_size(self):
+        self.manualsegmentationcontroller.update_parameters()
+        self.mainview.imageview.update_pen_size(self.manualsegmentationcontroller.pencil_size)
 
     def end_manual_seg(self, image, number):
         self.remove_image("Manual_segmentation")
