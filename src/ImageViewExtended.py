@@ -194,9 +194,7 @@ class ImageViewExtended(pg.ImageView):
             is_shown = True
 
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
-
-        self.levelMax += 1
-
+        self.levelMax+=1
         #Changes wheel event
         self.ui.roiPlot.setMouseEnabled(True, True)
         self.ui.roiPlot.wheelEvent = self.roi_scroll_bar

@@ -397,7 +397,7 @@ class MainController:
         self.add_image(manual_seg, key)
         self.choose_image(key)
 
-        worker = WorkerManualSegmentation(self.mainview.imageview.imageDisp)
+        worker = WorkerManualSegmentation(self.mainview.imageview.imageDisp, manual_seg.shape)
         thread = QThread()
         worker.moveToThread(thread)
         worker.signal_end.connect(self.end_manual_seg)
@@ -539,7 +539,7 @@ class MainController:
         self.remove_image("Manual_segmentation")
         manual_name = "manual_" + str(number)
         self.add_image(image, manual_name)
-        self.choose_image(manual_name, is_vis=False)
+        self.choose_image(manual_name)
         self.mainview.imageview.setDraw(False)
 
     def end_measurements(self, names, units, array):
