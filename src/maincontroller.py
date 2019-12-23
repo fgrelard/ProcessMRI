@@ -17,6 +17,7 @@ from src.houghcontroller import HoughController, WorkerHough
 from src.largestcomponentcontroller import WorkerLargestComponent
 from src.measurementcontroller import MeasurementController, WorkerMeasurement
 from src.manualsegmentationcontroller import ManualSegmentationController, WorkerManualSegmentation
+from src.manualcomponentcontroller import ManualComponentController, WorkerManualComponent
 
 import src.imageio as io
 import src.exponentialfit as expfit
@@ -74,6 +75,12 @@ class MainController:
         self.manualsegmentationcontroller = ManualSegmentationController(mainview.centralWidget())
         self.manualsegmentationcontroller.trigger.signal.connect(self.manual_segmentation)
 
+        self.manualcomponentcontroller = ManualComponentController(mainview.centralWidget())
+        self.manualcomponentcontroller.trigger.signal.connect(lambda: self.mainview.imageview.setClickable(True))
+        self.manualcomponentcontroller.view.buttonBox.accepted.connect(self.end_manual_component)
+
+        self.mainview.imageview.scene.sigMouseClicked.connect(self.manual_component)
+
         self.measurementcontroller = MeasurementController(mainview.centralWidget())
         self.measurementcontroller.trigger.signal.connect(self.measurements)
 
@@ -88,6 +95,7 @@ class MainController:
         self.mainview.actionSegmentGrain.triggered.connect(self.largest_component)
         self.mainview.actionSegmentCavity.triggered.connect(self.cavitycontroller.show)
         self.mainview.actionManualSegmentation.triggered.connect(self.manualsegmentationcontroller.show)
+        self.mainview.actionManualComponent.triggered.connect(self.manualcomponentcontroller.show)
         self.mainview.actionMeasurements.triggered.connect(lambda : self.measurementcontroller.show(self.images.keys()))
 
         self.cavitycontroller.view.horizontalSlider.valueChanged.connect(lambda: self.segment_cavity(preview=True))
@@ -112,7 +120,7 @@ class MainController:
         self.echotime = None
 
         self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
-        self.manualsegmentationcontroller.show()
+        self.manualcomponentcontroller.show()
 
     def open_bruker(self):
         """
@@ -390,7 +398,7 @@ class MainController:
     def manual_segmentation(self):
         key = "Manual_segmentation"
         self.remove_image(key)
-        self.mainview.imageview.setDraw(True)
+        self.mainview.imageview.setDrawable(True)
 
         manual_seg = self.img_data.copy()
 
@@ -406,6 +414,22 @@ class MainController:
         thread.start()
         self.threads.append((thread, worker))
 
+    def manual_component(self, evt):
+        if not self.mainview.imageview.is_clickable:
+            return
+
+        pos = evt.pos()
+        mousePoint = self.mainview.imageview.view.mapSceneToView(pos)
+        mouse_x = int(mousePoint.x())
+        mouse_y = int(mousePoint.y())
+
+        worker = WorkerManualComponent(self.img_data.copy(), (mouse_x, mouse_y))
+        thread = QThread()
+        worker.moveToThread(thread)
+        worker.signal_end.connect(self.end_preview)
+        thread.started.connect(worker.work)
+        thread.start()
+        self.threads.append((thread, worker))
 
     def measurements(self):
         names = [self.measurementcontroller.image]
@@ -535,12 +559,18 @@ class MainController:
         self.choose_image(hough_name)
 
 
-    def end_manual_seg(self, image, number):
-        self.remove_image("Manual_segmentation")
-        manual_name = "manual_" + str(number)
-        self.add_image(image, manual_name)
-        self.choose_image(manual_name)
-        self.mainview.imageview.setDraw(False)
+    def end_manual_component(self):
+        number = 1
+        manual_name = "component_" + str(number)
+        while manual_name in self.images:
+            number += 1
+            manual_name = "component_" + str(number)
+        if "Preview" in self.images:
+            image = self.images["Preview"]
+            self.add_image(image, manual_name)
+            self.choose_image(manual_name, preview=True)
+            self.remove_image("Preview")
+        self.mainview.imageview.setClickable(False)
 
     def end_measurements(self, names, units, array):
         self.mainview.hide_run()
@@ -565,7 +595,7 @@ class MainController:
             self.images[name] = image
         else:
             self.add_image(image, name)
-        self.choose_image(name, preview=True)
+        self.choose_image(name, preview=True, autoLevels=False)
 
 
     def abort_computation(self):
@@ -598,6 +628,10 @@ class MainController:
         """
         self.mainview.combobox.addItem(name)
         self.images[name] = image
+        list_keys = list(self.images.keys())
+        list_values = list(self.images.values())
+        img_data_name = list_keys[list_values.index(self.img_data)]
+        self.metadata[name] = self.metadata[img_data_name] if img_data_name in self.metadata else None
 
     def remove_image(self,  name):
         if name in self.images:
@@ -605,7 +639,7 @@ class MainController:
             index = self.mainview.combobox.findText(name)
             self.mainview.combobox.removeItem(index)
 
-    def choose_image(self, name, preview=False, is_vis=True):
+    def choose_image(self, name, preview=False, autoLevels=True):
         """
         Choose an image among available image
         The name must be in self.images
@@ -622,10 +656,7 @@ class MainController:
         if not preview:
             self.img_data = self.images[name]
         self.mainview.combobox.setCurrentIndex(self.mainview.combobox.findText(name))
-        if is_vis:
-            vis = self.image_to_visualization(self.images[name])
-        else:
-            vis = self.images[name]
+        vis = self.image_to_visualization(self.images[name])
         self.mainview.imageview.setImage(vis)
 
     def image_to_visualization(self, img):

@@ -6,7 +6,7 @@ from skimage import data, color
 from skimage.draw import circle
 import src.imageio as io
 from skimage.util import img_as_ubyte
-
+import sys
 
 def detect_circles(image, threshold=150, min_radius=10, max_radius=50):
     image_display = np.zeros_like(image)
@@ -22,6 +22,9 @@ def detect_circles(image, threshold=150, min_radius=10, max_radius=50):
 
 img = nib.load("/mnt/d/IRM/nifti/BLE/250/50/50_subscan_1.nii.gz")
 img_data = img.get_fdata()
+seg = segmentation.region_growing(img_data, (55,83,0))
+sys.exit(0)
+
 image = np.reshape(img_data, (img_data.shape[0], img_data.shape[1]) + (-1,), order='F')
 image = image.transpose(2, 1, 0)
 

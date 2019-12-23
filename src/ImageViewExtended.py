@@ -115,6 +115,7 @@ class ImageViewExtended(pg.ImageView):
         pg.graphicsItems.GradientEditorItem.Gradients["segmentation"] = {'ticks': [(0.0, (0, 0, 0, 255)), (1.0-np.finfo(float).eps, (255, 255, 255, 255)), (1.0, (255, 0, 0, 255))], 'mode': 'rgb'}
 
         super().__init__(parent, name, view, imageItem, *args)
+        self.imageItem.getHistogram = self.getImageItemHistogram
         self.timeLine.setPen('g')
 
         self.ui.histogram.sigLevelsChanged.connect(self.levelsChanged)
@@ -141,6 +142,8 @@ class ImageViewExtended(pg.ImageView):
         self.mouse_x = 0
         self.mouse_y = 0
 
+        self.is_clickable = False
+
 
     def hide_partial(self):
         """
@@ -164,7 +167,7 @@ class ImageViewExtended(pg.ImageView):
             pos = QtCore.QPoint(pos[1], pos[0])
         pg.ImageItem.drawAt(self.imageItem, pos, ev)
 
-    def setDraw(self, is_draw, pen_width=1):
+    def setDrawable(self, is_draw, pen_width=1):
         if is_draw:
             array = np.full((pen_width, pen_width), np.amax(self.imageDisp)+1)
             self.imageItem.drawAt = self.drawAt
@@ -174,7 +177,8 @@ class ImageViewExtended(pg.ImageView):
             self.imageItem.setDrawKernel(kernel=None)
             self.ui.histogram.gradient.loadPreset("viridis")
 
-
+    def setClickable(self, is_clickable):
+        self.is_clickable = is_clickable
 
     def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True):
         """
@@ -195,6 +199,7 @@ class ImageViewExtended(pg.ImageView):
 
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
         self.levelMax+=1
+
         #Changes wheel event
         self.ui.roiPlot.setMouseEnabled(True, True)
         self.ui.roiPlot.wheelEvent = self.roi_scroll_bar
@@ -238,6 +243,7 @@ class ImageViewExtended(pg.ImageView):
         if image is None:
             return
         self.update_label()
+
 
     def update_label(self):
         """
@@ -451,3 +457,47 @@ class ImageViewExtended(pg.ImageView):
         self.exportSlicesAction = QtGui.QAction("Export all slices", self.menu)
         self.exportSlicesAction.triggered.connect(self.exportSlicesClicked)
         self.menu.addAction(self.exportSlicesAction)
+
+    def getImageItemHistogram(self, bins='auto', step='auto', targetImageSize=200, targetHistogramSize=500, **kwds):
+        """Returns x and y arrays containing the histogram values for the current image.
+        For an explanation of the return format, see numpy.histogram().
+
+        The *step* argument causes pixels to be skipped when computing the histogram to save time.
+        If *step* is 'auto', then a step is chosen such that the analyzed data has
+        dimensions roughly *targetImageSize* for each axis.
+
+        The *bins* argument and any extra keyword arguments are passed to
+        np.histogram(). If *bins* is 'auto', then a bin number is automatically
+        chosen based on the image characteristics:
+
+        * Integer images will have approximately *targetHistogramSize* bins,
+          with each bin having an integer width.
+        * All other types will have *targetHistogramSize* bins.
+
+        This method is also used when automatically computing levels.
+        """
+        if self.image is None:
+            return None,None
+        if step == 'auto':
+            step = (int(np.ceil(self.image.shape[0] / targetImageSize)),
+                    int(np.ceil(self.image.shape[1] / targetImageSize)))
+        if np.isscalar(step):
+            step = (step, step)
+        stepData = self.image[::step[0], ::step[1]]
+
+        if bins == 'auto':
+            if stepData.dtype.kind in "ui":
+                mn = stepData.min()
+                mx = stepData.max()
+                step = np.ceil((mx-mn) / 500.)
+                bins = np.arange(mn, mx+1.01*step, step+1, dtype=np.int)
+                if len(bins) == 0:
+                    bins = [mn, mx]
+            else:
+                bins = 500
+
+        kwds['bins'] = bins
+        stepData = stepData[np.isfinite(stepData)]
+        hist = np.histogram(stepData, **kwds)
+
+        return hist[1][:-1], hist[0]

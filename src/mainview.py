@@ -67,6 +67,8 @@ class Ui_MainView(object):
 
         self.actionManualSegmentation = QtWidgets.QAction(MainView)
 
+        self.actionManualComponent = QtWidgets.QAction(MainView)
+
         self.actionMeasurements = QtWidgets.QAction(MainView)
 
         self.menuFile = QtWidgets.QMenu(self.menubar)
@@ -180,6 +182,7 @@ class Ui_MainView(object):
         self.menuSegmentation.addAction(self.actionSegmentCavity)
         self.menuSegmentation.addSeparator()
         self.menuSegmentation.addAction(self.actionManualSegmentation)
+        self.menuSegmentation.addAction(self.actionManualComponent)
         self.menuAnalyze.addAction(self.actionMeasurements)
         self.menuHelp.addAction(self.actionUser_manual_FR)
         self.menubar.addAction(self.menuFile.menuAction())
@@ -223,5 +226,6 @@ class Ui_MainView(object):
         self.actionSegmentGrain.setText(_translate("MainView", "Largest component"))
         self.actionSegmentCavity.setText(_translate("MainView", "Segment cavity"))
         self.actionManualSegmentation.setText(_translate("MainView", "Manual segmentation"))
+        self.actionManualComponent.setText(_translate("MainView", "Manual component"))
         self.actionMeasurements.setText(_translate("MainView", "Measurements"))
         self.actionUser_manual_FR.setText(_translate("MainView", "User manual (FR)"))
