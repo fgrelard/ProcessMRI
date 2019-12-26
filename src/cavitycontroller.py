@@ -5,6 +5,8 @@ from PyQt5 import QtCore
 import numpy as np
 from skimage.util import img_as_ubyte
 import src.segmentation as seg
+import matplotlib.pyplot as plt
+
 
 class WorkerCavity(QtCore.QObject):
     """
@@ -35,12 +37,11 @@ class WorkerCavity(QtCore.QObject):
     signal_progress = QtCore.pyqtSignal(int)
     number = 1
 
-    def __init__(self, img_data, parent=None, multiplier=2.5, start=1, end=0, preview=False):
+    def __init__(self, img_data, parent=None, multiplier=2.5, size_se=5, preview=False):
         super().__init__()
         self.img_data = img_data
         self.multiplier = multiplier
-        self.start_slice = start
-        self.end_slice = end
+        self.size_se = size_se
         self.is_preview = preview
         self.is_abort = False
 
@@ -52,30 +53,26 @@ class WorkerCavity(QtCore.QObject):
         Analogous to cavity.exponentialfit_image
         """
         self.signal_start.emit()
-        depth = self.img_data.shape[-1]
-        if self.end_slice > depth:
-            self.end_slice = depth
-        if self.start_slice > depth:
-            self.start_slice = 0
-        if self.end_slice <= self.start_slice:
-            self.start_slice = 0
-            self.end_slice = depth
-        image8 = img_as_ubyte(self.img_data * 1.0 / self.img_data.max())
-        image8 = image8[..., self.start_slice:self.end_slice]
-        image_copy = self.img_data.copy()[..., self.start_slice:self.end_slice]
+        image8 = self.img_data.copy()
+        image8 = img_as_ubyte(image8 * 1.0 / image8.max())
+        image8 = np.reshape(image8, (image8.shape[0], image8.shape[1]) + (-1,), order='F')
+        seg_image = np.zeros_like(image8)
         length = image8.shape[-1]
         for i in range(length):
             if self.is_abort:
                 break
             QApplication.processEvents()
-            cavity = seg.detect_cavity(image8[ ..., i], multiplier=self.multiplier)
-            cond = np.where(cavity == 0) + (i, )
-            image_copy[cond] = 0
-            progress = float(i/depth*100)
+            cavity = seg.detect_cavity(image8[..., i].T, multiplier=self.multiplier, size_struct_elem=self.size_se)
+            seg_image[..., i] = cavity.T
+            progress = float(i/length*100)
             self.signal_progress.emit(progress)
         if not self.is_abort:
             #Send images as a signal
-            self.signal_end.emit(image_copy, WorkerCavity.number)
+            seg_image = np.reshape(seg_image, self.img_data.shape, order='F')
+            cond = np.where(seg_image > 0)
+            out_image = np.zeros_like(self.img_data)
+            out_image[cond] = self.img_data[cond]
+            self.signal_end.emit(out_image, WorkerCavity.number)
             if not self.is_preview:
                 WorkerCavity.number += 1
 
@@ -103,36 +100,31 @@ class CavityController:
         self.view.retranslateUi(self.dialog)
         self.view.pushButton.setFixedWidth(20)
         self.view.pushButton_2.setFixedWidth(20)
-        self.view.pushButton_3.setFixedWidth(20)
-
 
         #Tooltips
         t1 = self.view.pushButton.toolTip()
         t2 = self.view.pushButton_2.toolTip()
-        t3 = self.view.pushButton_3.toolTip()
         self.view.pushButton.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t1)
         self.view.pushButton_2.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t2)
-        self.view.pushButton_3.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t3)
         #Reset tooltips to avoid overlap of events
         self.view.pushButton.setToolTip("")
         self.view.pushButton_2.setToolTip("")
-        self.view.pushButton_3.setToolTip("")
 
         #Events
         self.trigger = Signal()
-        self.view.horizontalSlider.mouseMoveEvent = self.slider_event
+        self.view.horizontalSlider_2.mouseMoveEvent = self.slider_event
         self.view.buttonBox.accepted.connect(self.update_parameters)
 
 
     def update_tooltip(self):
-        value = self.view.horizontalSlider.value()
+        value = self.view.horizontalSlider_2.value()
         value = self.slidervalue_to_multvalue(value)
         self.view.horizontalSlider.setToolTip(str(value))
 
     def slider_event(self, event):
         self.update_tooltip()
-        QToolTip.showText(event.globalPos(), self.view.horizontalSlider.toolTip())
-        QSlider.mouseMoveEvent(self.view.horizontalSlider, event)
+        QToolTip.showText(event.globalPos(), self.view.horizontalSlider_2.toolTip())
+        QSlider.mouseMoveEvent(self.view.horizontalSlider_2, event)
 
     def slidervalue_to_multvalue(self, value):
         return float(value/10) + 1
@@ -141,10 +133,9 @@ class CavityController:
         """
         Gets the values in the GUI and updates the attributes
         """
-        value = self.view.horizontalSlider.value()
+        self.size_se = self.view.horizontalSlider.value()
+        value = self.view.horizontalSlider_2.value()
         self.multiplier = self.slidervalue_to_multvalue(value)
-        self.start_slice = self.view.lineEdit.text()
-        self.end_slice = self.view.lineEdit_2.text()
         if not preview:
             self.trigger.signal.emit()
 

@@ -102,6 +102,7 @@ class MainController:
         self.mainview.actionMeasurements.triggered.connect(lambda : self.measurementcontroller.show(self.images.keys()))
 
         self.cavitycontroller.view.horizontalSlider.valueChanged.connect(lambda: self.segment_cavity(preview=True))
+        self.cavitycontroller.view.horizontalSlider_2.valueChanged.connect(lambda: self.segment_cavity(preview=True))
 
         self.houghcontroller.view.pushButton_3.clicked.connect(lambda: self.hough_transform(preview=True))
 
@@ -125,8 +126,8 @@ class MainController:
         self.mouse_x = 0
         self.mouse_y = 0
 
-        self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
-        self.manualcomponentcontroller.show()
+        self.open_image("/mnt/d/IRM/nifti/BLE/650/35/35_grain.nii")
+        self.cavitycontroller.show()
 
     def open_bruker(self):
         """
@@ -317,36 +318,27 @@ class MainController:
             self.cavitycontroller.update_parameters(preview)
 
         multiplier = self.cavitycontroller.multiplier
-        start_slice = self.cavitycontroller.start_slice
-        end_slice = self.cavitycontroller.end_slice
+        size_se = self.cavitycontroller.size_se
         if self.img_data is not None:
-            try:
-                start_slice = int(start_slice)
-                end_slice = int(end_slice) + 1
-            except:
-                print("Defaulting")
-                start_slice = 1
-                end_slice =  0
-            finally:
-                if preview:
-                    self.abort_computation()
-                else:
-                    self.update_progressbar(0)
+            if preview:
+                self.abort_computation()
+            else:
+                self.update_progressbar(0)
 
-                worker = WorkerCavity(img_data=self.img_data, multiplier=multiplier, start=start_slice, end=end_slice, preview=preview)
-                thread = QThread()
-                worker.moveToThread(thread)
+            worker = WorkerCavity(img_data=self.img_data, multiplier=multiplier, size_se=size_se, preview=preview)
+            thread = QThread()
+            worker.moveToThread(thread)
 
-                if not preview:
-                    worker.signal_start.connect(self.mainview.show_run)
-                    worker.signal_end.connect(self.end_segment_cavity)
-                    worker.signal_progress.connect(self.update_progressbar)
-                else:
-                    worker.signal_end.connect(self.end_preview)
-                self.sig_abort_workers.signal.connect(worker.abort)
-                thread.started.connect(worker.work)
-                thread.start()
-                self.threads.append((thread, worker))
+            if not preview:
+                worker.signal_start.connect(self.mainview.show_run)
+                worker.signal_end.connect(self.end_segment_cavity)
+                worker.signal_progress.connect(self.update_progressbar)
+            else:
+                worker.signal_end.connect(self.end_preview)
+            self.sig_abort_workers.signal.connect(worker.abort)
+            thread.started.connect(worker.work)
+            thread.start()
+            self.threads.append((thread, worker))
 
     def largest_component(self):
         if self.img_data is not None:

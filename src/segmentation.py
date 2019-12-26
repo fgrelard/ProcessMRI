@@ -35,9 +35,12 @@ def closest_circle_to_median_circle(image, min_radius=10, max_radius=20):
     depth = image.shape[0]
     L = np.zeros(shape=(depth, 3, 3))
     for i in range(depth):
-        image_current = image[i, ...]
+        image_current = image[i, ...].copy()
         image_current = img_as_ubyte(image_current * 1.0 / image_current.max())
-        threshold = threshold_otsu(image_current)
+        if not np.any(image_current):
+            threshold = 1
+        else:
+            threshold = threshold_otsu(image_current)
         cx, cy, r = detect_circle(image_current, threshold, min_radius, max_radius)
         L[i, 0] = cx
         L[i, 1] = cy
@@ -64,7 +67,10 @@ def remove_circle_3D(image, coordinates_circle):
     return image
 
 def binarize(image):
-    threshold = threshold_otsu(image)
+    if not np.any(image):
+        threshold = 1
+    else:
+        threshold = threshold_otsu(image)
     cond = np.where(image > threshold)
     image_copy = np.zeros_like(image)
     image_copy[cond] = 255
@@ -289,14 +295,16 @@ def find_local_maximum_dt(dt, point, r=1):
     new_point = tuple(int(x) for x in new_point)
     return new_point
 
-def detect_cavity(image, multiplier):
-    point = find_location_cavity(image)
-    cond = np.where(image > 0)
-    if point is None or np.all(image[cond] == image[cond][0]):
-        return np.zeros_like(image)
-    threshold = threshold_otsu(image[cond])
-    cond = np.where(image > threshold)
-    image_copy = np.zeros_like(image)
+def detect_cavity(image, multiplier, size_struct_elem=5):
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(size_struct_elem, size_struct_elem))
+    current_image = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
+    point = find_location_cavity(current_image)
+    cond = np.where(current_image > 0)
+    if point is None or np.all(current_image[cond] == current_image[cond][0]):
+        return np.zeros_like(current_image)
+    threshold = threshold_otsu(current_image[cond])
+    cond = np.where(current_image > threshold)
+    image_copy = np.zeros_like(current_image)
     image_copy[cond] = 255
     # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
     # seg_array = cv2.morphologyEx(image_copy, cv2.MORPH_OPEN, kernel)
@@ -331,8 +339,9 @@ def detect_cavity_3D(image, multiplier):
     depth = image.shape[0]
     image8 = img_as_ubyte(image * 1.0 / image.max())
     for i in range(depth):
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
-        current = cv2.morphologyEx(image8[i, ...], cv2.MORPH_OPEN, kernel)
+        # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+        # current = cv2.morphologyEx(image8[i, ...], cv2.MORPH_OPEN, kernel)
+        current = image8[i, ...]
         cavity = detect_cavity(current, multiplier)
         cond = (i, ) + np.where(cavity == 0)
         image_copy[cond] = 0
@@ -347,15 +356,9 @@ def region_growing(image_data, seed):
     plt.imshow(image)
     plt.show()
     threshold = threshold_otsu(image)
-    print(threshold)
     image_itk = sitk.GetImageFromArray(image)
     seed = (seed[1], seed[0])
-    print(image_itk.GetSize())
     seg_con = sitk.ConnectedThreshold(image_itk, seedList=[seed], lower=int(threshold+1), upper=255)
     seg_con_array = sitk.GetArrayFromImage(seg_con)
     # seg_con_array = np.reshape(seg_con_array.T, image_data.shape, order='F')
-    print(seg_con_array.shape)
-
-    plt.imshow(seg_con_array)
-    plt.show()
     return seg_con_array
