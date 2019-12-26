@@ -12,15 +12,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Measurement_View(object):
     def setupUi(self, Measurement_View):
         Measurement_View.setObjectName("Measurement_View")
-        Measurement_View.resize(464, 380)
+        Measurement_View.resize(456, 240)
         self.buttonBox = QtWidgets.QDialogButtonBox(Measurement_View)
-        self.buttonBox.setGeometry(QtCore.QRect(90, 320, 341, 32))
+        self.buttonBox.setGeometry(QtCore.QRect(90, 180, 341, 32))
         self.buttonBox.setToolTipDuration(-1)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.gridLayoutWidget = QtWidgets.QWidget(Measurement_View)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 20, 421, 281))
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(10, 20, 421, 131))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -78,7 +78,8 @@ class Ui_Measurement_View(object):
         _translate = QtCore.QCoreApplication.translate
         Measurement_View.setWindowTitle(_translate("Measurement_View", "Measurements"))
         self.label_2.setText(_translate("Measurement_View", "Slice range"))
-        self.pushButton.setToolTip(_translate("Measurement_View", "Slice range. Syntax: start:end,start2:end2. -1 means all slices."))
+        self.pushButton.setToolTip(_translate("Measurement_View", "Slice range. Syntax: start:end,start_2:end_2.\n"
+"Intervals are left-closed. -1 means all slices."))
         self.pushButton.setText(_translate("Measurement_View", "?"))
         self.textEdit.setHtml(_translate("Measurement_View", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"

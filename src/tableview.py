@@ -2,6 +2,7 @@ import sys, csv
 from PyQt5.QtWidgets import QMainWindow, QApplication, QDialog, QAction, QTableWidget,QTableWidgetItem,QVBoxLayout, QPushButton, QFileDialog
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot
+import os
 
 class TableView(QDialog):
     def __init__(self, rows, columns, parent=None):
@@ -25,8 +26,9 @@ class TableView(QDialog):
         path, ext = QFileDialog.getSaveFileName(
                 self, 'Save File', '', 'CSV(*.csv)')
         if path:
-            with open(str(path), 'w') as stream:
-                writer = csv.writer(stream)
+            root, ext = os.path.splitext(str(path))
+            with open(root+".csv", 'w') as stream:
+                writer = csv.writer(stream, delimiter=";")
                 for row in range(self.table.rowCount()):
                     rowdata = []
                     for column in range(self.table.columnCount()):

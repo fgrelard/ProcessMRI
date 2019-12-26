@@ -31,7 +31,7 @@ class WorkerMeasurement(QtCore.QObject):
     signal_start = QtCore.pyqtSignal()
 
     #Signal emitted at the end of the computation
-    signal_end = QtCore.pyqtSignal(list, list, np.ndarray)
+    signal_end = QtCore.pyqtSignal(list, list, list, np.ndarray)
 
     #Signal emitted during the computation, to keep
     #track of its progress
@@ -59,6 +59,7 @@ class WorkerMeasurement(QtCore.QObject):
         out = np.zeros(shape=(len(self.names), 5))
         i = 0
         units = []
+        ranges = []
         for name in self.names:
             image = self.images[name]
             if name in self.metadata:
@@ -70,8 +71,11 @@ class WorkerMeasurement(QtCore.QObject):
 
             image = np.reshape(image, (image.shape[0], image.shape[1]) + (-1,), order='C')
             if isinstance(self.slice_range, (np.ndarray, list)):
-                self.slice_range = [x for x in self.slice_range if x in range(image.shape[-1])]
-                image = image[..., self.slice_range]
+                slice_range = [x for x in self.slice_range if x in range(image.shape[-1])]
+                ranges.append(slice_range)
+                image = image[..., slice_range]
+            else:
+                ranges.append(["All"])
             area_pix = measurements.area_pixels(image)
             area_unit = measurements.area_unit(image, res)
             average = measurements.average_value(image)
@@ -85,7 +89,7 @@ class WorkerMeasurement(QtCore.QObject):
             i +=1
         if not self.is_abort:
             #Send images as a signal
-            self.signal_end.emit(self.names, units, out)
+            self.signal_end.emit(self.names, units, ranges, out)
 
 
     def abort(self):

@@ -92,7 +92,7 @@ class WorkerExpFit(QtCore.QObject):
             self.signal_progress.emit(progress)
         if not self.is_abort:
             #Send images as a signal
-            self.signal_end.emit(density_data, t2_data, WorkerExpFit.number)
+            self.signal_end.emit(np.nan_to_num(density_data), np.nan_to_num(t2_data), WorkerExpFit.number)
             WorkerExpFit.number += 1
 
 

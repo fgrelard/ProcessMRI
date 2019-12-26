@@ -126,8 +126,6 @@ class MainController:
         self.mouse_x = 0
         self.mouse_y = 0
 
-        self.open_image("/mnt/d/IRM/nifti/BLE/650/35/35_grain.nii")
-        self.cavitycontroller.show()
 
     def open_bruker(self):
         """
@@ -443,10 +441,12 @@ class MainController:
 
 
     def measurements(self):
-        names = [self.measurementcontroller.image]
+        names = self.measurementcontroller.image
         slice_range = self.measurementcontroller.slice_range
-        if names == ["All"]:
+        if names == "All":
             names = list(self.images.keys())
+        else:
+            names = [names]
         try:
             slice_range = [list(map(int, x.split(":"))) for x in slice_range.split(",")]
             slice_range = np.concatenate([np.arange(x[0], x[1]) for x in slice_range])
@@ -593,14 +593,15 @@ class MainController:
             self.remove_image("Preview")
         self.mainview.imageview.setClickable(False)
 
-    def end_measurements(self, names, units, array):
+    def end_measurements(self, names, units, ranges, array):
         self.mainview.hide_run()
-        table = TableView(len(names)+1, 7, parent=self.mainview.parent.centralWidget())
+        table = TableView(len(names)+1, 8, parent=self.mainview.parent.centralWidget())
         table.resize(640,320)
-        table.set_headers(["Area (pixels)", "Area (unit)", "Average intensity", "Min intensity", "Max intensity", "Unit"])
+        table.set_headers(["Area (pixels)", "Area (unit)", "Average intensity", "Min intensity", "Max intensity", "Unit", "Slice range"])
         for i in range(len(names)):
             name = names[i]
             unit = units[i]
+            r = ranges[i]
             table.set_item(name, i+1, 0)
             table.set_item(str(array[i, 0]), i+1, 1)
             table.set_item(str(array[i, 1]), i+1, 2)
@@ -608,6 +609,7 @@ class MainController:
             table.set_item(str(array[i, 3]), i+1, 4)
             table.set_item(str(array[i, 4]), i+1, 5)
             table.set_item(str(unit), i+1, 6)
+            table.set_item(str(r), i+1, 7)
         table.show()
 
     def end_preview(self, image, number):
@@ -654,7 +656,7 @@ class MainController:
     def current_name(self, image):
         list_keys = list(self.images.keys())
         list_values = list(self.images.values())
-        key = [np.all(image == array) for array in list_values].index(True)
+        key = [image.shape == array.shape and np.allclose(image, array, rtol=0, atol=0, equal_nan=True) for array in list_values].index(True)
         img_data_name = list_keys[key]
         return img_data_name
 

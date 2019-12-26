@@ -70,7 +70,8 @@
        <bool>true</bool>
       </property>
       <property name="toolTip">
-       <string>Slice range. Syntax: start:end,start2:end2. -1 means all slices.</string>
+       <string>Slice range. Syntax: start:end,start_2:end_2.
+Intervals are left-closed. -1 means all slices.</string>
       </property>
       <property name="toolTipDuration">
        <number>-1</number>
