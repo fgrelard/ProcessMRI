@@ -579,7 +579,7 @@ class MainController:
 
     def update_pen_size(self):
         self.manualsegmentationcontroller.update_parameters()
-        self.mainview.imageview.update_pen_size(self.manualsegmentationcontroller.pencil_size)
+        self.mainview.imageview.update_pen(pen_size=self.manualsegmentationcontroller.pencil_size)
 
     def end_manual_seg(self, image, number):
         self.remove_image("Manual_segmentation")

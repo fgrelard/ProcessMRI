@@ -116,6 +116,8 @@ class ImageViewExtended(pg.ImageView):
 
         super().__init__(parent, name, view, imageItem, *args)
         self.imageItem.getHistogram = self.getImageItemHistogram
+        self.imageItem.mouseClickEvent = self.mouseClickEventImageItem
+        self.imageItem.mouseDragEvent = self.mouseClickEventImageItem
         self.timeLine.setPen('g')
 
         self.ui.histogram.sigLevelsChanged.connect(self.levelsChanged)
@@ -146,8 +148,25 @@ class ImageViewExtended(pg.ImageView):
         self.is_drawable = False
 
         self.pen_size = 1
-
+        self.imageCopy = None
         self.imageItem.drawAt = self.drawAt
+
+
+    def mouseClickEventImageItem(self, ev):
+        pg.ImageItem.mouseClickEvent(self.imageItem, ev)
+        if self.is_drawable:
+            pos = ev.pos()
+            pos = [int(pos.x()), int(pos.y())]
+            if ev.button() == QtCore.Qt.RightButton:
+                ev.accept()
+                shift = self.pen_size//2
+                min_x, max_x = pos[0] - shift, pos[0] + shift
+                min_y, max_y = pos[1] - shift, pos[1] + shift
+                local_values = self.imageCopy[self.currentIndex, min_y:max_y, min_x:max_x]
+                self.update_pen(pen_size=self.pen_size, array=local_values)
+            else:
+                self.update_pen(pen_size=self.pen_size, array=None)
+            self.drawAt(pos, ev)
 
 
     def hide_partial(self):
@@ -173,19 +192,20 @@ class ImageViewExtended(pg.ImageView):
         pg.ImageItem.drawAt(self.imageItem, pos, ev)
 
     def setDrawable(self, is_drawable, pen_size=1):
-        self.updateImage()
+        #         self.updateImage()
         self.is_drawable = is_drawable
         if self.is_drawable:
-            self.update_pen_size(pen_size)
+            self.update_pen(pen_size)
             self.ui.histogram.gradient.loadPreset("segmentation")
         else:
             self.imageItem.setDrawKernel(kernel=None)
             self.ui.histogram.gradient.loadPreset("viridis")
 
-    def update_pen_size(self, pen_size):
+    def update_pen(self, pen_size, array=None):
         self.pen_size = pen_size
         if self.is_drawable:
-            array = np.full((self.pen_size, self.pen_size), np.amax(self.imageDisp))
+            if array is None:
+                array = np.full((self.pen_size, self.pen_size), np.amax(self.imageDisp))
             self.imageItem.setDrawKernel(kernel=array, center=(self.pen_size//2, self.pen_size//2), mode='set')
 
     def setClickable(self, is_clickable):
@@ -210,6 +230,7 @@ class ImageViewExtended(pg.ImageView):
 
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
         self.levelMax+=1
+        self.imageCopy = self.imageDisp.copy()
 
         #Changes wheel event
         self.ui.roiPlot.setMouseEnabled(True, True)
