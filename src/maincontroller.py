@@ -412,7 +412,7 @@ class MainController:
         self.add_image(manual_seg, key)
         self.choose_image(key)
 
-        worker = WorkerManualSegmentation(self.mainview.imageview.imageDisp, manual_seg.shape)
+        worker = WorkerManualSegmentation(img_data=self.mainview.imageview.imageDisp, original=manual_seg, shape=manual_seg.shape)
         thread = QThread()
         worker.moveToThread(thread)
         worker.signal_end.connect(self.end_manual_seg)

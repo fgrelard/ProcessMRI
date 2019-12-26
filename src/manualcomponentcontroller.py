@@ -45,7 +45,7 @@ class WorkerManualComponent(QtCore.QObject):
         image = img_as_ubyte(self.img_data * 1.0 / self.img_data.max())
         image = np.reshape(image, (image.shape[0], image.shape[1]) + (-1,), order='F')
         length = image.shape[-1]
-        out_image = np.zeros_like(image)
+        seg_image = np.zeros_like(image)
         self.seed = (self.seed[1], self.seed[0])
         for i in range(length):
             QApplication.processEvents()
@@ -57,9 +57,10 @@ class WorkerManualComponent(QtCore.QObject):
                 threshold = 50
             seg_con = sitk.ConnectedThreshold(sitk.GetImageFromArray(current), seedList=[self.seed], lower=int(threshold), upper=255)
             seg_con_array = sitk.GetArrayFromImage(seg_con)
-            out_image[..., i] = seg_con_array
-        out_image[out_image == 1] = 255
-        out_image = np.reshape(out_image, self.img_data.shape, order='F')
+            seg_image[..., i] = seg_con_array
+        seg_image = np.reshape(seg_image, self.img_data.shape, order='F')
+        out_image = self.img_data.copy()
+        out_image[seg_image != 1] = 0
         self.signal_end.emit(out_image, WorkerManualComponent.number)
         if self.is_abort:
             WorkerManualComponent.number += 1

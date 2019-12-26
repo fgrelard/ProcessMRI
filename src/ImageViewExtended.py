@@ -192,7 +192,7 @@ class ImageViewExtended(pg.ImageView):
         pg.ImageItem.drawAt(self.imageItem, pos, ev)
 
     def setDrawable(self, is_drawable, pen_size=1):
-        #         self.updateImage()
+        self.updateImage()
         self.is_drawable = is_drawable
         if self.is_drawable:
             self.update_pen(pen_size)

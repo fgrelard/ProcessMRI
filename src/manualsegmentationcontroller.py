@@ -30,9 +30,10 @@ class WorkerManualSegmentation(QtCore.QObject):
 
     number = 1
 
-    def __init__(self, img_data, shape, parent=None):
+    def __init__(self, img_data, original, shape, parent=None):
         super().__init__()
         self.img_data = img_data
+        self.original = original
         self.shape = shape
         self.is_abort = False
 
@@ -46,7 +47,7 @@ class WorkerManualSegmentation(QtCore.QObject):
         maximum = np.amax(image)
         cond = np.where(image == np.amax(image))
         segmentation = np.zeros_like(image)
-        segmentation[cond] = image[cond]
+        segmentation[cond] = self.original[cond]
         self.signal_end.emit(segmentation, WorkerManualSegmentation.number)
         WorkerManualSegmentation.number += 1
 
