@@ -88,7 +88,8 @@
        <bool>true</bool>
       </property>
       <property name="toolTip">
-       <string>Multiplication factor for the estimated variance at the seed point of the region growing. Defines acceptable pixel intensities for the region growing.</string>
+       <string>Multiplication factor for the estimated variance at the seed point of the region growing.
+Defines acceptable pixel intensities for the region growing.</string>
       </property>
       <property name="toolTipDuration">
        <number>-1</number>

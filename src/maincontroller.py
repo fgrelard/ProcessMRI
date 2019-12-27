@@ -69,17 +69,27 @@ class MainController:
 
         self.cavitycontroller = CavityController(mainview.centralWidget())
         self.cavitycontroller.trigger.signal.connect(self.segment_cavity)
+        self.cavitycontroller.view.buttonBox.rejected.connect(self.cancel_preview)
+        self.cavitycontroller.view.horizontalSlider.valueChanged.connect(lambda: self.segment_cavity(preview=True))
+        self.cavitycontroller.view.horizontalSlider_2.valueChanged.connect(lambda: self.segment_cavity(preview=True))
+
         self.houghcontroller = HoughController(mainview.centralWidget())
         self.houghcontroller.trigger.signal.connect(self.hough_transform)
+        self.houghcontroller.view.buttonBox.rejected.connect(self.cancel_preview)
+        self.houghcontroller.view.pushButton_3.clicked.connect(lambda: self.hough_transform(preview=True))
+
+
 
         self.manualsegmentationcontroller = ManualSegmentationController(mainview.centralWidget())
         self.manualsegmentationcontroller.trigger.signal.connect(self.manual_segmentation)
+        self.manualsegmentationcontroller.view.buttonBox.rejected.connect(self.cancel_manual_segmentation)
         self.manualsegmentationcontroller.view.horizontalSlider.valueChanged.connect(self.update_pen_size)
 
 
         self.manualcomponentcontroller = ManualComponentController(mainview.centralWidget())
         self.manualcomponentcontroller.trigger.signal.connect(lambda: self.mainview.imageview.setClickable(True))
         self.manualcomponentcontroller.view.buttonBox.accepted.connect(self.end_manual_component)
+        self.manualcomponentcontroller.view.buttonBox.rejected.connect(self.cancel_manual_component)
         self.manualcomponentcontroller.view.horizontalSlider.valueChanged.connect(lambda: self.manual_component(evt=None, click=False))
 
         self.mainview.imageview.scene.sigMouseClicked.connect(self.manual_component)
@@ -101,10 +111,6 @@ class MainController:
         self.mainview.actionManualComponent.triggered.connect(self.manualcomponentcontroller.show)
         self.mainview.actionMeasurements.triggered.connect(lambda : self.measurementcontroller.show(self.images.keys()))
 
-        self.cavitycontroller.view.horizontalSlider.valueChanged.connect(lambda: self.segment_cavity(preview=True))
-        self.cavitycontroller.view.horizontalSlider_2.valueChanged.connect(lambda: self.segment_cavity(preview=True))
-
-        self.houghcontroller.view.pushButton_3.clicked.connect(lambda: self.hough_transform(preview=True))
 
         self.mainview.actionUser_manual_FR.triggered.connect(lambda event : webbrowser.open_new('file://' + os.path.realpath('docs/manual.pdf')))
         self.mainview.stopButton.clicked.connect(self.abort_computation)
@@ -569,6 +575,18 @@ class MainController:
         self.manualsegmentationcontroller.update_parameters()
         self.mainview.imageview.update_pen(pen_size=self.manualsegmentationcontroller.pencil_size)
 
+    def cancel_preview(self):
+        self.remove_image("Preview")
+        self.choose_image(self.current_name(self.img_data))
+
+    def cancel_manual_segmentation(self):
+        self.cancel_preview()
+        self.mainview.imageview.setDrawable(False)
+
+    def cancel_manual_component(self):
+        self.cancel_preview()
+        self.mainview.imageview.setClickable(False)
+
     def end_manual_seg(self, image, number):
         self.remove_image("Preview")
         self.mainview.imageview.setDrawable(False)
@@ -656,7 +674,10 @@ class MainController:
             key = [np.all(image == array) for array in list_values].index(True)
         except Exception as e:
             key = -1
-        img_data_name = list_keys[key]
+        if len(list_keys) > 0:
+            img_data_name = list_keys[key]
+        else:
+            img_data_name = "No image"
         return img_data_name
 
     def remove_image(self,  name):

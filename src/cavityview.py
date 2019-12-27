@@ -112,7 +112,8 @@ class Ui_Cavity_View(object):
     def retranslateUi(self, Cavity_View):
         _translate = QtCore.QCoreApplication.translate
         Cavity_View.setWindowTitle(_translate("Cavity_View", "Cavity segmentation"))
-        self.pushButton_2.setToolTip(_translate("Cavity_View", "Multiplication factor for the estimated variance at the seed point of the region growing. Defines acceptable pixel intensities for the region growing."))
+        self.pushButton_2.setToolTip(_translate("Cavity_View", "Multiplication factor for the estimated variance at the seed point of the region growing.\n"
+"Defines acceptable pixel intensities for the region growing."))
         self.pushButton_2.setText(_translate("Cavity_View", "?"))
         self.label_4.setText(_translate("Cavity_View", "Size SE"))
         self.label_3.setText(_translate("Cavity_View", "Multiplier"))
