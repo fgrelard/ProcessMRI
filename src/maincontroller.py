@@ -393,16 +393,12 @@ class MainController:
                 self.threads.append((thread, worker))
 
     def manual_segmentation(self):
-        key = "Manual_segmentation"
-        self.remove_image(key)
+        manual_seg = self.img_data.copy()
+        self.mainview.imageview.is_drawable = True
+        self.end_preview(manual_seg, 1)
         self.mainview.imageview.setDrawable(True, self.mainview.imageview.pen_size)
 
-        manual_seg = self.img_data.copy()
-
-        self.add_image(manual_seg, key)
-        self.choose_image(key)
-
-        worker = WorkerManualSegmentation(img_data=self.mainview.imageview.imageDisp, original=manual_seg, shape=manual_seg.shape)
+        worker = WorkerManualSegmentation(img_data=self.mainview.imageview.imageDisp, original=self.img_data, shape=self.img_data.shape)
         thread = QThread()
         worker.moveToThread(thread)
         worker.signal_end.connect(self.end_manual_seg)
@@ -574,11 +570,11 @@ class MainController:
         self.mainview.imageview.update_pen(pen_size=self.manualsegmentationcontroller.pencil_size)
 
     def end_manual_seg(self, image, number):
-        self.remove_image("Manual_segmentation")
+        self.remove_image("Preview")
+        self.mainview.imageview.setDrawable(False)
         manual_name = "manual_" + str(number)
         self.add_image(image, manual_name)
         self.choose_image(manual_name)
-        self.mainview.imageview.setDrawable(False)
 
     def end_manual_component(self):
         number = 1
@@ -656,7 +652,10 @@ class MainController:
     def current_name(self, image):
         list_keys = list(self.images.keys())
         list_values = list(self.images.values())
-        key = [image.shape == array.shape and np.allclose(image, array, rtol=0, atol=0, equal_nan=True) for array in list_values].index(True)
+        try:
+            key = [np.all(image == array) for array in list_values].index(True)
+        except Exception as e:
+            key = -1
         img_data_name = list_keys[key]
         return img_data_name
 

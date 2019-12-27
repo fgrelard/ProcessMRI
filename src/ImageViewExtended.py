@@ -130,7 +130,8 @@ class ImageViewExtended(pg.ImageView):
         self.ui.normAutoRadio.setObjectName("normAutoRadio")
         self.ui.gridLayout_2.addWidget(self.ui.normAutoRadio, 0, 3, 1, 1)
         self.ui.gridLayout_2.addWidget(self.ui.normOffRadio, 0, 4, 1, 1)
-        self.ui.normAutoRadio.setText(QtGui.QApplication.translate("Form", "Auto", None))
+        self.ui.normAutoRadio.setText(QtGui.QApplication.translate("Form", "Stack", None))
+        self.ui.normOffRadio.setText(QtGui.QApplication.translate("Form", "Image", None))
         self.ui.normAutoRadio.clicked.connect(self.normRadioChanged)
 
         self.hide_partial()
@@ -205,7 +206,7 @@ class ImageViewExtended(pg.ImageView):
         self.pen_size = pen_size
         if self.is_drawable:
             if array is None:
-                array = np.full((self.pen_size, self.pen_size), np.amax(self.imageDisp))
+                array = np.full((self.pen_size, self.pen_size), self.levelMax+1)
             self.imageItem.setDrawKernel(kernel=array, center=(self.pen_size//2, self.pen_size//2), mode='set')
 
     def setClickable(self, is_clickable):
@@ -229,7 +230,6 @@ class ImageViewExtended(pg.ImageView):
             is_shown = True
 
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
-        self.levelMax+=1
         self.imageCopy = self.imageDisp.copy()
 
         #Changes wheel event
@@ -295,7 +295,6 @@ class ImageViewExtended(pg.ImageView):
         self.label.setText("<span>" + position + "</span><span style='font-weight:bold; color: green;'>: " + value + "</span>")
 
 
-
     def setCurrentIndex(self, ind):
         super().setCurrentIndex(ind)
         self.update_label()
@@ -308,14 +307,13 @@ class ImageViewExtended(pg.ImageView):
         if self.imageDisp is None:
             image = self.normalize(self.image)
             self.imageDisp = image
-            if self.axes['t'] is not None:
+            if self.is_drawable:
+                self.levelMin, self.levelMax = np.amin(self.imageDisp), np.amax(self.imageDisp)
+            elif self.axes['t'] is not None and self.ui.normOffRadio.isChecked():
                 curr_img = self.imageDisp[self.currentIndex, ...]
-                if self.ui.normAutoRadio.isChecked():
-                    self.levelMin, self.levelMax = list(map(float, self.quickMinMax(self.imageDisp)))
-                else:
-                    self.levelMin, self.levelMax = np.amin(curr_img), np.amax(curr_img)
+                self.levelMin, self.levelMax = np.amin(curr_img), np.amax(curr_img)
             else:
-                self.levelMin, self.levelMax = list(map(float, self.quickMinMax(self.imageDisp)))
+                self.levelMin, self.levelMax = np.amin(self.imageDisp), np.amax(self.imageDisp)
         return self.imageDisp
 
 
