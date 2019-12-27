@@ -63,7 +63,10 @@ class WorkerHough(QtCore.QObject):
                 break
             QApplication.processEvents()
             image_current = image8[..., i]
-            threshold = threshold_otsu(image_current)
+            if np.any(image_current):
+                threshold = threshold_otsu(image_current)
+            else:
+                threshold = 1
             cx, cy, r = seg.detect_circle(image_current, threshold, self.min_radius, self.max_radius)
             L[i, 0] = cx
             L[i, 1] = cy

@@ -49,6 +49,7 @@ class Ui_ExpFit_View(object):
         self.textEdit.setAutoFillBackground(True)
         self.textEdit.setStyleSheet("background: rgba(0,0,0,0%)")
         self.textEdit.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.textEdit.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("textEdit")
         self.gridLayout.addWidget(self.textEdit, 0, 0, 1, 3)
