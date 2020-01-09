@@ -47,6 +47,8 @@ class WorkerManualComponent(QtCore.QObject):
         length = image.shape[-1]
         seg_image = np.zeros_like(image)
         self.seed = (self.seed[1], self.seed[0])
+        if not (0 <= self.seed[0] < image.shape[1] and 0 <= self.seed[1] < image.shape[0]):
+            return
         for i in range(length):
             QApplication.processEvents()
             current = image[..., i]

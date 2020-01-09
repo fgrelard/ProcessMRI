@@ -339,6 +339,8 @@ class ImageViewExtended(pg.ImageView):
         if self.ui.normTimeRangeCheck.isChecked() and image.ndim == 3:
             (sind, start) = self.timeIndex(self.normRgn.lines[0])
             (eind, end) = self.timeIndex(self.normRgn.lines[1])
+            if sind > eind:
+                sind, eind = eind, sind
             n = image[sind:eind+1].mean(axis=0)
             n.shape = (1,) + n.shape
             if div and n.any():

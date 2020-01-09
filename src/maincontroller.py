@@ -1,5 +1,7 @@
 import os
 import sys
+import webbrowser
+
 import numpy as np
 
 from PyQt5 import QtWidgets
@@ -22,7 +24,6 @@ from src.manualcomponentcontroller import ManualComponentController, WorkerManua
 import src.imageio as io
 import src.exponentialfit as expfit
 
-import webbrowser
 
 class MainController:
     """
