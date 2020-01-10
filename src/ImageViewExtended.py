@@ -131,7 +131,7 @@ class ImageViewExtended(pg.ImageView):
         self.ui.gridLayout_2.addWidget(self.ui.normAutoRadio, 0, 3, 1, 1)
         self.ui.gridLayout_2.addWidget(self.ui.normOffRadio, 0, 4, 1, 1)
         self.ui.normAutoRadio.setText(QtGui.QApplication.translate("Form", "Stack", None))
-        self.ui.normOffRadio.setText(QtGui.QApplication.translate("Form", "Image", None))
+        self.ui.normOffRadio.setText(QtGui.QApplication.translate("Form", "Manual", None))
         self.ui.normAutoRadio.clicked.connect(self.normRadioChanged)
 
         self.hide_partial()
@@ -151,6 +151,10 @@ class ImageViewExtended(pg.ImageView):
         self.pen_size = 1
         self.imageCopy = None
         self.imageItem.drawAt = self.drawAt
+
+        self.levelMin, self.levelMax = None, None
+        self.isNewImage = False
+
 
 
     def mouseClickEventImageItem(self, ev):
@@ -229,6 +233,7 @@ class ImageViewExtended(pg.ImageView):
             previousShape = self.imageDisp.shape
             is_shown = True
 
+        self.isNewImage = True
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
         self.imageCopy = self.imageDisp.copy()
 
@@ -304,9 +309,10 @@ class ImageViewExtended(pg.ImageView):
         self.update_label()
 
     def getProcessedImage(self):
-        if self.imageDisp is None:
-            image = self.normalize(self.image)
-            self.imageDisp = image
+        if self.isNewImage and self.levelMin:
+            self.imageDisp = self.image
+        elif self.imageDisp is None:
+            self.imageDisp = self.normalize(self.image)
             if self.is_drawable:
                 self.levelMin, self.levelMax = np.amin(self.imageDisp), np.amax(self.imageDisp)
             elif self.axes['t'] is not None and self.ui.normOffRadio.isChecked():
@@ -314,7 +320,9 @@ class ImageViewExtended(pg.ImageView):
                 self.levelMin, self.levelMax = np.amin(curr_img), np.amax(curr_img)
             else:
                 self.levelMin, self.levelMax = np.amin(self.imageDisp), np.amax(self.imageDisp)
+        self.isNewImage = False
         return self.imageDisp
+
 
 
     def normalize(self, image):
@@ -328,10 +336,11 @@ class ImageViewExtended(pg.ImageView):
         intersection of both as opposed to timeline being
         favored in the parent class
         """
-        if self.ui.normOffRadio.isChecked():
+        if self.image is None or self.ui.normOffRadio.isChecked():
             return image
 
         div = self.ui.normDivideRadio.isChecked()
+        sub = self.ui.normSubtractRadio.isChecked()
         norm = image.view(np.ndarray).copy()
         if div:
             norm = norm.astype(np.float32)
@@ -343,18 +352,20 @@ class ImageViewExtended(pg.ImageView):
                 sind, eind = eind, sind
             n = image[sind:eind+1].mean(axis=0)
             n.shape = (1,) + n.shape
-            if div and n.any():
-                norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
-            else:
-                norm -= n
+            if n.any():
+                if sub:
+                    norm -= n
+                else:
+                    norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
 
         if self.ui.normFrameCheck.isChecked() and image.ndim == 3:
             n = image.mean(axis=1).mean(axis=1)
             n.shape = n.shape + (1, 1)
-            if div and n.any():
-                norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
-            else:
-                norm -= n
+            if n.any():
+                if sub:
+                    norm -= n
+                else:
+                    norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
 
         if self.ui.normROICheck.isChecked() and image.ndim == 3:
             #If ROI checked, only work on this part of the image
@@ -366,12 +377,13 @@ class ImageViewExtended(pg.ImageView):
                 n = self.normRoi.getArrayRegion(roi, self.imageItem, (1, 2)).mean(axis=1).mean(axis=1).mean(axis=0)
             #Other case : no ROI checked
             else:
-                n = self.normRoi.getArrayRegion(norm, self.imageItem, (1, 2)).mean(axis=1).mean(axis=1)
+                n = self.normRoi.getArrayRegion(norm[self.currentIndex:self.currentIndex+1], self.imageItem, (1, 2)).mean(axis=1).mean(axis=1)
                 n = n[:,np.newaxis,np.newaxis]
-            if div and n.any():
-                norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
-            else:
-                norm -= n
+            if n.any():
+                if sub:
+                    norm -= n
+                else:
+                    norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
 
         return norm
 
