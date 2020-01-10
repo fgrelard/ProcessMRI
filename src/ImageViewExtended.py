@@ -122,6 +122,8 @@ class ImageViewExtended(pg.ImageView):
 
         self.ui.histogram.sigLevelsChanged.connect(self.levelsChanged)
         self.ui.histogram.gradient.loadPreset("viridis")
+        self.gradient = self.ui.histogram.gradient.getGradient()
+
         self.ui.histogram.gradient.updateGradient()
         self.ui.histogram.gradientChanged()
 
@@ -197,20 +199,22 @@ class ImageViewExtended(pg.ImageView):
         pg.ImageItem.drawAt(self.imageItem, pos, ev)
 
     def setDrawable(self, is_drawable, pen_size=1):
-        self.updateImage()
         self.is_drawable = is_drawable
+        self.updateImage()
         if self.is_drawable:
+            self.normalize(self.image)
             self.update_pen(pen_size)
+            self.gradient = self.ui.histogram.gradient.colorMap()
             self.ui.histogram.gradient.loadPreset("segmentation")
         else:
             self.imageItem.setDrawKernel(kernel=None)
-            self.ui.histogram.gradient.loadPreset("viridis")
+            self.ui.histogram.gradient.setColorMap(self.gradient)
 
     def update_pen(self, pen_size, array=None):
         self.pen_size = pen_size
         if self.is_drawable:
             if array is None:
-                array = np.full((self.pen_size, self.pen_size), self.levelMax+1)
+                array = np.full((self.pen_size, self.pen_size), self.pen_value)
             self.imageItem.setDrawKernel(kernel=array, center=(self.pen_size//2, self.pen_size//2), mode='set')
 
     def setClickable(self, is_clickable):
@@ -236,6 +240,7 @@ class ImageViewExtended(pg.ImageView):
         self.isNewImage = True
         super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
         self.imageCopy = self.imageDisp.copy()
+        self.pen_value = np.amax(self.imageDisp)+1
 
         #Changes wheel event
         self.ui.roiPlot.setMouseEnabled(True, True)
@@ -313,13 +318,13 @@ class ImageViewExtended(pg.ImageView):
             self.imageDisp = self.image
         elif self.imageDisp is None:
             self.imageDisp = self.normalize(self.image)
-            if self.is_drawable:
-                self.levelMin, self.levelMax = np.amin(self.imageDisp), np.amax(self.imageDisp)
-            elif self.axes['t'] is not None and self.ui.normOffRadio.isChecked():
+            if self.axes['t'] is not None and self.ui.normOffRadio.isChecked():
                 curr_img = self.imageDisp[self.currentIndex, ...]
                 self.levelMin, self.levelMax = np.amin(curr_img), np.amax(curr_img)
             else:
                 self.levelMin, self.levelMax = np.amin(self.imageDisp), np.amax(self.imageDisp)
+        if self.is_drawable:
+            self.levelMin, self.levelMax = np.amin(self.imageDisp), self.pen_value
         self.isNewImage = False
         return self.imageDisp
 

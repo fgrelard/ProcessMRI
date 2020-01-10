@@ -590,10 +590,10 @@ class MainController:
 
     def end_manual_seg(self, image, number):
         self.remove_image("Preview")
-        self.mainview.imageview.setDrawable(False)
         manual_name = "manual_" + str(number)
         self.add_image(image, manual_name)
         self.choose_image(manual_name)
+        self.mainview.imageview.setDrawable(False)
 
     def end_manual_component(self):
         number = 1
@@ -604,7 +604,7 @@ class MainController:
         if "Preview" in self.images:
             image = self.images["Preview"]
             self.add_image(image, manual_name)
-            self.choose_image(manual_name, preview=True)
+            self.choose_image(manual_name, preview=False)
             self.remove_image("Preview")
         self.mainview.imageview.setClickable(False)
 
