@@ -314,9 +314,9 @@ class ImageViewExtended(pg.ImageView):
         self.update_label()
 
     def getProcessedImage(self):
-        if self.isNewImage and self.levelMin:
+        if self.isNewImage and self.levelMin is not None:
             self.imageDisp = self.image
-        elif self.imageDisp is None:
+        elif self.imageDisp is None or not self.ui.normOffRadio.isChecked():
             self.imageDisp = self.normalize(self.image)
             if self.axes['t'] is not None and self.ui.normOffRadio.isChecked():
                 curr_img = self.imageDisp[self.currentIndex, ...]
@@ -325,6 +325,7 @@ class ImageViewExtended(pg.ImageView):
                 self.levelMin, self.levelMax = np.amin(self.imageDisp), np.amax(self.imageDisp)
         if self.is_drawable:
             self.levelMin, self.levelMax = np.amin(self.imageDisp), self.pen_value
+        self.autoLevels()
         self.isNewImage = False
         return self.imageDisp
 
