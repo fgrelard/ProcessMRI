@@ -69,8 +69,9 @@ class WorkerMeasurement(QtCore.QObject):
             res, unit = io.extract_resolution(metadata)
             units.append(unit)
 
-            image = np.reshape(image, (image.shape[0], image.shape[1]) + (-1,), order='C')
+            image = np.reshape(image, (image.shape[0], image.shape[1]) + (-1,), order='F')
             if isinstance(self.slice_range, (np.ndarray, list)):
+                print(self.slice_range, image.shape[-1])
                 slice_range = [x for x in self.slice_range if x in range(image.shape[-1])]
                 ranges.append(slice_range)
                 image = image[..., slice_range]
