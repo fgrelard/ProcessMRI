@@ -53,7 +53,7 @@ class WorkerManualComponent(QtCore.QObject):
             QApplication.processEvents()
             current = image[..., i]
             try:
-                threshold = threshold_otsu(current)
+                threshold = threshold_otsu(current[current!=0])
                 threshold = max(1, min(int(threshold*self.multiplier), 255))
             except:
                 threshold = 50

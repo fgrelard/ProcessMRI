@@ -9,7 +9,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QFrame
 import src.ImageViewExtended as ive
-
+import qtawesome as qta
 
 class Ui_MainView(object):
     def setupUi(self, MainView):
@@ -30,6 +30,8 @@ class Ui_MainView(object):
         self.labelCombo = QtWidgets.QLabel(self.gridLayoutWidget)
         self.horizontalSpace = QtWidgets.QSpacerItem(20, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Maximum)
         self.combobox = QtWidgets.QComboBox(self.gridLayoutWidget)
+        fa5_trash = qta.icon('fa.trash')
+        self.trashButton = QtWidgets.QPushButton(fa5_trash, "")
         self.menubar = QtWidgets.QMenuBar(MainView)
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.actionExit = QtWidgets.QAction(MainView)
@@ -125,12 +127,12 @@ class Ui_MainView(object):
         self.gridLayout.addWidget(self.textEdit, 1, 0, 1, 1)
 
         self.labelCombo.setText("Current image: ")
-        self.combobox.setFixedWidth(100)
+        self.combobox.setFixedWidth(200)
         self.combobox.setSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
-        self.combobox.addItem("No image")
         self.hLayout = QtWidgets.QHBoxLayout()
         self.hLayout.addWidget(self.labelCombo)
         self.hLayout.addWidget(self.combobox)
+        self.hLayout.addWidget(self.trashButton)
         self.hLayout.addStretch()
         self.hLayout.setAlignment(QtCore.Qt.AlignLeft)
 

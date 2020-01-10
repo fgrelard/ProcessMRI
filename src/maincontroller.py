@@ -57,6 +57,7 @@ class MainController:
         self.mainview = mainview.ui
         self.mainview.parent = mainview
         self.app = app
+
         self.sig_abort_workers = Signal()
 
         self.expfitcontroller = ExpFitController(mainview.centralWidget())
@@ -116,6 +117,7 @@ class MainController:
         self.mainview.actionUser_manual_FR.triggered.connect(lambda event : webbrowser.open_new('file://' + os.path.realpath('docs/manual.pdf')))
         self.mainview.stopButton.clicked.connect(self.abort_computation)
         self.mainview.combobox.activated[str].connect(self.choose_image)
+        self.mainview.trashButton.clicked.connect(lambda : self.remove_image(self.current_name(self.img_data)))
 
         self.mainview.imageview.signal_progress_export.connect(self.update_progressbar)
         self.mainview.imageview.signal_start_export.connect(self.mainview.show_run)
@@ -686,6 +688,10 @@ class MainController:
             del self.images[name]
             index = self.mainview.combobox.findText(name)
             self.mainview.combobox.removeItem(index)
+            if len(self.images.keys()) > 0:
+                self.choose_image(list(self.images.keys())[index-1])
+            else:
+                self.choose_image("No image")
 
     def choose_image(self, name, preview=False, autoLevels=True):
         """
