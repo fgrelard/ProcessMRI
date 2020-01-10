@@ -150,7 +150,8 @@ def t2_star(values, echotime):
         t2 star
 
     """
-    return np.sum(np.divide(echotime,values[1::2]))
+    t2_val = np.sum(np.divide(echotime,values[1::2]))
+    return t2_val if t2_val > 0 else 0
 
 def fit_exponential_linear_regression(x, y):
     """
