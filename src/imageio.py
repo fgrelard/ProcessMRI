@@ -209,7 +209,6 @@ def save_nifti_with_metadata(img, metadata, filename):
     filename: str
         the image name, used as well for echotimes
     """
-    print(filename)
     root, ext = os.path.splitext(filename)
     image_name = root + ".nii"
     metadata_name = root + "_visu_pars.npy"

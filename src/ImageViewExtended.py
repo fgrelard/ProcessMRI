@@ -409,6 +409,9 @@ class ImageViewExtended(pg.ImageView):
         index: int
             z-index of the image to save
         """
+        if self.imageDisp is None:
+            return
+
         if self.imageDisp.ndim == 2:
             img = self.imageDisp
         else:
@@ -442,7 +445,7 @@ class ImageViewExtended(pg.ImageView):
         """
         Called when the "Export" button is clicked
         """
-        fileName, image_format = QtGui.QFileDialog.getSaveFileName(self.parentWidget(), "Save image as...", "", "PNG images (.png);;Portable Document Format (.pdf);; Scalable Vector Graphics (.svg)")
+        fileName, image_format = QtGui.QFileDialog.getSaveFileName(self.parentWidget(), "Save image as...", "", "PNG images (*.png);;Portable Document Format (*.pdf);;Scalable Vector Graphics (*.svg)")
         if not fileName:
             return
         root, ext = os.path.splitext(fileName)
