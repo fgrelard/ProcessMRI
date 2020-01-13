@@ -159,6 +159,7 @@ class ImageViewExtended(pg.ImageView):
 
         self.levelMin, self.levelMax = None, None
         self.isNewImage = False
+        self.normDivideRadioChecked = False
 
 
 
@@ -208,11 +209,16 @@ class ImageViewExtended(pg.ImageView):
         self.is_drawable = is_drawable
         self.updateImage()
         if self.is_drawable:
+            self.normDivideRadioChecked = self.ui.normDivideRadio.isChecked()
+
+            self.ui.normOffRadio.setChecked(True)
             self.normalize(self.image)
             self.update_pen(pen_size)
             self.gradient = self.ui.histogram.gradient.colorMap()
             self.ui.histogram.gradient.loadPreset("segmentation")
         else:
+            if self.normDivideRadioChecked:
+                self.ui.normDivideRadio.setChecked(True)
             self.imageItem.setDrawKernel(kernel=None)
             self.ui.histogram.gradient.setColorMap(self.gradient)
 
