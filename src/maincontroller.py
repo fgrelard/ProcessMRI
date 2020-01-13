@@ -3,6 +3,8 @@ import sys
 import webbrowser
 
 import numpy as np
+import qtawesome as qta
+
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem
@@ -23,6 +25,8 @@ from src.manualcomponentcontroller import ManualComponentController, WorkerManua
 
 import src.imageio as io
 import src.exponentialfit as expfit
+
+from collections import OrderedDict
 
 
 class MainController:
@@ -119,14 +123,18 @@ class MainController:
         self.mainview.combobox.activated[str].connect(self.choose_image)
         self.mainview.trashButton.clicked.connect(lambda : self.remove_image(self.current_name(self.img_data), manual=True))
 
+        self.mainview.editButton.clicked.connect(self.edit_name)
+
         self.mainview.imageview.signal_progress_export.connect(self.update_progressbar)
         self.mainview.imageview.signal_start_export.connect(self.mainview.show_run)
         self.mainview.imageview.signal_end_export.connect(self.mainview.hide_run)
 
+        self.is_edit = False
+
         self.app.aboutToQuit.connect(self.exit_app)
         self.config = config
-        self.images = {}
-        self.metadata = {}
+        self.images = OrderedDict()
+        self.metadata = OrderedDict()
         self.mainview.hide_run()
         self.threads = []
         self.img_data = None
@@ -134,7 +142,6 @@ class MainController:
 
         self.mouse_x = 0
         self.mouse_y = 0
-
 
     def open_bruker(self):
         """
@@ -152,6 +159,7 @@ class MainController:
                 dirname = os.path.dirname(list_filenames[0])
                 self.config['default']['NifTiDir'] = dirname
                 self.open_nifti()
+
 
 
     def open_image(self, filename):
@@ -684,7 +692,38 @@ class MainController:
             img_data_name = "No image"
         return img_data_name
 
+    def edit_name(self):
+        self.is_edit = not self.is_edit
+        if self.is_edit:
+            fa_check = qta.icon('fa.check', color="green")
+            self.mainview.editButton.setIcon(fa_check)
+        else:
+            self.mainview.combobox.update()
+            old_name = self.current_name(self.img_data)
+            new_name = self.mainview.combobox.currentText()
+            if old_name != "No image":
+                self.change_name(old_name, new_name)
+                self.mainview.combobox.clear()
+                self.mainview.combobox.addItems(list(self.images.keys()))
+                index = self.mainview.combobox.findText(new_name)
+                self.mainview.combobox.setCurrentIndex(index)
+            fa_edit = qta.icon('fa.edit')
+            self.mainview.editButton.setIcon(fa_edit)
+        self.mainview.combobox.setEditable(self.is_edit)
+
+
+    def change_name(self, old_name, new_name):
+        if old_name in self.images:
+            image = self.images[old_name]
+            metadata = self.metadata[old_name]
+            del self.images[old_name]
+            del self.metadata[old_name]
+            self.images[new_name] = image
+            self.metadata[new_name] = metadata
+
     def remove_image(self,  name, manual=False):
+        if name in self.metadata:
+            del self.metadata[name]
         if name in self.images:
             del self.images[name]
             index = self.mainview.combobox.findText(name)
