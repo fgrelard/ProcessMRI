@@ -128,7 +128,7 @@ class ImageViewExtended(pg.ImageView):
         self.ui.histogram.gradientChanged()
 
         self.ui.normAutoRadio = QtGui.QRadioButton(self.ui.normGroup)
-        self.ui.normAutoRadio.setChecked(False)
+        self.ui.normDivideRadio.setChecked(True)
         self.ui.normAutoRadio.setObjectName("normAutoRadio")
         self.ui.gridLayout_2.addWidget(self.ui.normAutoRadio, 0, 3, 1, 1)
         self.ui.gridLayout_2.addWidget(self.ui.normOffRadio, 0, 4, 1, 1)

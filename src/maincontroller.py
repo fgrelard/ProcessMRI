@@ -374,11 +374,8 @@ class MainController:
             self.threads.append((thread, worker))
 
     def hough_transform(self, preview=False):
-        if not preview:
-            self.remove_image("Preview")
         if preview:
             self.houghcontroller.update_parameters(preview)
-
         min_radius = self.houghcontroller.min_radius
         max_radius = self.houghcontroller.max_radius
         if self.img_data is not None:
@@ -579,6 +576,7 @@ class MainController:
 
     def end_hough_transform(self, circle, number):
         self.mainview.hide_run()
+        self.remove_image("Preview")
         hough_name = "hough_" + str(number)
         self.add_image(circle, hough_name)
         self.choose_image(hough_name)
@@ -714,12 +712,9 @@ class MainController:
 
     def change_name(self, old_name, new_name):
         if old_name in self.images:
-            image = self.images[old_name]
-            metadata = self.metadata[old_name]
-            del self.images[old_name]
-            del self.metadata[old_name]
-            self.images[new_name] = image
-            self.metadata[new_name] = metadata
+            self.images = OrderedDict([(new_name, v) if k == old_name else (k, v) for k, v in self.images.items()])
+            self.metadata = OrderedDict([(new_name, v) if k == old_name else (k, v) for k, v in self.metadata.items()])
+
 
     def remove_image(self,  name, manual=False):
         if name in self.metadata:
