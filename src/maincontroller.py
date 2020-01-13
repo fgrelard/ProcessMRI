@@ -205,8 +205,9 @@ class MainController:
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.mainview.centralwidget, "Save Nifti", self.config['default']['NifTiDir'])
         if not filename:
             return
-        img_data_name = self.current_name(self.img_data)
-        io.save_nifti_with_metadata(self.img_data, self.metadata[img_data_name], filename)
+        if self.img_data is not None:
+            img_data_name = self.current_name(self.img_data)
+            io.save_nifti_with_metadata(self.img_data, self.metadata[img_data_name], filename)
 
     def exit_app(self):
         """

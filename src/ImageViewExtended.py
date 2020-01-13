@@ -135,6 +135,8 @@ class ImageViewExtended(pg.ImageView):
         self.ui.normAutoRadio.setText(QtGui.QApplication.translate("Form", "Stack", None))
         self.ui.normOffRadio.setText(QtGui.QApplication.translate("Form", "Manual", None))
         self.ui.normTimeRangeCheck.setText(QtGui.QApplication.translate("Form", "Slice range", None))
+        self.ui.normDivideRadio.setText(QtGui.QApplication.translate("Form", "Auto", None))
+        self.ui.label_5.setText(QtGui.QApplication.translate("Form", "Type:", None))
         self.ui.normAutoRadio.clicked.connect(self.normRadioChanged)
 
         self.hide_partial()
@@ -190,6 +192,9 @@ class ImageViewExtended(pg.ImageView):
         self.ui.normYBlurSpin.hide()
         self.ui.normTBlurSpin.hide()
         self.ui.normFrameCheck.hide()
+        self.ui.normSubtractRadio.hide()
+        self.ui.normAutoRadio.hide()
+        self.ui.gridLayout_2.addWidget(self.ui.normOffRadio, 0, 2, 1, 1)
         self.ui.gridLayout_2.addWidget(self.ui.normTimeRangeCheck, 1, 2, 1, 1)
 
 
@@ -440,6 +445,10 @@ class ImageViewExtended(pg.ImageView):
         plt.clf()
         plt.close()
 
+    def setLevels(self, min, max):
+        if self.imageDisp is None:
+            return
+        super().setLevels(min, max)
 
     def exportClicked(self):
         """
