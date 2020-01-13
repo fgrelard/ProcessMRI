@@ -228,6 +228,6 @@ class Ui_MainView(object):
         self.actionSegmentGrain.setText(_translate("MainView", "Largest component"))
         self.actionSegmentCavity.setText(_translate("MainView", "Segment cavity"))
         self.actionManualSegmentation.setText(_translate("MainView", "Manual segmentation"))
-        self.actionManualComponent.setText(_translate("MainView", "Manual component"))
+        self.actionManualComponent.setText(_translate("MainView", "Region growing"))
         self.actionMeasurements.setText(_translate("MainView", "Measurements"))
         self.actionUser_manual_FR.setText(_translate("MainView", "User manual (FR)"))

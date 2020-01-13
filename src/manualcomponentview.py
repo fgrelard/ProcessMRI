@@ -84,7 +84,7 @@ class Ui_ManualComponent_View(object):
 
     def retranslateUi(self, ManualComponent_View):
         _translate = QtCore.QCoreApplication.translate
-        ManualComponent_View.setWindowTitle(_translate("ManualComponent_View", "Manual component extraction"))
+        ManualComponent_View.setWindowTitle(_translate("ManualComponent_View", "Region growing segmentation"))
         self.label.setText(_translate("ManualComponent_View", "Multiplier"))
         self.pushButton_2.setToolTip(_translate("ManualComponent_View", "Multiplication factor for the threshold for the region growing."))
         self.pushButton_2.setText(_translate("ManualComponent_View", "?"))
@@ -92,9 +92,9 @@ class Ui_ManualComponent_View(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Semi-manual component extraction</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt; font-weight:600;\">Region growing</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt; font-weight:600;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Extracts a component in the image from a selected seed point, by region growing.</p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Segments a region by region growing, from a selected seed point.</p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Press the &quot;Start&quot; button to start the process. Next, left-click on the desired component.  </p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Validate the segmentation by pressing &quot;OK&quot;, or generate another segmentation by selecting another seed.</p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt; font-weight:600;\"><br /></p></body></html>"))
