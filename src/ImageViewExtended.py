@@ -134,6 +134,7 @@ class ImageViewExtended(pg.ImageView):
         self.ui.gridLayout_2.addWidget(self.ui.normOffRadio, 0, 4, 1, 1)
         self.ui.normAutoRadio.setText(QtGui.QApplication.translate("Form", "Stack", None))
         self.ui.normOffRadio.setText(QtGui.QApplication.translate("Form", "Manual", None))
+        self.ui.normTimeRangeCheck.setText(QtGui.QApplication.translate("Form", "Slice range", None))
         self.ui.normAutoRadio.clicked.connect(self.normRadioChanged)
 
         self.hide_partial()
