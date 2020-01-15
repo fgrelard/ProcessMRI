@@ -351,14 +351,13 @@ def detect_cavity_3D(image, multiplier):
 def region_growing(image_data, seed):
     image = image_data.copy()
     image = img_as_ubyte(image * 1.0 / image.max())
-    image = np.reshape(image, (image.shape[0], image.shape[1]) + (-1,), order='F')
-    image = image[..., 0]
-    plt.imshow(image)
-    plt.show()
     threshold = threshold_otsu(image)
     image_itk = sitk.GetImageFromArray(image)
-    seed = (seed[1], seed[0])
+    seed = (seed[2], seed[1], seed[0])
+    print(image_itk)
     seg_con = sitk.ConnectedThreshold(image_itk, seedList=[seed], lower=int(threshold+1), upper=255)
     seg_con_array = sitk.GetArrayFromImage(seg_con)
+    plt.imshow(seg_con_array[..., 7])
+    plt.show()
     # seg_con_array = np.reshape(seg_con_array.T, image_data.shape, order='F')
     return seg_con_array

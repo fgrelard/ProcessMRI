@@ -437,12 +437,14 @@ class MainController:
             self.register_position_on_click(evt)
         self.manualcomponentcontroller.update_parameters()
         multiplier = self.manualcomponentcontroller.multiplier
+        is_3D = self.manualcomponentcontroller.is_3D
+        z = self.mainview.imageview.currentIndex
         try:
             multiplier = float(multiplier)
         except Exception as e:
             multiplier = 1.0
 
-        worker = WorkerManualComponent(self.img_data.copy(), seed=(self.mouse_x, self.mouse_y), multiplier=multiplier)
+        worker = WorkerManualComponent(self.img_data.copy(), seed=(self.mouse_x, self.mouse_y, z), multiplier=multiplier, is_3D=is_3D)
         thread = QThread()
         worker.moveToThread(thread)
         worker.signal_end.connect(self.end_preview)

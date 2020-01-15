@@ -33,10 +33,11 @@ class WorkerManualComponent(QtCore.QObject):
 
     number = 1
 
-    def __init__(self, img_data, seed, multiplier=1.0, parent=None):
+    def __init__(self, img_data, seed, multiplier=1.0, is_3D=True, parent=None):
         super().__init__()
         self.img_data = img_data
         self.seed = seed
+        self.is_3D = is_3D
         self.multiplier = multiplier
         self.is_abort = False
 
@@ -46,20 +47,30 @@ class WorkerManualComponent(QtCore.QObject):
         image = np.reshape(image, (image.shape[0], image.shape[1]) + (-1,), order='F')
         length = image.shape[-1]
         seg_image = np.zeros_like(image)
-        self.seed = (self.seed[1], self.seed[0])
-        if not (0 <= self.seed[0] < image.shape[1] and 0 <= self.seed[1] < image.shape[0]):
+        if not (0 <= self.seed[0] < image.shape[0] and 0 <= self.seed[1] < image.shape[1]):
             return
-        for i in range(length):
-            QApplication.processEvents()
-            current = image[..., i]
+        if self.is_3D:
+            self.seed = (int(self.seed[2]), int(self.seed[1]), int(self.seed[0]))
             try:
-                threshold = threshold_otsu(current[current!=0])
+                threshold = threshold_otsu(image[image!=0])
                 threshold = max(1, min(int(threshold*self.multiplier), 255))
             except:
                 threshold = 50
-            seg_con = sitk.ConnectedThreshold(sitk.GetImageFromArray(current), seedList=[self.seed], lower=int(threshold), upper=255)
-            seg_con_array = sitk.GetArrayFromImage(seg_con)
-            seg_image[..., i] = seg_con_array
+            seg_con = sitk.ConnectedThreshold(sitk.GetImageFromArray(image), seedList=[self.seed], lower=int(threshold), upper=255)
+            seg_image = sitk.GetArrayFromImage(seg_con)
+        else:
+            self.seed = (int(self.seed[1]), int(self.seed[0]))
+            for i in range(length):
+                QApplication.processEvents()
+                current = image[..., i]
+                try:
+                    threshold = threshold_otsu(current[current!=0])
+                    threshold = max(1, min(int(threshold*self.multiplier), 255))
+                except:
+                    threshold = 50
+                seg_con = sitk.ConnectedThreshold(sitk.GetImageFromArray(current), seedList=[self.seed], lower=int(threshold), upper=255)
+                seg_con_array = sitk.GetArrayFromImage(seg_con)
+                seg_image[..., i] = seg_con_array
         seg_image = np.reshape(seg_image, self.img_data.shape, order='F')
         out_image = self.img_data.copy()
         out_image[seg_image != 1] = 0
@@ -97,6 +108,9 @@ class ManualComponentController:
         #Reset tooltips to avoid overlap of events
         self.view.pushButton_2.setToolTip("")
 
+        self.is_3D = True
+        self.multiplier = 1.0
+
         #Events
         self.trigger = Signal()
         self.view.pushButton.clicked.connect(self.update_parameters)
@@ -104,6 +118,7 @@ class ManualComponentController:
 
     def update_parameters(self):
         value = self.view.horizontalSlider.value()
+        self.is_3D = self.view.radioButton_3D.isChecked()
         self.multiplier = self.slidervalue_to_multvalue(value)
         self.trigger.signal.emit()
 
