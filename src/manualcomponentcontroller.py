@@ -136,4 +136,4 @@ class ManualComponentController:
         self.view.horizontalSlider.setToolTip(str(value))
 
     def slidervalue_to_multvalue(self, value):
-        return float(value/10)
+        return float(value/100)
