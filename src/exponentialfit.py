@@ -167,11 +167,11 @@ def fit_exponential_linear_regression(x, y):
 
     Returns
     ----------
-    list
-        exponential coefficients
+    tuple
+        exponential coefficients, residuals
     """
-    fit = np.polyfit(np.array(x), np.log(y), 1,  w=np.sqrt(y))
-    return [np.exp(fit[1]), -fit[0], 0]
+    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=np.sqrt(y), full=True)
+    return [np.exp(fit[1]), -fit[0], 0], residuals[0]
 
 def fit_exponential(x, y, p0, lreg=False):
     """
@@ -189,8 +189,10 @@ def fit_exponential(x, y, p0, lreg=False):
     lreg: bool
         use linear regression or nnls
     """
+    initial_values = [y[0], float("inf"), 0]
     if lreg:
-        return fit_exponential_linear_regression(x, y)
+        fit, residual = fit_exponential_linear_regression(x, y)
+        return fit
     try:
         popt, pcov = curve_fit(n_exponential_function, x, y, p0=p0,maxfev=3000)
 
@@ -198,7 +200,8 @@ def fit_exponential(x, y, p0, lreg=False):
             raise RuntimeError("Exponential coefficient not suited.")
         return popt
     except RuntimeError as error:
-        return fit_exponential_linear_regression(x, y)
+        fit, residual = fit_exponential_linear_regression(x, y)
+        return fit
 
 def plot_values(x, y, value, popt, threshold, f=n_exponential_function):
     """
