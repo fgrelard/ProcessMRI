@@ -122,25 +122,64 @@ class ImageViewExtended(pg.ImageView):
 
         self.ui.histogram.sigLevelsChanged.connect(self.levelsChanged)
         self.ui.histogram.gradient.loadPreset("viridis")
-        self.gradient = self.ui.histogram.gradient.getGradient()
+        self.gradient = self.ui.histogram.gradient.colorMap()
 
         self.ui.histogram.gradient.updateGradient()
         self.ui.histogram.gradientChanged()
 
         self.ui.normAutoRadio = QtGui.QRadioButton(self.ui.normGroup)
-        self.ui.normDivideRadio.setChecked(True)
         self.ui.normAutoRadio.setObjectName("normAutoRadio")
-        self.ui.gridLayout_2.addWidget(self.ui.normAutoRadio, 0, 3, 1, 1)
-        self.ui.gridLayout_2.addWidget(self.ui.normOffRadio, 0, 4, 1, 1)
+
+        self.ui.roiGroup = QtGui.QButtonGroup(self.ui.normGroup)
+        self.ui.normRadioGroup = QtGui.QButtonGroup(self.ui.normGroup)
+        self.ui.label_roi = QtGui.QLabel(self.ui.normGroup)
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.ui.label_roi.setFont(font)
+        self.ui.label_roi.setText(QtGui.QApplication.translate("Form", "ROI:", None))
+        self.ui.roiSquareRadio = QtGui.QRadioButton(self.ui.normGroup)
+
+        self.ui.roiSquareRadio.setText(QtGui.QApplication.translate("Form", "Square", None))
+        self.ui.roiCircleRadio = QtGui.QRadioButton(self.ui.normGroup)
+        self.ui.roiCircleRadio.setText(QtGui.QApplication.translate("Form", "Circle", None))
+
+        self.ui.roiGroup.addButton(self.ui.roiSquareRadio)
+        self.ui.roiGroup.addButton(self.ui.roiCircleRadio)
+
         self.ui.normAutoRadio.setText(QtGui.QApplication.translate("Form", "Stack", None))
         self.ui.normOffRadio.setText(QtGui.QApplication.translate("Form", "Manual", None))
         self.ui.normTimeRangeCheck.setText(QtGui.QApplication.translate("Form", "Slice range", None))
         self.ui.normDivideRadio.setText(QtGui.QApplication.translate("Form", "Auto", None))
         self.ui.label_5.setText(QtGui.QApplication.translate("Form", "Type:", None))
+
+        self.ui.roiSquareRadio.clicked.connect(self.roiRadioChanged)
+        self.ui.roiCircleRadio.clicked.connect(self.roiRadioChanged)
         self.ui.normAutoRadio.clicked.connect(self.normRadioChanged)
+
+        self.ui.normRadioGroup.addButton(self.ui.normDivideRadio)
+        self.ui.normRadioGroup.addButton(self.ui.normOffRadio)
+
+        self.ui.roiSquareRadio.setChecked(True)
+        self.ui.normDivideRadio.setChecked(True)
+
 
         self.hide_partial()
 
+        for i in reversed(range(self.ui.gridLayout_2.count())):
+            self.ui.gridLayout_2.itemAt(i).widget().setParent(None)
+
+        self.ui.gridLayout_2.addWidget(self.ui.label_roi, 0, 0, 1, 1)
+        self.ui.gridLayout_2.addWidget(self.ui.roiSquareRadio, 0, 1, 1, 1)
+        self.ui.gridLayout_2.addWidget(self.ui.roiCircleRadio, 0, 2, 1, 1)
+        self.ui.gridLayout_2.addWidget(self.ui.label_5, 1, 0, 1, 1)
+        self.ui.gridLayout_2.addWidget(self.ui.normDivideRadio, 1, 1, 1, 1)
+
+        self.ui.gridLayout_2.addWidget(self.ui.normOffRadio, 1, 2, 1, 1)
+        self.ui.gridLayout_2.addWidget(self.ui.normFrameCheck, 2, 1, 1, 1)
+        self.ui.gridLayout_2.addWidget(self.ui.label_3, 2, 0, 1, 1)
+        self.ui.gridLayout_2.addWidget(self.ui.normROICheck, 2, 1, 1, 1)
+        self.ui.gridLayout_2.addWidget(self.ui.normTimeRangeCheck, 2, 2, 1, 1)
         self.label = pg.LabelItem(justify='right')
         self.scene.addItem(self.label)
         self.scene.sigMouseMoved.connect(self.on_hover_image)
@@ -161,7 +200,23 @@ class ImageViewExtended(pg.ImageView):
         self.isNewImage = False
         self.normDivideRadioChecked = False
 
-
+    def roiRadioChanged(self):
+        roiSquareChecked = self.ui.roiSquareRadio.isChecked()
+        self.normRoi.hide()
+        if roiSquareChecked:
+            self.normRoi = pg.graphicsItems.ROI.ROI(pos=[0,0], size=10)
+            self.normRoi.addScaleHandle([1, 1], [0, 0])
+            self.normRoi.addRotateHandle([0, 0], [0.5, 0.5])
+            self.normRoi.setZValue(10000)
+            self.normRoi.setPen('y')
+            self.normRoi.show()
+        else:
+            self.normRoi = pg.graphicsItems.ROI.CircleROI(pos=[0,0], size=10)
+            self.normRoi.setPen("y")
+            self.normRoi.setZValue(20)
+            self.normRoi.show()
+        self.view.addItem(self.normRoi)
+        self.normRoi.sigRegionChangeFinished.connect(self.updateNorm)
 
     def mouseClickEventImageItem(self, ev):
         pg.ImageItem.mouseClickEvent(self.imageItem, ev)
@@ -195,8 +250,7 @@ class ImageViewExtended(pg.ImageView):
         self.ui.normFrameCheck.hide()
         self.ui.normSubtractRadio.hide()
         self.ui.normAutoRadio.hide()
-        self.ui.gridLayout_2.addWidget(self.ui.normOffRadio, 0, 2, 1, 1)
-        self.ui.gridLayout_2.addWidget(self.ui.normTimeRangeCheck, 1, 2, 1, 1)
+
 
 
     def drawAt(self, pos, ev=None):
