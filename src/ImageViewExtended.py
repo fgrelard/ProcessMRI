@@ -204,18 +204,19 @@ class ImageViewExtended(pg.ImageView):
         roiSquareChecked = self.ui.roiSquareRadio.isChecked()
         self.normRoi.hide()
         if roiSquareChecked:
-            self.normRoi = pg.graphicsItems.ROI.ROI(pos=[0,0], size=10)
+            self.normRoi = pg.graphicsItems.ROI.ROI(pos=self.normRoi.pos(), size=self.normRoi.size())
             self.normRoi.addScaleHandle([1, 1], [0, 0])
             self.normRoi.addRotateHandle([0, 0], [0.5, 0.5])
             self.normRoi.setZValue(10000)
             self.normRoi.setPen('y')
             self.normRoi.show()
         else:
-            self.normRoi = pg.graphicsItems.ROI.CircleROI(pos=[0,0], size=10)
+            self.normRoi = pg.graphicsItems.ROI.CircleROI(pos=self.normRoi.pos(), size=self.normRoi.size())
             self.normRoi.setPen("y")
             self.normRoi.setZValue(20)
             self.normRoi.show()
         self.view.addItem(self.normRoi)
+        self.updateNorm()
         self.normRoi.sigRegionChangeFinished.connect(self.updateNorm)
 
     def mouseClickEventImageItem(self, ev):
@@ -418,6 +419,7 @@ class ImageViewExtended(pg.ImageView):
             norm = norm.astype(np.float32)
 
         if self.ui.normTimeRangeCheck.isChecked() and image.ndim == 3:
+            print("time range check")
             (sind, start) = self.timeIndex(self.normRgn.lines[0])
             (eind, end) = self.timeIndex(self.normRgn.lines[1])
             if sind > eind:
@@ -431,6 +433,7 @@ class ImageViewExtended(pg.ImageView):
                     norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
 
         if self.ui.normFrameCheck.isChecked() and image.ndim == 3:
+            print("frame check")
             n = image.mean(axis=1).mean(axis=1)
             n.shape = n.shape + (1, 1)
             if n.any():
@@ -446,11 +449,16 @@ class ImageViewExtended(pg.ImageView):
                 if div:
                     norm = norm.astype(np.float32)
                 roi = norm[sind:eind+1]
-                n = self.normRoi.getArrayRegion(roi, self.imageItem, (1, 2)).mean(axis=1).mean(axis=1).mean(axis=0)
+                rgn = self.normRoi.getArrayRegion(roi, self.imageItem, (1, 2), order=0).mean(axis=1)
+                masked_rgn = np.ma.masked_equal(rgn, 0)
+                n = masked_rgn.mean(axis=1).mean(axis=0)
             #Other case : no ROI checked
             else:
-                n = self.normRoi.getArrayRegion(norm[self.currentIndex:self.currentIndex+1], self.imageItem, (1, 2)).mean(axis=1).mean(axis=1)
+                rgn = self.normRoi.getArrayRegion(norm[self.currentIndex:self.currentIndex+1], self.imageItem, (1, 2), order=0)
+                masked_rgn = np.ma.masked_equal(rgn, 0)
+                n = masked_rgn.mean(axis=1).mean(axis=1)
                 n = n[:,np.newaxis,np.newaxis]
+
             if n.any():
                 if sub:
                     norm -= n
