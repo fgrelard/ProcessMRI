@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import QMessageBox, QApplication
 import os
 import pyqtgraph as pg
 import time
-
+import src.Image as Imeta
 
 class WorkerExport(QtCore.QObject):
     """
@@ -287,7 +287,7 @@ class ImageViewExtended(pg.ImageView):
     def setClickable(self, is_clickable):
         self.is_clickable = is_clickable
 
-    def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True):
+    def setImage(self, img, autoRange=True, autoLevels=True, levels=None, axes=None, xvals=None, pos=None, scale=None, transform=None, autoHistogramRange=True, contains_plot_info=False):
         """
         Sets a new image
 
@@ -305,14 +305,18 @@ class ImageViewExtended(pg.ImageView):
             is_shown = True
 
         self.isNewImage = True
-        super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
-        self.imageCopy = self.imageDisp.copy()
+        if contains_plot_info:
+            super().setImage(img[0, ...], autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
+            self.imageCopy = Imeta.Image(img, True)
+        else:
+            super().setImage(img, autoRange, autoLevels, levels, axes, xvals, pos, scale, transform, autoHistogramRange)
+            self.imageCopy = Imeta.Image(self.imageDisp.copy(), False)
         self.pen_value = np.amax(self.imageDisp)+1
 
         #Changes wheel event
         self.ui.roiPlot.setMouseEnabled(True, True)
         self.ui.roiPlot.wheelEvent = self.roi_scroll_bar
-        max_t = img.shape[0]
+        max_t = self.imageDisp.shape[0]
         self.normRgn.setRegion((1, max_t//2))
         if not is_shown:
             return

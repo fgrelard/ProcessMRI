@@ -66,6 +66,7 @@ class WorkerExpFit(QtCore.QObject):
         n = self.n
         density_data = np.zeros(shape=image.shape[:-1])
         t2_data = np.zeros(shape=image.shape[:-1])
+        fit_data = np.zeros(shape=image.shape[:-1] + (2*self.n+1, ))
 
         #Auto threshold with mixture of gaussian (EM alg.)
         if threshold is None:
@@ -80,12 +81,8 @@ class WorkerExpFit(QtCore.QObject):
             if pixel_values[0] > threshold:
                 p0 = expfit.n_to_p0(n, pixel_values[0])
                 fit, residual = expfit.fit_exponential(echotime, pixel_values, p0, lreg)
-                x = np.linspace(0, 8, 50)
-                y2 = fit[0] * np.exp(-fit[1] * x) + fit[2]
-                plt.plot(echotime, pixel_values, x, y2)
-                plt.show()
-                print(fit)
-                break
+                fit_data[i] = fit
+
                 density_value = expfit.density(fit)
                 t2_value = expfit.t2_star(fit, echotime[0])
 
@@ -99,7 +96,11 @@ class WorkerExpFit(QtCore.QObject):
             self.signal_progress.emit(progress)
         if not self.is_abort:
             #Send images as a signal
-            self.signal_end.emit(np.nan_to_num(density_data), np.nan_to_num(t2_data), WorkerExpFit.number)
+            density_data = np.nan_to_num(density_data)
+            t2_data = np.nan_to_num(t2_data)
+            density_data = np.append(density_data[...,None], fit_data, axis=-1)
+            t2_data = np.append(t2_data[..., None], fit_data, axis=-1)
+            self.signal_end.emit(density_data, t2_data, WorkerExpFit.number)
             WorkerExpFit.number += 1
 
 
@@ -140,6 +141,8 @@ class ExpFitController:
         self.trigger = Signal()
         self.view.buttonBox.accepted.connect(self.update_parameters)
 
+        self.fit_method = self.view.comboBox.currentText()
+        self.threshold = self.view.lineEdit.text()
 
     def update_parameters(self):
         """

@@ -5,6 +5,7 @@ import webbrowser
 import numpy as np
 import qtawesome as qta
 
+import src.Image as Imeta
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem
@@ -27,6 +28,8 @@ import src.imageio as io
 import src.exponentialfit as expfit
 
 from collections import OrderedDict
+import matplotlib.pyplot as plt
+
 
 
 class MainController:
@@ -125,6 +128,8 @@ class MainController:
 
         self.mainview.editButton.clicked.connect(self.edit_name)
 
+        self.mainview.imageview.scene.sigMouseClicked.connect(self.on_click_image)
+
         self.mainview.imageview.signal_progress_export.connect(self.update_progressbar)
         self.mainview.imageview.signal_start_export.connect(self.mainview.show_run)
         self.mainview.imageview.signal_end_export.connect(self.mainview.hide_run)
@@ -145,8 +150,9 @@ class MainController:
         self.z = 0
 
 
-        self.open_image("/mnt/d/INRAE/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
+        self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1_reduced.nii")
         self.echotime = [1, 2, 3, 4, 5, 6, 7, 8]
+        self.exp_fit_estimation()
 
 
     def open_bruker(self):
@@ -516,8 +522,8 @@ class MainController:
         self.mainview.hide_run()
         density_name = "density_" + str(number)
         t2_name = "t2_" + str(number)
-        self.add_image(density, density_name)
-        self.add_image(t2, t2_name)
+        self.add_image(density, density_name, True)
+        self.add_image(t2, t2_name, True)
         self.choose_image(density_name)
 
     def end_denoise(self, denoised, number):
@@ -647,7 +653,7 @@ class MainController:
     def end_preview(self, image, number):
         name = "Preview"
         if name in self.images:
-            self.images[name] = image
+            self.images[name] = Imeta.Image(image)
         else:
             self.add_image(image, name)
         self.choose_image(name, preview=True, autoLevels=False)
@@ -668,7 +674,7 @@ class MainController:
             thread.wait()
         self.mainview.hide_run()
 
-    def add_image(self, image, name):
+    def add_image(self, image, name, plot_info=False):
         """
         Adds an image to the combobox
         and to the self.images dictionary
@@ -681,7 +687,8 @@ class MainController:
             combobox name
         """
         self.mainview.combobox.addItem(name)
-        self.images[name] = image
+        image_with_metadata = Imeta.Image(image, contains_plot_info=plot_info)
+        self.images[name] = image_with_metadata
         img_data_name = self.current_name(self.img_data)
         self.metadata[name] = self.metadata[img_data_name] if img_data_name in self.metadata else None
 
@@ -756,10 +763,11 @@ class MainController:
         if not preview:
             self.img_data = self.images[name]
         self.mainview.combobox.setCurrentIndex(self.mainview.combobox.findText(name))
-        vis = self.image_to_visualization(self.images[name])
-        self.mainview.imageview.setImage(vis)
+        is_plot = self.images[name].contains_plot_info
+        vis = self.image_to_visualization(self.images[name], is_plot)
+        self.mainview.imageview.setImage(vis, contains_plot_info=is_plot)
 
-    def image_to_visualization(self, img):
+    def image_to_visualization(self, img, info_plot=False):
         """
         Modifies the image so it can be rendered
         Converts n-D image to 3D
@@ -769,6 +777,25 @@ class MainController:
         img: np.ndarray
             n-D image loaded by the imageio module
         """
-        img2 = np.reshape(img, (img.shape[0], img.shape[1]) + (-1,), order='F')
+        if info_plot:
+            img2 = np.reshape(img, img.shape, order='F')
+        else:
+            img2 = np.reshape(img, (img.shape[0], img.shape[1]) + (-1,), order='F')
         img2 = img2.transpose()
         return img2
+
+
+    def on_click_image(self, evt):
+        pos = evt
+        ive = self.mainview.imageview
+        image = ive.imageDisp
+        if image is None:
+            return
+        if ive.imageCopy.contains_plot_info:
+            fit = ive.imageCopy[1:, ive.currentIndex, ive.mouse_y, ive.mouse_x]
+            print(fit)
+            # pixel_values = self.imageCopy[0:, self.currentIndex, self.mouse_y, self.mouse_x]
+            x = np.linspace(0, len(self.echotime), 50)
+            y2 = fit[0] * np.exp(-fit[1] * x) + fit[2]
+            plt.plot(x, y2)
+            plt.show()
