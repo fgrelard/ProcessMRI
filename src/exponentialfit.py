@@ -192,13 +192,13 @@ def fit_exponential(x, y, p0, lreg=False):
     initial_values = [y[0], float("inf"), 0]
     if lreg:
         fit, residual = fit_exponential_linear_regression(x, y)
-        return fit
+        return fit, residual
     try:
         popt, pcov = curve_fit(n_exponential_function, x, y, p0=p0,maxfev=3000)
-
+        residual = np.sqrt(np.diag(pcov))
         if popt[1] > 3:
             raise RuntimeError("Exponential coefficient not suited.")
-        return popt
+        return popt, residual
     except RuntimeError as error:
         fit, residual = fit_exponential_linear_regression(x, y)
         return fit

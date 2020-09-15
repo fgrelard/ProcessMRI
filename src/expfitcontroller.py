@@ -4,6 +4,7 @@ from src.signal import Signal
 from PyQt5 import QtCore
 import numpy as np
 import src.exponentialfit as expfit
+import matplotlib.pyplot as plt
 
 
 class WorkerExpFit(QtCore.QObject):
@@ -78,7 +79,13 @@ class WorkerExpFit(QtCore.QObject):
             pixel_values = image[i + (slice(None),)]
             if pixel_values[0] > threshold:
                 p0 = expfit.n_to_p0(n, pixel_values[0])
-                fit = expfit.fit_exponential(echotime, pixel_values, p0, lreg)
+                fit, residual = expfit.fit_exponential(echotime, pixel_values, p0, lreg)
+                x = np.linspace(0, 8, 50)
+                y2 = fit[0] * np.exp(-fit[1] * x) + fit[2]
+                plt.plot(echotime, pixel_values, x, y2)
+                plt.show()
+                print(fit)
+                break
                 density_value = expfit.density(fit)
                 t2_value = expfit.t2_star(fit, echotime[0])
 

@@ -4,7 +4,7 @@ import matplotlib
 
 #Allows to use QThreads without freezing
 #the main application
-matplotlib.use('Agg')
+matplotlib.use('Qt5Agg')
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
