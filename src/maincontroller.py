@@ -195,7 +195,7 @@ class MainController:
         self.z = 0
 
 
-        self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1_reduced.nii")
+        self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
         self.echotime = [1, 2, 3, 4, 5, 6, 7, 8]
         self.exp_fit_estimation()
 

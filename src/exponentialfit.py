@@ -171,7 +171,11 @@ def fit_exponential_linear_regression(x, y):
         exponential coefficients, residuals
     """
     fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=np.sqrt(y), full=True)
-    return [np.exp(fit[1]), -fit[0], 0], residuals[0]
+    fitted = np.polyval(fit, x)
+    fitted_norm = fitted * 1.0 / max(fitted.max(), y.max())
+    y_norm = y * 1.0 / max(fitted.max(), y.max())
+    error = np.sqrt((fitted_norm - y_norm)**2)
+    return [np.exp(fit[1]), -fit[0], 0], np.mean(error)
 
 def fit_exponential(x, y, p0, lreg=False):
     """
