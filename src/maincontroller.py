@@ -29,6 +29,27 @@ import src.exponentialfit as expfit
 
 from collections import OrderedDict
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvas, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+
+class WidgetPlot(QtWidgets.QDialog):
+    def __init__(self, *args, **kwargs):
+        QtWidgets.QWidget.__init__(self, *args, **kwargs)
+
+        self.fig, self.ax = plt.subplots()
+        self.ax.plot([10], [12])
+        self.canvas = FigureCanvas(self.fig)
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.fig.canvas.draw_idle()
+        self.canvas.draw()
+
+    def update(self, *args):
+        self.ax.cla()
+        self.ax.plot(*args)
+        self.ax.set_xlabel("Echotimes (ms)", fontweight="bold")
+        self.ax.set_ylabel("Intensities", fontweight="bold")
+        self.fig.canvas.draw_idle()
+        self.canvas.draw()
 
 
 
@@ -133,6 +154,10 @@ class MainController:
         self.mainview.imageview.signal_progress_export.connect(self.update_progressbar)
         self.mainview.imageview.signal_start_export.connect(self.mainview.show_run)
         self.mainview.imageview.signal_end_export.connect(self.mainview.hide_run)
+
+        #Exp fit plot
+        self.widgetPlot = WidgetPlot()
+        self.widgetPlot.show()
 
         self.is_edit = False
 
@@ -792,10 +817,10 @@ class MainController:
         if image is None:
             return
         if ive.imageCopy.contains_plot_info:
-            fit = ive.imageCopy[1:, ive.currentIndex, ive.mouse_y, ive.mouse_x]
+            number_echoes = len(self.echotime)
+            pixel_values = ive.imageCopy[1:number_echoes+1, ive.currentIndex, ive.mouse_y, ive.mouse_x]
+            fit = ive.imageCopy[number_echoes+1:, ive.currentIndex, ive.mouse_y, ive.mouse_x]
             print(fit)
-            # pixel_values = self.imageCopy[0:, self.currentIndex, self.mouse_y, self.mouse_x]
-            x = np.linspace(0, len(self.echotime), 50)
+            x = np.linspace(0, number_echoes, 50)
             y2 = fit[0] * np.exp(-fit[1] * x) + fit[2]
-            plt.plot(x, y2)
-            plt.show()
+            self.widgetPlot.update(self.echotime, pixel_values, "o", x, y2)

@@ -98,8 +98,9 @@ class WorkerExpFit(QtCore.QObject):
             #Send images as a signal
             density_data = np.nan_to_num(density_data)
             t2_data = np.nan_to_num(t2_data)
-            density_data = np.append(density_data[...,None], fit_data, axis=-1)
-            t2_data = np.append(t2_data[..., None], fit_data, axis=-1)
+            print(density_data[...,None].shape, image.shape, fit_data.shape)
+            density_data = np.concatenate((density_data[...,None], image, fit_data), axis=-1)
+            t2_data = np.concatenate((t2_data[..., None], image, fit_data), axis=-1)
             self.signal_end.emit(density_data, t2_data, WorkerExpFit.number)
             WorkerExpFit.number += 1
 
