@@ -8,6 +8,7 @@ import qtawesome as qta
 import src.Image as Imeta
 
 from PyQt5 import QtWidgets
+from PyQt5.Qt import QVBoxLayout
 from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
@@ -37,11 +38,14 @@ class WidgetPlot(QtWidgets.QDialog):
         QtWidgets.QWidget.__init__(self, *args, **kwargs)
 
         self.fig, self.ax = plt.subplots()
-        self.ax.plot([10], [12])
         self.canvas = FigureCanvas(self.fig)
         self.toolbar = NavigationToolbar(self.canvas, self)
-        self.fig.canvas.draw_idle()
-        self.canvas.draw()
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.canvas)
+        self.layout.addWidget(self.toolbar)
+        self.setLayout(self.layout)
+        self.move(0,0)
 
     def update(self, *args):
         self.ax.cla()
@@ -50,6 +54,7 @@ class WidgetPlot(QtWidgets.QDialog):
         self.ax.set_ylabel("Intensities", fontweight="bold")
         self.fig.canvas.draw_idle()
         self.canvas.draw()
+        self.show()
 
 
 
@@ -156,7 +161,7 @@ class MainController:
         self.mainview.imageview.signal_end_export.connect(self.mainview.hide_run)
 
         #Exp fit plot
-        self.widgetPlot = WidgetPlot()
+        self.widgetPlot = WidgetPlot(parent=self.mainview.parent.centralWidget())
         self.widgetPlot.show()
 
         self.is_edit = False
@@ -820,7 +825,6 @@ class MainController:
             number_echoes = len(self.echotime)
             pixel_values = ive.imageCopy[1:number_echoes+1, ive.currentIndex, ive.mouse_y, ive.mouse_x]
             fit = ive.imageCopy[number_echoes+1:, ive.currentIndex, ive.mouse_y, ive.mouse_x]
-            print(fit)
             x = np.linspace(0, number_echoes, 50)
             y2 = fit[0] * np.exp(-fit[1] * x) + fit[2]
             self.widgetPlot.update(self.echotime, pixel_values, "o", x, y2)
