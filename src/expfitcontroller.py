@@ -67,6 +67,7 @@ class WorkerExpFit(QtCore.QObject):
         density_data = np.zeros(shape=image.shape[:-1])
         t2_data = np.zeros(shape=image.shape[:-1])
         fit_data = np.zeros(shape=image.shape[:-1] + (2*self.n+1, ))
+        residual_data = np.zeros(shape=image.shape[:-1])
 
         #Auto threshold with mixture of gaussian (EM alg.)
         if threshold is None:
@@ -82,6 +83,7 @@ class WorkerExpFit(QtCore.QObject):
                 p0 = expfit.n_to_p0(n, pixel_values[0])
                 fit, residual = expfit.fit_exponential(echotime, pixel_values, p0, lreg)
                 fit_data[i] = fit
+                residual_data[i] = residual
 
                 density_value = expfit.density(fit)
                 t2_value = expfit.t2_star(fit, echotime[0])
@@ -98,9 +100,8 @@ class WorkerExpFit(QtCore.QObject):
             #Send images as a signal
             density_data = np.nan_to_num(density_data)
             t2_data = np.nan_to_num(t2_data)
-            print(density_data[...,None].shape, image.shape, fit_data.shape)
-            density_data = np.concatenate((density_data[...,None], image, fit_data), axis=-1)
-            t2_data = np.concatenate((t2_data[..., None], image, fit_data), axis=-1)
+            density_data = np.concatenate((density_data[...,None], image, fit_data, residual_data[..., None]), axis=-1)
+            t2_data = np.concatenate((t2_data[..., None], image, fit_data, residual_data[..., None]), axis=-1)
             self.signal_end.emit(density_data, t2_data, WorkerExpFit.number)
             WorkerExpFit.number += 1
 

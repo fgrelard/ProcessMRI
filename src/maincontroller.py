@@ -47,14 +47,30 @@ class WidgetPlot(QtWidgets.QDialog):
         self.setLayout(self.layout)
         self.move(0,0)
 
-    def update(self, *args):
+    def clear(self):
         self.ax.cla()
-        self.ax.plot(*args)
-        self.ax.set_xlabel("Echotimes (ms)", fontweight="bold")
-        self.ax.set_ylabel("Intensities", fontweight="bold")
+
+    def set_xlabel(self, xlabel):
+        self.ax.set_xlabel(xlabel, fontweight="bold")
+
+    def set_ylabel(self, ylabel):
+        self.ax.set_ylabel(ylabel, fontweight="bold")
+
+    def set_text(self, text):
+        self.ax.text(0.95,
+                     0.95,
+                     text,
+                     verticalalignment='top',
+                     horizontalalignment='right',
+                     transform=self.ax.transAxes)
+
+    def plot(self, *args, **kwargs):
+        self.ax.plot(*args, **kwargs)
+
+    def show(self):
         self.fig.canvas.draw_idle()
         self.canvas.draw()
-        self.show()
+        super().show()
 
 
 
@@ -162,7 +178,6 @@ class MainController:
 
         #Exp fit plot
         self.widgetPlot = WidgetPlot(parent=self.mainview.parent.centralWidget())
-        self.widgetPlot.show()
 
         self.is_edit = False
 
@@ -824,7 +839,14 @@ class MainController:
         if ive.imageCopy.contains_plot_info:
             number_echoes = len(self.echotime)
             pixel_values = ive.imageCopy[1:number_echoes+1, ive.currentIndex, ive.mouse_y, ive.mouse_x]
-            fit = ive.imageCopy[number_echoes+1:, ive.currentIndex, ive.mouse_y, ive.mouse_x]
+            fit = ive.imageCopy[number_echoes+1:-1, ive.currentIndex, ive.mouse_y, ive.mouse_x]
+            residual = ive.imageCopy[-1:, ive.currentIndex, ive.mouse_y, ive.mouse_x]
             x = np.linspace(0, number_echoes, 50)
             y2 = fit[0] * np.exp(-fit[1] * x) + fit[2]
-            self.widgetPlot.update(self.echotime, pixel_values, "o", x, y2)
+            self.widgetPlot.clear()
+            self.widgetPlot.set_xlabel("Echotimes (ms)")
+            self.widgetPlot.set_ylabel("Intensities")
+            self.widgetPlot.set_text("residual="+str(residual))
+            self.widgetPlot.plot(self.echotime, pixel_values, "o", label="Pixel values")
+            self.widgetPlot.plot(x, y2, label="Exponential fit")
+            self.widgetPlot.show()
