@@ -195,9 +195,9 @@ class MainController:
         self.z = 0
 
 
-        self.open_image("/mnt/d/IRM/raw/BLE/250/50/nifti/50_subscan_1.nii.gz")
-        self.echotime = [1, 2, 3, 4, 5, 6, 7, 8]
-        self.exp_fit_estimation()
+        self.open_image("/mnt/e/IRM/BLE_BOB_250DJ_1_1_20200210_102914/27/nifti/27.nii.gz")
+        self.echotime = [i+1 for i in range(16)]
+        # self.exp_fit_estimation()
 
 
     def open_bruker(self):
@@ -292,6 +292,8 @@ class MainController:
         """
         fit_method = self.expfitcontroller.fit_method
         threshold = self.expfitcontroller.threshold
+        threshold_error = self.expfitcontroller.threshold_error
+        threshold_expfactor = self.expfitcontroller.threshold_expfactor
         outname = self.config['default']['NifTiDir']
         if self.img_data is not None:
             try:
@@ -299,19 +301,26 @@ class MainController:
             except:
                 print("Automatic threshold with gaussian mixture")
                 threshold = None
+            try:
+                threshold_error = float(threshold_error)
+                threshold_expfactor = float(threshold_expfactor)
+            except:
+                print("Defaulting thresholds")
+                threshold_error = 1.0
+                threshold_expfactor = 0.0
             finally:
                 self.update_progressbar(0)
                 lreg = True
                 n=1
                 if fit_method != "Linear regression":
                     lreg = False
-                    if fit_method == "Mono-exponential":
+                    if fit_method == "NNLS mono-exponential":
                         n=1
-                    elif fit_method == "Bi-exponential":
+                    elif fit_method == "NNLS bi-exponential":
                         n=2
                     else:
                         n=3
-                worker = WorkerExpFit(img_data=self.img_data, echotime=self.echotime, threshold=threshold, lreg=lreg, n=n)
+                worker = WorkerExpFit(img_data=self.img_data, echotime=self.echotime, threshold=threshold, lreg=lreg, n=n, threshold_error=threshold_error, threshold_expfactor=threshold_expfactor)
                 thread = QThread()
                 worker.moveToThread(thread)
                 worker.signal_start.connect(self.mainview.show_run)
@@ -846,7 +855,7 @@ class MainController:
             self.widgetPlot.clear()
             self.widgetPlot.set_xlabel("Echotimes (ms)")
             self.widgetPlot.set_ylabel("Intensities")
-            self.widgetPlot.set_text("residual="+str(residual))
+            self.widgetPlot.set_text("residual=" + str(residual) + "\nexp. factor=" + str(round(float(np.sum(fit[1::2])), 4)))
             self.widgetPlot.plot(self.echotime, pixel_values, "o", label="Pixel values")
             self.widgetPlot.plot(x, y2, label="Exponential fit")
             self.widgetPlot.show()

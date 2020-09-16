@@ -150,7 +150,8 @@ def t2_star(values, echotime):
         t2 star
 
     """
-    t2_val = np.sum(np.divide(echotime,values[1::2]))
+    vals = [x for x in values[1::2] if x > 0]
+    t2_val = np.sum(np.divide(echotime,vals))
     return t2_val if t2_val > 0 else 0
 
 def fit_exponential_linear_regression(x, y):
@@ -171,11 +172,16 @@ def fit_exponential_linear_regression(x, y):
         exponential coefficients, residuals
     """
     fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=np.sqrt(y), full=True)
-    fitted = np.polyval(fit, x)
+    exp_values = [np.exp(fit[1]), -fit[0], 0]
+    error = normalized_mse(exp_values, x, y)
+    return exp_values, error
+
+def normalized_mse(exp_values, x, y):
+    fitted = n_exponential_function(np.array(x), *exp_values)
     fitted_norm = fitted * 1.0 / max(fitted.max(), y.max())
     y_norm = y * 1.0 / max(fitted.max(), y.max())
     error = np.sqrt((fitted_norm - y_norm)**2)
-    return [np.exp(fit[1]), -fit[0], 0], np.mean(error)
+    return np.mean(error)
 
 def fit_exponential(x, y, p0, lreg=False):
     """
@@ -199,13 +205,16 @@ def fit_exponential(x, y, p0, lreg=False):
         return fit, residual
     try:
         popt, pcov = curve_fit(n_exponential_function, x, y, p0=p0,maxfev=3000)
-        residual = np.sqrt(np.diag(pcov))
+        residual = normalized_mse(popt, x, y)
         if popt[1] > 3:
             raise RuntimeError("Exponential coefficient not suited.")
         return popt, residual
     except RuntimeError as error:
         fit, residual = fit_exponential_linear_regression(x, y)
-        return fit
+        if len(fit) != len(p0):
+            diff = len(p0) - len(fit)
+            fit += [0 for i in range(diff)]
+        return fit, residual
 
 def plot_values(x, y, value, popt, threshold, f=n_exponential_function):
     """

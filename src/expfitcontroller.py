@@ -42,7 +42,7 @@ class WorkerExpFit(QtCore.QObject):
     signal_progress = QtCore.pyqtSignal(int)
     number = 1
 
-    def __init__(self, img_data, echotime, parent=None, threshold=None, lreg=True, n=1):
+    def __init__(self, img_data, echotime, parent=None, threshold=None, lreg=True, n=1, threshold_error=1.0, threshold_expfactor=0):
         super().__init__()
         self.img_data = img_data
         self.echotime = echotime
@@ -50,6 +50,8 @@ class WorkerExpFit(QtCore.QObject):
         self.lreg = lreg
         self.n = n
         self.is_abort = False
+        self.threshold_error = threshold_error
+        self.threshold_expfactor = threshold_expfactor
 
     @QtCore.pyqtSlot()
     def work(self):
@@ -63,7 +65,6 @@ class WorkerExpFit(QtCore.QObject):
         image = self.img_data
         threshold = self.threshold
         lreg = self.lreg
-        n = self.n
         density_data = np.zeros(shape=image.shape[:-1])
         t2_data = np.zeros(shape=image.shape[:-1])
         fit_data = np.zeros(shape=image.shape[:-1] + (2*self.n+1, ))
@@ -74,13 +75,14 @@ class WorkerExpFit(QtCore.QObject):
             threshold = expfit.auto_threshold_gmm(np.expand_dims(image[...,0].ravel(), 1), 3)
 
         length = density_data.size
+
         for i in np.ndindex(density_data.shape):
             if self.is_abort:
                 break
             QApplication.processEvents()
             pixel_values = image[i + (slice(None),)]
             if pixel_values[0] > threshold:
-                p0 = expfit.n_to_p0(n, pixel_values[0])
+                p0 = expfit.n_to_p0(self.n, pixel_values[0])
                 fit, residual = expfit.fit_exponential(echotime, pixel_values, p0, lreg)
                 fit_data[i] = fit
                 residual_data[i] = residual
@@ -88,8 +90,13 @@ class WorkerExpFit(QtCore.QObject):
                 density_value = expfit.density(fit)
                 t2_value = expfit.t2_star(fit, echotime[0])
 
-                density_data[i] = density_value
-                t2_data[i] = t2_value
+                if np.sum(fit[1::2]) > self.threshold_expfactor and \
+                   residual < self.threshold_error:
+                    density_data[i] = density_value
+                    t2_data[i] = t2_value
+                else:
+                    density_data[i] = pixel_values[0]
+                    t2_data[i] = 0
             else:
                 density_data[i] = pixel_values[0]
                 t2_data[i] = 0
@@ -129,15 +136,25 @@ class ExpFitController:
         self.view.retranslateUi(self.dialog)
         self.view.pushButton.setFixedWidth(20)
         self.view.pushButton_2.setFixedWidth(20)
+        self.view.pushButton_3.setFixedWidth(20)
+        self.view.pushButton_4.setFixedWidth(20)
+
+
 
         #Tooltips
         t1 = self.view.pushButton.toolTip()
         t2 = self.view.pushButton_2.toolTip()
+        t3 = self.view.pushButton_3.toolTip()
+        t4 = self.view.pushButton_4.toolTip()
         self.view.pushButton.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t1)
         self.view.pushButton_2.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t2)
+        self.view.pushButton_3.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t3)
+        self.view.pushButton_4.enterEvent = lambda event : QToolTip.showText(event.globalPos(), t4)
         #Reset tooltips to avoid overlap of events
         self.view.pushButton.setToolTip("")
         self.view.pushButton_2.setToolTip("")
+        self.view.pushButton_3.setToolTip("")
+        self.view.pushButton_4.setToolTip("")
 
         #Events
         self.trigger = Signal()
@@ -145,6 +162,9 @@ class ExpFitController:
 
         self.fit_method = self.view.comboBox.currentText()
         self.threshold = self.view.lineEdit.text()
+        self.threshold_error = self.view.lineEdit_2.text()
+        self.threshold_expfactor = self.view.lineEdit_3.text()
+
 
     def update_parameters(self):
         """
@@ -152,6 +172,8 @@ class ExpFitController:
         """
         self.fit_method = self.view.comboBox.currentText()
         self.threshold = self.view.lineEdit.text()
+        self.threshold_error = self.view.lineEdit_2.text()
+        self.threshold_expfactor = self.view.lineEdit_3.text()
         self.trigger.signal.emit()
 
 
