@@ -70,6 +70,7 @@ def denoise_2_3D(image, size, distance, spread):
     patch_kw = dict(patch_size=size,      # s*s patches
                 patch_distance=distance,  # d*d search area
                 multichannel=True)
+    image = image.copy(order='C')
     denoised = skrestore.denoise_nl_means(image, h=spread*sigma_est,fast_mode=False, **patch_kw)
     return denoised
 
@@ -171,7 +172,7 @@ def fit_exponential_linear_regression(x, y):
     tuple
         exponential coefficients, residuals
     """
-    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=np.sqrt(y), full=True)
+    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=[1 for i in range(len(y))], full=True)
     exp_values = [np.exp(fit[1]), -fit[0], 0]
     error = normalized_mse(exp_values, x, y)
     return exp_values, error
