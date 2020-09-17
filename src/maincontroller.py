@@ -195,11 +195,6 @@ class MainController:
         self.z = 0
 
 
-        self.open_image("/mnt/e/IRM/BLE_BOB_250DJ_1_1_20200210_102914/27/nifti/27.nii.gz")
-        self.echotime = [i+1 for i in range(16)]
-        # self.exp_fit_estimation()
-
-
     def open_bruker(self):
         """
         Opens Bruker directory
