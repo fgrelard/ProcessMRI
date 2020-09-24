@@ -157,6 +157,21 @@ def t2_star(values, echotime):
     return t2_val if t2_val > 0 else 0
 
 def fit_linear_regression(x, y):
+    """
+    Fits a line by linear regression.
+
+    Parameters
+    ----------
+    x: list
+        x data
+    y: list
+        y data
+
+    Returns
+    ----------
+    tuple
+        linear coefficients, residuals
+    """
     fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.array(y), 1, full=True)
     values = [fit[0], fit[1], 0]
     linear_function = lambda x, a, b, c: a * x + b
@@ -189,10 +204,49 @@ def fit_exponential_linear_regression(x, y, w=None):
 
 
 def piecewise_linear(x, x0, y0, k1, k2):
+    """
+    Piecewise function involving
+    two linear functions.
+
+    Parameters
+    ----------
+    x: list
+        x data
+    x0: float
+        x value where the two linear functions intersect
+    y0: float
+        y value where the two linear functions intersect
+    k1: float
+        slope for first linear function
+    k2: float
+        slope fot second linear function
+
+    Returns
+    ----------
+    np.piecewise
+        the piecewise function
+    """
     return np.piecewise(x, [x < x0], [lambda x:k1*x + y0-k1*x0, lambda x:k2*x + y0-k2*x0])
 
 
 def fit_exponential_piecewise_linear_regression(x, y):
+    """
+    Exponential fitting by piecewise linear regression.
+    Involves two linear functions fitted on the logarithm
+    of y. Particularly suited to bi-exponential distributions.
+
+    Parameters
+    ----------
+    x: list
+        x data
+    y: list
+        y data
+
+    Returns
+    ----------
+    tuple
+        exponential coefficients, residuals
+    """
     fit, _ = fit_exponential_linear_regression(x, y)
     guesses = [-fit[1], np.log(fit[0])]
     guess_x0 = len(x) // 2
@@ -212,6 +266,29 @@ def fit_exponential_piecewise_linear_regression(x, y):
 
 
 def normalized_mse(exp_values, x, y, fn=n_exponential_function):
+    """
+    Normalized Mean Squared Error (MSE).
+    Defined as the MSE between a fitted distribution (exp_values)
+    and real data (y), where both distribution are normalized
+    with respect to the maximum value in either y or the
+    fitted distribution.
+
+    Parameters
+    ----------
+    exp_values: list
+        exponential coefficients
+    x: list
+        x data
+    y: list
+        y data
+    fn: function
+        function to apply to get fitted distribution from exp_values
+
+    Returns
+    ----------
+    float
+        normalized MSE
+    """
     fitted = fn(np.array(x), *exp_values)
     fitted_norm = fitted * 1.0 / max(fitted.max(), y.max())
     y_norm = y * 1.0 / max(fitted.max(), y.max())
@@ -240,6 +317,9 @@ def fit_exponential(x, y, p0, lreg=False, piecewise_lreg=False):
     if lreg:
         fit_lr, residual_lr = fit_linear_regression(x, y)
         fit_elr, residual_elr = fit_exponential_linear_regression(x, y)
+        # if a line is more suited than an exponential function,
+        # we use another way of fitting the exponential
+        # (different weights)
         if residual_lr < residual_elr:
             new_x = np.array(x.tolist() + [x[-1] + x[1] - x[0]])
             new_y = np.array(y.tolist() + [y[-1]])
