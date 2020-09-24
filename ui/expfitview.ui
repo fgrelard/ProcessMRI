@@ -37,7 +37,7 @@
     <rect>
      <x>20</x>
      <y>30</y>
-     <width>396</width>
+     <width>410</width>
      <height>186</height>
     </rect>
    </property>
@@ -104,6 +104,11 @@ Accepted values are in the range [0, 1]. A value of 1 retains all the fitted val
       <item>
        <property name="text">
         <string>Linear regression</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Linear regression bi-exponential</string>
        </property>
       </item>
       <item>

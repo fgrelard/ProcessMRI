@@ -20,7 +20,7 @@ class Ui_ExpFit_View(object):
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.gridLayoutWidget = QtWidgets.QWidget(ExpFit_View)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(20, 30, 396, 186))
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(20, 30, 410, 186))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
@@ -56,6 +56,7 @@ class Ui_ExpFit_View(object):
         sizePolicy.setHeightForWidth(self.comboBox.sizePolicy().hasHeightForWidth())
         self.comboBox.setSizePolicy(sizePolicy)
         self.comboBox.setObjectName("comboBox")
+        self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.comboBox.addItem("")
@@ -139,10 +140,11 @@ class Ui_ExpFit_View(object):
         self.label_2.setText(_translate("ExpFit_View", "Threshold"))
         self.label.setText(_translate("ExpFit_View", "Fit method"))
         self.comboBox.setItemText(0, _translate("ExpFit_View", "Linear regression"))
-        self.comboBox.setItemText(1, _translate("ExpFit_View", "Piecewise linear regression"))
-        self.comboBox.setItemText(2, _translate("ExpFit_View", "NNLS mono-exponential"))
-        self.comboBox.setItemText(3, _translate("ExpFit_View", "NNLS bi-exponential"))
-        self.comboBox.setItemText(4, _translate("ExpFit_View", "NNLS tri-exponential"))
+        self.comboBox.setItemText(1, _translate("ExpFit_View", "Linear regression bi-exponential"))
+        self.comboBox.setItemText(2, _translate("ExpFit_View", "Piecewise linear regression"))
+        self.comboBox.setItemText(3, _translate("ExpFit_View", "NNLS mono-exponential"))
+        self.comboBox.setItemText(4, _translate("ExpFit_View", "NNLS bi-exponential"))
+        self.comboBox.setItemText(5, _translate("ExpFit_View", "NNLS tri-exponential"))
         self.textEdit.setHtml(_translate("ExpFit_View", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"

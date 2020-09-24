@@ -297,7 +297,7 @@ def normalized_mse(exp_values, x, y, fn=n_exponential_function):
 
 
 
-def fit_exponential(x, y, p0, lreg=False, piecewise_lreg=False):
+def fit_exponential(x, y, p0, lreg=False, biexp=False, piecewise_lreg=False):
     """
     Fit the exponential on the (x, y) data
     Parameters
@@ -312,6 +312,12 @@ def fit_exponential(x, y, p0, lreg=False, piecewise_lreg=False):
         of the exponential
     lreg: bool
         use linear regression or nnls
+    biexp: bool
+        whether linear regression should be adapted to bi-
+        exponential functions
+    piecewise_lreg: bool
+        whether linear regression should be piecewise (two
+        linear functions are fitted on the log of the data)
     """
     initial_values = [y[0], float("inf"), 0]
     if lreg:
@@ -320,10 +326,8 @@ def fit_exponential(x, y, p0, lreg=False, piecewise_lreg=False):
         # if a line is more suited than an exponential function,
         # we use another way of fitting the exponential
         # (different weights)
-        if residual_lr < residual_elr:
-            new_x = np.array(x.tolist() + [x[-1] + x[1] - x[0]])
-            new_y = np.array(y.tolist() + [y[-1]])
-            fit, residual = fit_exponential_linear_regression(new_x, new_y, w=np.sqrt(new_y))
+        if residual_lr < residual_elr or not biexp:
+            fit, residual = fit_exponential_linear_regression(x, y, w=np.sqrt(y))
         else:
             fit, residual = fit_elr, residual_elr
     elif piecewise_lreg:
