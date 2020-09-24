@@ -157,12 +157,13 @@ def t2_star(values, echotime):
     return t2_val if t2_val > 0 else 0
 
 def fit_linear_regression(x, y):
-    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x) y, 1, full=True)
-    exp_values = [fit[0], fit[1], 0]
-    error = normalized_mse(exp_values, x, y)
-    return exp_values, error
+    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.array(y), 1, full=True)
+    values = [fit[0], fit[1], 0]
+    linear_function = lambda x, a, b, c: a * x + b
+    error = normalized_mse(values, x, y, fn=linear_function)
+    return values, error
 
-def fit_exponential_linear_regression(x, y):
+def fit_exponential_linear_regression(x, y, w=None):
     """
     Fit a mono-exponential by linear regression
     on the log of the data
@@ -179,7 +180,9 @@ def fit_exponential_linear_regression(x, y):
     tuple
         exponential coefficients, residuals
     """
-    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=[(1 - 1/len(x)*i)**2 for i in range(len(x))], full=True)
+    if w is None:
+        w = [(1 - 1/len(x)*i)**2 for i in range(len(x))]
+    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=w, full=True)
     exp_values = [np.exp(fit[1]), -fit[0], 0]
     error = normalized_mse(exp_values, x, y)
     return exp_values, error
@@ -220,16 +223,13 @@ def fit_exponential_piecewise_linear_regression_2(x, y):
     d = popt[1] - c * popt[0]
     intersect_one = np.exp(b)
     intersect_two = np.exp(d)
-    if intersect_one > intersect_two:
-        exp_values = [intersect_one, -a, 0]
-    else:
-        exp_values = [intersect_two, -c, 0]
+    exp_values = [intersect_one, -a, 0]
     error = normalized_mse(exp_values, x, y)
     return exp_values, error
 
 
-def normalized_mse(exp_values, x, y):
-    fitted = n_exponential_function(np.array(x), *exp_values)
+def normalized_mse(exp_values, x, y, fn=n_exponential_function):
+    fitted = fn(np.array(x), *exp_values)
     fitted_norm = fitted * 1.0 / max(fitted.max(), y.max())
     y_norm = y * 1.0 / max(fitted.max(), y.max())
     error = np.sqrt((fitted_norm - y_norm)**2)
@@ -255,7 +255,14 @@ def fit_exponential(x, y, p0, lreg=False, piecewise_lreg=False):
     """
     initial_values = [y[0], float("inf"), 0]
     if lreg:
-        fit, residual = fit_exponential_linear_regression(x, y)
+        fit_lr, residual_lr = fit_linear_regression(x, y)
+        fit_elr, residual_elr = fit_exponential_linear_regression(x, y)
+        if residual_lr < residual_elr:
+            new_x = np.array(x.tolist() + [x[-1] + x[1] - x[0]])
+            new_y = np.array(y.tolist() + [y[-1]])
+            fit, residual = fit_exponential_linear_regression(new_x, new_y, w=np.sqrt(new_y))
+        else:
+            fit, residual = fit_elr, residual_elr
     elif piecewise_lreg:
         with warnings.catch_warnings():
             # warnings.filterwarnings("error")
