@@ -187,43 +187,26 @@ def fit_exponential_linear_regression(x, y, w=None):
     error = normalized_mse(exp_values, x, y)
     return exp_values, error
 
-def piecewise_linear(x, a, b, c, d):
-    one = a*x + b
-    two = c*x + d
-    return np.maximum(one, two)
 
-def piecewise_linear_2(x, x0, y0, k1, k2):
+def piecewise_linear(x, x0, y0, k1, k2):
     return np.piecewise(x, [x < x0], [lambda x:k1*x + y0-k1*x0, lambda x:k2*x + y0-k2*x0])
 
-def fit_exponential_piecewise_linear_regression(x,y):
-    fit, _ = fit_exponential_linear_regression(x, y)
-    guesses = [-fit[1], np.log(fit[0])]
-    popt, pcov = curve_fit(piecewise_linear, x, np.log(y), p0=(guesses[0], guesses[1], guesses[0], guesses[1]))
-    intersect_one = np.exp(popt[1])
-    intersect_two = np.exp(popt[3])
-    if intersect_one > intersect_two:
-        exp_values = [intersect_one, -popt[0], 0]
-    else:
-        exp_values = [intersect_two, -popt[2], 0]
-    error = normalized_mse(exp_values, x, y)
-    return exp_values, error
 
-def fit_exponential_piecewise_linear_regression_2(x, y):
+def fit_exponential_piecewise_linear_regression(x, y):
     fit, _ = fit_exponential_linear_regression(x, y)
     guesses = [-fit[1], np.log(fit[0])]
     guess_x0 = len(x) // 2
     guess_k1 = -guesses[0]
     guess_y0 = guesses[1] + guess_k1 * guess_x0
     guess_k2 = guess_k1 * 2
-    popt, pcov = curve_fit(piecewise_linear_2, x, np.log(y), p0=(guess_x0, guess_y0, guess_k1, guess_k2))
-    xc = np.linspace(0, 8, 50)
+    popt, pcov = curve_fit(piecewise_linear, x, np.log(y), p0=(guess_x0, guess_y0, guess_k1, guess_k2))
     a = popt[2]
     c = popt[3]
     b = popt[1] - a * popt[0]
     d = popt[1] - c * popt[0]
     intersect_one = np.exp(b)
     intersect_two = np.exp(d)
-    exp_values = [intersect_one, -a, 0]
+    exp_values = [intersect_one, np.abs(a), 0]
     error = normalized_mse(exp_values, x, y)
     return exp_values, error
 
@@ -265,9 +248,9 @@ def fit_exponential(x, y, p0, lreg=False, piecewise_lreg=False):
             fit, residual = fit_elr, residual_elr
     elif piecewise_lreg:
         with warnings.catch_warnings():
-            # warnings.filterwarnings("error")
+            warnings.filterwarnings("ignore")
             try:
-                fit, residual = fit_exponential_piecewise_linear_regression_2(x, y)
+                fit, residual = fit_exponential_piecewise_linear_regression(x, y)
             except RuntimeError as e:
                 fit, residual = fit_exponential_linear_regression(x, y)
                 fit = [0, 1, 0]
