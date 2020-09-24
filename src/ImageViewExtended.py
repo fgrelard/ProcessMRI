@@ -102,6 +102,7 @@ class ImageViewExtended(pg.ImageView):
     signal_progress_export = QtCore.pyqtSignal(int)
     signal_start_export = QtCore.pyqtSignal()
     signal_end_export = QtCore.pyqtSignal()
+    signal_image_change = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None, name="ImageView", view=None, imageItem=None, *args):
         pg.setConfigOptions(imageAxisOrder='row-major')
@@ -356,6 +357,29 @@ class ImageViewExtended(pg.ImageView):
         if image is None:
             return
         self.update_label()
+
+    def evalKeyState(self):
+        if len(self.keysPressed) == 1:
+            key = list(self.keysPressed.keys())[0]
+            if key == QtCore.Qt.Key_Right:
+                self.play(20)
+                self.jumpFrames(1)
+                self.lastPlayTime = pg.ptime.time() + 0.2
+            elif key == QtCore.Qt.Key_Left:
+                self.play(-20)
+                self.jumpFrames(-1)
+                self.lastPlayTime = pg.ptime.time() + 0.2
+            elif key == QtCore.Qt.Key_Up:
+                self.signal_image_change.emit(-1)
+            elif key == QtCore.Qt.Key_Down:
+                self.signal_image_change.emit(1)
+            elif key == QtCore.Qt.Key_PageUp:
+                self.play(-1000)
+            elif key == QtCore.Qt.Key_PageDown:
+                self.play(1000)
+        else:
+            self.play(0)
+
 
 
     def update_label(self):

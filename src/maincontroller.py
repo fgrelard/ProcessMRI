@@ -175,6 +175,7 @@ class MainController:
         self.mainview.imageview.signal_progress_export.connect(self.update_progressbar)
         self.mainview.imageview.signal_start_export.connect(self.mainview.show_run)
         self.mainview.imageview.signal_end_export.connect(self.mainview.hide_run)
+        self.mainview.imageview.signal_image_change.connect(self.change_image_combobox)
 
         #Exp fit plot
         self.widgetPlot = WidgetPlot(parent=self.mainview.parent.centralWidget())
@@ -552,6 +553,13 @@ class MainController:
 
         """
         self.mainview.progressBar.setValue(progress)
+
+    def change_image_combobox(self, value):
+        current_index = self.mainview.combobox.currentIndex()
+        count = self.mainview.combobox.count() - 1
+        new_index = max(0, min(current_index + value, count))
+        name = self.mainview.combobox.itemText(new_index)
+        self.choose_image(name)
 
 
     def end_expfit(self, density, t2, number):
