@@ -42,12 +42,13 @@ class WorkerExpFit(QtCore.QObject):
     signal_progress = QtCore.pyqtSignal(int)
     number = 1
 
-    def __init__(self, img_data, echotime, parent=None, threshold=None, lreg=True, n=1, threshold_error=1.0, threshold_expfactor=0):
+    def __init__(self, img_data, echotime, parent=None, threshold=None, lreg=True, piecewise_lreg=False, n=1, threshold_error=1.0, threshold_expfactor=0):
         super().__init__()
         self.img_data = img_data
         self.echotime = echotime
         self.threshold = threshold
         self.lreg = lreg
+        self.piecewise_lreg = piecewise_lreg
         self.n = n
         self.is_abort = False
         self.threshold_error = threshold_error
@@ -65,6 +66,7 @@ class WorkerExpFit(QtCore.QObject):
         image = self.img_data
         threshold = self.threshold
         lreg = self.lreg
+        piecewise_lreg = self.piecewise_lreg
         density_data = np.zeros(shape=image.shape[:-1])
         t2_data = np.zeros(shape=image.shape[:-1])
         fit_data = np.zeros(shape=image.shape[:-1] + (2*self.n+1, ))
@@ -83,7 +85,7 @@ class WorkerExpFit(QtCore.QObject):
             pixel_values = image[i + (slice(None),)]
             if pixel_values[0] > threshold:
                 p0 = expfit.n_to_p0(self.n, pixel_values[0])
-                fit, residual = expfit.fit_exponential(echotime, pixel_values, p0, lreg)
+                fit, residual = expfit.fit_exponential(echotime, pixel_values, p0, lreg, piecewise_lreg)
                 fit_data[i] = fit
                 residual_data[i] = residual
 

@@ -13,8 +13,8 @@ class TestExponentialFit(unittest.TestCase):
         with open("/mnt/d/IRM/nifti/BLE/250/50/old/1/BLE RECITAL/1_BLE 250DJ/50_1_MGE/1.json") as f:
             data = json.load(f)
         self.echotime = [item for sublist in data['EchoTime'] for item in sublist]
-        self.good = (45,27,6)
-        self.bad = (34, 50, 7)
+        self.good = (43,68,9)
+        self.bad = (16, 55, 7)
 
     def test_denoise_image(self):
         img = nib.load("/mnt/d/IRM/nifti/BLE/250/50/50_subscan_1.nii.gz")
@@ -33,9 +33,27 @@ class TestExponentialFit(unittest.TestCase):
     def test_fit_exponential_linear_regression(self):
         img = nib.load("/mnt/d/IRM/nifti/BLE/250/50/processed/50_subscan_1_denoised.nii")
         img_data = img.get_fdata()
-        pixel_values = img_data[self.bad + (slice(None),)]
-        fit = ef.fit_exponential_linear_regression(self.echotime, pixel_values)
-        f = ef.n_exponential_function(1, *fit)
+        pixel_values = img_data[self.good + (slice(None),)]
+        fit, _ = ef.fit_exponential_linear_regression(self.echotime, pixel_values)
+        f = ef.n_exponential_function(np.array(self.echotime), *fit)
+        print(f)
+        ef.plot_values(self.echotime,pixel_values,1, fit, 0, ef.n_exponential_function)
+
+    def test_fit_exponential_piecewise_linear_regression(self):
+        img = nib.load("/mnt/d/IRM/nifti/BLE/250/50/processed/50_subscan_1_denoised.nii")
+        img_data = img.get_fdata()
+        pixel_values = img_data[self.good + (slice(None),)]
+        fit, _ = ef.fit_exponential_piecewise_linear_regression(self.echotime, pixel_values)
+        f = ef.n_exponential_function(np.array(self.echotime), *fit)
+        print(f)
+        ef.plot_values(self.echotime,pixel_values,1, fit, 0, ef.n_exponential_function)
+
+    def test_fit_exponential_piecewise_linear_regression_2(self):
+        img = nib.load("/mnt/d/IRM/nifti/BLE/250/50/processed/50_subscan_1_denoised.nii")
+        img_data = img.get_fdata()
+        pixel_values = img_data[self.good + (slice(None),)]
+        fit, _ = ef.fit_exponential_piecewise_linear_regression_2(self.echotime, pixel_values)
+        f = ef.n_exponential_function(np.array(self.echotime), *fit)
         print(f)
         ef.plot_values(self.echotime,pixel_values,1, fit, 0, ef.n_exponential_function)
 
@@ -45,7 +63,7 @@ class TestExponentialFit(unittest.TestCase):
         pixel_values = img_data[self.bad + (slice(None),)]
         n=1
         p0 = ef.n_to_p0(n, pixel_values[0])
-        fit = ef.fit_exponential(self.echotime, pixel_values, p0)
+        fit, _ = ef.fit_exponential(self.echotime, pixel_values, p0)
         f = ef.n_exponential_function(n, *fit)
         ef.plot_values(self.echotime,pixel_values,1, fit, 0, ef.n_exponential_function)
 

@@ -108,6 +108,11 @@ Accepted values are in the range [0, 1]. A value of 1 retains all the fitted val
       </item>
       <item>
        <property name="text">
+        <string>Piecewise linear regression</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
         <string>NNLS mono-exponential</string>
        </property>
       </item>

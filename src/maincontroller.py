@@ -307,15 +307,17 @@ class MainController:
                 self.update_progressbar(0)
                 lreg = True
                 n=1
+                piecewise_lreg = False
                 if fit_method != "Linear regression":
                     lreg = False
-                    if fit_method == "NNLS mono-exponential":
+                    if fit_method == "Piecewise linear regression":
+                        piecewise_lreg = True
                         n=1
                     elif fit_method == "NNLS bi-exponential":
                         n=2
-                    else:
+                    elif fit_method == "NNLS tri-exponential":
                         n=3
-                worker = WorkerExpFit(img_data=self.img_data, echotime=self.echotime, threshold=threshold, lreg=lreg, n=n, threshold_error=threshold_error, threshold_expfactor=threshold_expfactor)
+                worker = WorkerExpFit(img_data=self.img_data, echotime=self.echotime, threshold=threshold, lreg=lreg, piecewise_lreg=piecewise_lreg, n=n, threshold_error=threshold_error, threshold_expfactor=threshold_expfactor)
                 thread = QThread()
                 worker.moveToThread(thread)
                 worker.signal_start.connect(self.mainview.show_run)

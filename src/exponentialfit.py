@@ -9,6 +9,7 @@ import skimage.filters as skfilters
 import skimage
 import os
 import time
+import warnings
 
 def denoise_image(image, size, distance, spread):
     """
@@ -155,6 +156,12 @@ def t2_star(values, echotime):
     t2_val = np.sum(np.divide(echotime,vals))
     return t2_val if t2_val > 0 else 0
 
+def fit_linear_regression(x, y):
+    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x) y, 1, full=True)
+    exp_values = [fit[0], fit[1], 0]
+    error = normalized_mse(exp_values, x, y)
+    return exp_values, error
+
 def fit_exponential_linear_regression(x, y):
     """
     Fit a mono-exponential by linear regression
@@ -172,10 +179,54 @@ def fit_exponential_linear_regression(x, y):
     tuple
         exponential coefficients, residuals
     """
-    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=[1 for i in range(len(y))], full=True)
+    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=[(1 - 1/len(x)*i)**2 for i in range(len(x))], full=True)
     exp_values = [np.exp(fit[1]), -fit[0], 0]
     error = normalized_mse(exp_values, x, y)
     return exp_values, error
+
+def piecewise_linear(x, a, b, c, d):
+    one = a*x + b
+    two = c*x + d
+    return np.maximum(one, two)
+
+def piecewise_linear_2(x, x0, y0, k1, k2):
+    return np.piecewise(x, [x < x0], [lambda x:k1*x + y0-k1*x0, lambda x:k2*x + y0-k2*x0])
+
+def fit_exponential_piecewise_linear_regression(x,y):
+    fit, _ = fit_exponential_linear_regression(x, y)
+    guesses = [-fit[1], np.log(fit[0])]
+    popt, pcov = curve_fit(piecewise_linear, x, np.log(y), p0=(guesses[0], guesses[1], guesses[0], guesses[1]))
+    intersect_one = np.exp(popt[1])
+    intersect_two = np.exp(popt[3])
+    if intersect_one > intersect_two:
+        exp_values = [intersect_one, -popt[0], 0]
+    else:
+        exp_values = [intersect_two, -popt[2], 0]
+    error = normalized_mse(exp_values, x, y)
+    return exp_values, error
+
+def fit_exponential_piecewise_linear_regression_2(x, y):
+    fit, _ = fit_exponential_linear_regression(x, y)
+    guesses = [-fit[1], np.log(fit[0])]
+    guess_x0 = len(x) // 2
+    guess_k1 = -guesses[0]
+    guess_y0 = guesses[1] + guess_k1 * guess_x0
+    guess_k2 = guess_k1 * 2
+    popt, pcov = curve_fit(piecewise_linear_2, x, np.log(y), p0=(guess_x0, guess_y0, guess_k1, guess_k2))
+    xc = np.linspace(0, 8, 50)
+    a = popt[2]
+    c = popt[3]
+    b = popt[1] - a * popt[0]
+    d = popt[1] - c * popt[0]
+    intersect_one = np.exp(b)
+    intersect_two = np.exp(d)
+    if intersect_one > intersect_two:
+        exp_values = [intersect_one, -a, 0]
+    else:
+        exp_values = [intersect_two, -c, 0]
+    error = normalized_mse(exp_values, x, y)
+    return exp_values, error
+
 
 def normalized_mse(exp_values, x, y):
     fitted = n_exponential_function(np.array(x), *exp_values)
@@ -184,7 +235,9 @@ def normalized_mse(exp_values, x, y):
     error = np.sqrt((fitted_norm - y_norm)**2)
     return np.mean(error)
 
-def fit_exponential(x, y, p0, lreg=False):
+
+
+def fit_exponential(x, y, p0, lreg=False, piecewise_lreg=False):
     """
     Fit the exponential on the (x, y) data
     Parameters
@@ -203,19 +256,30 @@ def fit_exponential(x, y, p0, lreg=False):
     initial_values = [y[0], float("inf"), 0]
     if lreg:
         fit, residual = fit_exponential_linear_regression(x, y)
-        return fit, residual
-    try:
-        popt, pcov = curve_fit(n_exponential_function, x, y, p0=p0,maxfev=3000)
-        residual = normalized_mse(popt, x, y)
-        if popt[1] > 3:
-            raise RuntimeError("Exponential coefficient not suited.")
-        return popt, residual
-    except RuntimeError as error:
-        fit, residual = fit_exponential_linear_regression(x, y)
-        if len(fit) != len(p0):
-            diff = len(p0) - len(fit)
-            fit += [0 for i in range(diff)]
-        return fit, residual
+    elif piecewise_lreg:
+        with warnings.catch_warnings():
+            # warnings.filterwarnings("error")
+            try:
+                fit, residual = fit_exponential_piecewise_linear_regression_2(x, y)
+            except RuntimeError as e:
+                fit, residual = fit_exponential_linear_regression(x, y)
+                fit = [0, 1, 0]
+                if len(fit) != len(p0):
+                    diff = len(p0) - len(fit)
+                    fit += [0 for i in range(diff)]
+    else:
+        try:
+            fit, pcov = curve_fit(n_exponential_function, x, y, p0=p0,maxfev=3000)
+            residual = normalized_mse(fit, x, y)
+            if fit[1] > 3:
+                raise RuntimeError("Exponential coefficient not suited.")
+        except RuntimeError as e:
+            fit, residual = fit_exponential_linear_regression(x, y)
+            if len(fit) != len(p0):
+                diff = len(p0) - len(fit)
+                fit += [0 for i in range(diff)]
+    return fit, residual
+
 
 def plot_values(x, y, value, popt, threshold, f=n_exponential_function):
     """

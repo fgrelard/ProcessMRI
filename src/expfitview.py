@@ -60,6 +60,7 @@ class Ui_ExpFit_View(object):
         self.comboBox.addItem("")
         self.comboBox.addItem("")
         self.comboBox.addItem("")
+        self.comboBox.addItem("")
         self.gridLayout.addWidget(self.comboBox, 3, 1, 1, 1)
         self.textEdit = QtWidgets.QTextEdit(self.gridLayoutWidget)
         self.textEdit.setEnabled(True)
@@ -138,9 +139,10 @@ class Ui_ExpFit_View(object):
         self.label_2.setText(_translate("ExpFit_View", "Threshold"))
         self.label.setText(_translate("ExpFit_View", "Fit method"))
         self.comboBox.setItemText(0, _translate("ExpFit_View", "Linear regression"))
-        self.comboBox.setItemText(1, _translate("ExpFit_View", "NNLS mono-exponential"))
-        self.comboBox.setItemText(2, _translate("ExpFit_View", "NNLS bi-exponential"))
-        self.comboBox.setItemText(3, _translate("ExpFit_View", "NNLS tri-exponential"))
+        self.comboBox.setItemText(1, _translate("ExpFit_View", "Piecewise linear regression"))
+        self.comboBox.setItemText(2, _translate("ExpFit_View", "NNLS mono-exponential"))
+        self.comboBox.setItemText(3, _translate("ExpFit_View", "NNLS bi-exponential"))
+        self.comboBox.setItemText(4, _translate("ExpFit_View", "NNLS tri-exponential"))
         self.textEdit.setHtml(_translate("ExpFit_View", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
