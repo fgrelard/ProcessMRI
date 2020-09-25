@@ -874,7 +874,7 @@ class MainController:
             fit = ive.imageCopy[number_echoes+1:-1, ive.currentIndex, ive.mouse_y, ive.mouse_x]
             residual = ive.imageCopy[-1:, ive.currentIndex, ive.mouse_y, ive.mouse_x]
             x = np.linspace(0, number_echoes, 50)
-            y2 = fit[0] * np.exp(-fit[1] * x) + fit[2]
+            y2 = expfit.n_exponential_function(x, *fit)
             self.widgetPlot.clear()
             self.widgetPlot.set_xlabel("Echotimes (ms)")
             self.widgetPlot.set_ylabel("Intensities")
