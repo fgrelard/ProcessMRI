@@ -343,10 +343,18 @@ def fit_exponential(x, y, p0, lreg=False, biexp=False, piecewise_lreg=False):
                     fit += [0 for i in range(diff)]
     else:
         try:
-            fit, pcov = curve_fit(n_exponential_function, x, y, p0=p0,maxfev=3000)
+            mean = np.mean(y)
+            # Is the first point an outlier?
+            if np.std(y) / np.std(y[1::2]) > 2:
+                raise RuntimeError("First point is an outlier.")
+
+            bounds_min = tuple(-np.inf for i in range(len(p0)-1))
+            bounds_max = tuple(np.inf for i in range(len(p0)-1))
+            bounds_min += (0,)
+            bounds_max += (1,)
+            fit, pcov = curve_fit(n_exponential_function, x, y, p0=p0,maxfev=3000, bounds=(bounds_min, bounds_max))
             residual = normalized_mse(fit, x, y)
-            if fit[1] > 3:
-                raise RuntimeError("Exponential coefficient not suited.")
+
         except RuntimeError as e:
             fit, residual = fit_exponential_linear_regression(x, y)
             if len(fit) != len(p0):
