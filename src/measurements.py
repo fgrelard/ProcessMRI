@@ -10,7 +10,7 @@ def average_value(image):
     return np.mean(image[image != 0])
 
 def max_value(image):
-    return image[image != 0].max() if A.any() else 0
+    return image[image != 0].max() if image.any() else 0
 
 def min_value(image):
-    return image[image != 0].min() if A.any() else 0
+    return image[image != 0].min() if image.any() else 0
