@@ -266,9 +266,15 @@ class MainController:
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.mainview.centralwidget, "Save Nifti", self.config['default']['NifTiDir'])
         if not filename:
             return
-        if self.img_data is not None:
+        if self.get_image() is not None:
             img_data_name = self.current_name(self.img_data)
-            io.save_nifti_with_metadata(self.img_data, self.metadata[img_data_name], filename)
+            io.save_nifti_with_metadata(self.get_image(), self.metadata[img_data_name], filename)
+
+
+    def get_image(self):
+        if self.img_data.contains_plot_info:
+            return self.img_data[..., 0]
+        return self.img_data
 
     def exit_app(self):
         """
@@ -291,7 +297,10 @@ class MainController:
         threshold_error = self.expfitcontroller.threshold_error
         threshold_expfactor = self.expfitcontroller.threshold_expfactor
         outname = self.config['default']['NifTiDir']
-        if self.img_data is not None:
+
+        same_length = len(self.echotime) == self.img_data.shape[-1]
+
+        if self.get_image() is not None and same_length:
             try:
                 threshold = int(threshold)
             except:
@@ -322,7 +331,7 @@ class MainController:
                         n=2
                     elif fit_method == "NNLS tri-exponential":
                         n=3
-                worker = WorkerExpFit(img_data=self.img_data, echotime=self.echotime, threshold=threshold, lreg=lreg, biexp=bi_exponential, piecewise_lreg=piecewise_lreg, n=n, threshold_error=threshold_error, threshold_expfactor=threshold_expfactor)
+                worker = WorkerExpFit(img_data=self.get_image(), echotime=self.echotime, threshold=threshold, lreg=lreg, biexp=bi_exponential, piecewise_lreg=piecewise_lreg, n=n, threshold_error=threshold_error, threshold_expfactor=threshold_expfactor)
                 thread = QThread()
                 worker.moveToThread(thread)
                 worker.signal_start.connect(self.mainview.show_run)
@@ -343,7 +352,7 @@ class MainController:
         spread = self.nlmeanscontroller.noise_spread
         outname = self.config['default']['NifTiDir']
 
-        if self.img_data is not None:
+        if self.get_image() is not None:
             try:
                 size = int(size)
                 distance = int(distance)
@@ -355,7 +364,7 @@ class MainController:
                 spread = 1.5
             finally:
                 self.update_progressbar(0)
-                worker = WorkerNLMeans(img_data=self.img_data, patch_size=size, patch_distance=distance, noise_spread=spread)
+                worker = WorkerNLMeans(img_data=self.get_image(), patch_size=size, patch_distance=distance, noise_spread=spread)
                 thread = QThread()
                 worker.moveToThread(thread)
                 worker.signal_start.connect(self.mainview.show_run)
@@ -374,7 +383,7 @@ class MainController:
         order = self.tpccontroller.polynomial_order
         threshold = self.tpccontroller.threshold
         outname = self.config['default']['NifTiDir']
-        if self.img_data is not None:
+        if self.get_image() is not None:
             try:
                 order = int(order)
                 threshold = int(threshold)
@@ -384,7 +393,7 @@ class MainController:
                 threshold = 0
             finally:
                 self.update_progressbar(0)
-                worker = WorkerTPC(img_data=self.img_data, echotime=self.echotime, order=order, threshold=threshold)
+                worker = WorkerTPC(img_data=self.get_image(), echotime=self.echotime, order=order, threshold=threshold)
                 thread = QThread()
                 worker.moveToThread(thread)
                 worker.signal_start.connect(self.mainview.show_run)
@@ -403,13 +412,13 @@ class MainController:
 
         multiplier = self.cavitycontroller.multiplier
         size_se = self.cavitycontroller.size_se
-        if self.img_data is not None:
+        if self.get_image() is not None:
             if preview:
                 self.abort_computation()
             else:
                 self.update_progressbar(0)
 
-            worker = WorkerCavity(img_data=self.img_data, multiplier=multiplier, size_se=size_se, preview=preview)
+            worker = WorkerCavity(img_data=self.get_image(), multiplier=multiplier, size_se=size_se, preview=preview)
             thread = QThread()
             worker.moveToThread(thread)
 
@@ -425,10 +434,10 @@ class MainController:
             self.threads.append((thread, worker))
 
     def largest_component(self):
-        if self.img_data is not None:
+        if self.get_image() is not None:
             self.update_progressbar(0)
 
-            worker = WorkerLargestComponent(img_data=self.img_data)
+            worker = WorkerLargestComponent(img_data=self.get_image())
             thread = QThread()
             worker.moveToThread(thread)
 
@@ -446,7 +455,7 @@ class MainController:
             self.houghcontroller.update_parameters(preview)
         min_radius = self.houghcontroller.min_radius
         max_radius = self.houghcontroller.max_radius
-        if self.img_data is not None:
+        if self.get_image() is not None:
             try:
                 min_radius = int(min_radius)
                 max_radius = int(max_radius) + 1
@@ -460,7 +469,7 @@ class MainController:
                 else:
                     self.update_progressbar(0)
 
-                worker = WorkerHough(img_data=self.img_data, min_radius=min_radius, max_radius=max_radius, preview=preview)
+                worker = WorkerHough(img_data=self.get_image(), min_radius=min_radius, max_radius=max_radius, preview=preview)
                 thread = QThread()
                 worker.moveToThread(thread)
 
@@ -476,12 +485,12 @@ class MainController:
                 self.threads.append((thread, worker))
 
     def manual_segmentation(self):
-        manual_seg = self.img_data.copy()
+        manual_seg = self.get_image().copy()
         self.mainview.imageview.is_drawable = True
         self.end_preview(manual_seg, 1)
         self.mainview.imageview.setDrawable(True, self.mainview.imageview.pen_size)
 
-        worker = WorkerManualSegmentation(img_data=self.mainview.imageview.imageDisp, original=self.img_data, shape=self.img_data.shape)
+        worker = WorkerManualSegmentation(img_data=self.mainview.imageview.imageDisp, original=self.get_image(), shape=self.get_image().shape)
         thread = QThread()
         worker.moveToThread(thread)
         worker.signal_end.connect(self.end_manual_seg)
@@ -512,7 +521,7 @@ class MainController:
         except Exception as e:
             multiplier = 1.0
 
-        worker = WorkerManualComponent(self.img_data.copy(), seed=(self.mouse_x, self.mouse_y, self.z), multiplier=multiplier, is_3D=is_3D)
+        worker = WorkerManualComponent(self.get_image().copy(), seed=(self.mouse_x, self.mouse_y, self.z), multiplier=multiplier, is_3D=is_3D)
         thread = QThread()
         worker.moveToThread(thread)
         worker.signal_end.connect(self.end_preview)
