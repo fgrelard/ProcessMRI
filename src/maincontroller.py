@@ -326,7 +326,7 @@ class MainController:
                     lreg = False
                     if fit_method == "Piecewise linear regression":
                         piecewise_lreg = True
-                        n=1
+                        n=2
                     elif fit_method == "NNLS bi-exponential":
                         n=2
                     elif fit_method == "NNLS tri-exponential":
@@ -594,6 +594,8 @@ class MainController:
         self.mainview.hide_run()
         density_name = "density_" + str(number)
         t2_name = "t2_" + str(number)
+        residual = density[..., -1]
+        print("Average residuals=", np.mean(residual))
         self.add_image(density, density_name, True)
         self.add_image(t2, t2_name, True)
         self.choose_image(density_name)

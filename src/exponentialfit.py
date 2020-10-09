@@ -196,7 +196,7 @@ def fit_exponential_linear_regression(x, y, w=None):
         exponential coefficients, residuals
     """
     if w is None:
-        w = [(1 - 1/len(x)*i)**2 for i in range(len(x))]
+        w = [(1 - 1/max(x)*i)**2 for i in x]
     fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=w, full=True)
     exp_values = [np.exp(fit[1]), -fit[0], 0]
     error = normalized_mse(exp_values, x, y)
@@ -260,7 +260,7 @@ def fit_exponential_piecewise_linear_regression(x, y):
     d = popt[1] - c * popt[0]
     intersect_one = np.exp(b)
     intersect_two = np.exp(d)
-    exp_values = [intersect_one, np.abs(a), 0]
+    exp_values = [intersect_one, np.abs(a), intersect_two, np.abs(b), 0]
     error = normalized_mse(exp_values, x, y)
     return exp_values, error
 
@@ -337,7 +337,7 @@ def fit_exponential(x, y, p0, lreg=False, biexp=False, piecewise_lreg=False):
                 fit, residual = fit_exponential_piecewise_linear_regression(x, y)
             except RuntimeError as e:
                 fit, residual = fit_exponential_linear_regression(x, y)
-                fit = [0, 1, 0]
+                fit = [0, 1, 0, 1, 0]
                 if len(fit) != len(p0):
                     diff = len(p0) - len(fit)
                     fit += [0 for i in range(diff)]
