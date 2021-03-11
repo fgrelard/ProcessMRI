@@ -82,6 +82,12 @@ def addNewGradientFromMatplotlib( name):
         L.append(elemColor)
     pg.graphicsItems.GradientEditorItem.Gradients[name] = {'ticks':L, 'mode': 'rgb'}
 
+def setHistogramRange(obj, mn, mx, padding):
+    lmin = float(mn)
+    lmax = float(mx)
+    obj.vb.enableAutoRange(obj.vb.YAxis, False)
+    obj.vb.setYRange(lmin, lmax, padding)
+
 class ImageViewExtended(pg.ImageView):
     """
     Image view extending pyqtgraph.ImageView
@@ -122,6 +128,7 @@ class ImageViewExtended(pg.ImageView):
         self.timeLine.setPen('g')
 
         self.ui.histogram.sigLevelsChanged.connect(self.levelsChanged)
+
         self.ui.histogram.gradient.loadPreset("viridis")
         self.gradient = self.ui.histogram.gradient.colorMap()
 
@@ -199,7 +206,10 @@ class ImageViewExtended(pg.ImageView):
 
         self.levelMin, self.levelMax = None, None
         self.isNewImage = False
+        self.isNewNorm = False
         self.normDivideRadioChecked = False
+
+        self.ui.histogram.setHistogramRange = lambda mn, mx, padding=0.1: setHistogramRange(self.ui.histogram, mn, mx, padding)
 
     def roiRadioChanged(self):
         roiSquareChecked = self.ui.roiSquareRadio.isChecked()
@@ -219,6 +229,7 @@ class ImageViewExtended(pg.ImageView):
         self.view.addItem(self.normRoi)
         self.updateNorm()
         self.normRoi.sigRegionChangeFinished.connect(self.updateNorm)
+
 
     def mouseClickEventImageItem(self, ev):
         pg.ImageItem.mouseClickEvent(self.imageItem, ev)
@@ -266,7 +277,7 @@ class ImageViewExtended(pg.ImageView):
         self.updateImage()
         if self.is_drawable:
             self.normDivideRadioChecked = self.ui.normDivideRadio.isChecked()
-
+            self.isNewNorm = False
             self.ui.normOffRadio.setChecked(True)
             self.normalize(self.image)
             self.update_pen(pen_size)
@@ -297,7 +308,6 @@ class ImageViewExtended(pg.ImageView):
         Changes the wheel-event from zoom-out
         to slice change
         """
-
         #Saves previous z-index
         previousIndex = self.currentIndex
         is_shown = False
@@ -408,10 +418,31 @@ class ImageViewExtended(pg.ImageView):
         super().timeLineChanged()
         self.update_label()
 
+    def updateNorm(self):
+        self.isNewNorm = True
+        if self.ui.normTimeRangeCheck.isChecked():
+            self.normRgn.show()
+        else:
+            self.normRgn.hide()
+
+        if self.ui.normROICheck.isChecked():
+            self.normRoi.show()
+        else:
+            self.normRoi.hide()
+
+        if not self.ui.normOffRadio.isChecked():
+            self.updateImage()
+            self.autoLevels()
+            self.roiChanged()
+            self.sigProcessingChanged.emit(self)
+
+
+
+
     def getProcessedImage(self):
         if self.isNewImage and self.levelMin is not None:
             self.imageDisp = self.image
-        elif self.imageDisp is None or not self.ui.normOffRadio.isChecked():
+        elif self.imageDisp is None or self.isNewNorm:
             self.imageDisp = self.normalize(self.image)
             if self.axes['t'] is not None and self.ui.normOffRadio.isChecked():
                 curr_img = self.imageDisp[self.currentIndex, ...]
@@ -422,9 +453,17 @@ class ImageViewExtended(pg.ImageView):
             self.levelMin, self.levelMax = np.amin(self.imageDisp), self.pen_value
         self.autoLevels()
         self.isNewImage = False
+        self.isNewNorm = False
         return self.imageDisp
 
 
+    def normRadioChanged(self):
+        self.isNewNorm = True
+        super().normRadioChanged()
+
+    def roiChanged(self):
+        self.isNewNorm = True
+        super().roiChanged()
 
     def normalize(self, image):
         """
@@ -447,7 +486,6 @@ class ImageViewExtended(pg.ImageView):
             norm = norm.astype(np.float32)
 
         if self.ui.normTimeRangeCheck.isChecked() and image.ndim == 3:
-            print("time range check")
             (sind, start) = self.timeIndex(self.normRgn.lines[0])
             (eind, end) = self.timeIndex(self.normRgn.lines[1])
             if sind > eind:
@@ -461,7 +499,6 @@ class ImageViewExtended(pg.ImageView):
                     norm = np.divide(norm, n, out=np.zeros_like(norm), where=n!=0)
 
         if self.ui.normFrameCheck.isChecked() and image.ndim == 3:
-            print("frame check")
             n = image.mean(axis=1).mean(axis=1)
             n.shape = n.shape + (1, 1)
             if n.any():

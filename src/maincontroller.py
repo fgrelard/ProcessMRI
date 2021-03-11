@@ -195,6 +195,8 @@ class MainController:
         self.mouse_y = 0
         self.z = 0
 
+        self.open_image("/mnt/g/Segmentation/650/Grain2_Xyl/3D_density_aligned_manual.nii")
+
 
     def open_bruker(self):
         """
@@ -264,11 +266,14 @@ class MainController:
         Saves as Nifti file
         """
         filename, _ = QtWidgets.QFileDialog.getSaveFileName(self.mainview.centralwidget, "Save Nifti", self.config['default']['NifTiDir'])
+        im = self.mainview.imageview.imageDisp
+        im = im.transpose((2, 1, 0))
+        im = im.reshape(self.get_image().shape, order="F")
         if not filename:
             return
-        if self.get_image() is not None:
+        if im is not None:
             img_data_name = self.current_name(self.img_data)
-            io.save_nifti_with_metadata(self.get_image(), self.metadata[img_data_name], filename)
+            io.save_nifti_with_metadata(im, self.metadata[img_data_name], filename)
 
 
     def get_image(self):
