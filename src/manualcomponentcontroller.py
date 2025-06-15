@@ -5,7 +5,6 @@ from PyQt5 import QtCore
 import numpy as np
 from skimage.util import img_as_ubyte
 import src.segmentation as seg
-from skimage.draw import circle
 from skimage.filters import threshold_otsu, rank
 import SimpleITK as sitk
 import matplotlib.pyplot as plt

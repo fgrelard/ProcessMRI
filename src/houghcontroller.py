@@ -5,7 +5,7 @@ from PyQt5 import QtCore
 import numpy as np
 from skimage.util import img_as_ubyte
 import src.segmentation as seg
-from skimage.draw import circle
+from skimage.draw import disk
 from skimage.filters import threshold_otsu, rank
 
 class WorkerHough(QtCore.QObject):
@@ -84,7 +84,7 @@ class WorkerHough(QtCore.QObject):
             cx, cy, r = coordinates_circle[i]
             if cx == -1:
                 continue
-            x, y = circle(cx, cy, r+1, shape=image8[...,0].shape)
+            x, y = disk(cx, cy, r+1, shape=image8[...,0].shape)
             old_index = np.unravel_index(i, self.img_data.shape[2:])
             for j in range(len(x)):
                 current_index = (y[j], x[j]) + old_index

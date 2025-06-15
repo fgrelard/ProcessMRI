@@ -5,7 +5,6 @@ from PyQt5 import QtCore
 import numpy as np
 from skimage.util import img_as_ubyte
 import src.measurements as measurements
-from skimage.draw import circle
 from skimage.filters import threshold_otsu, rank
 import src.imageio as io
 

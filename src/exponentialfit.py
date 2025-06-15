@@ -197,7 +197,8 @@ def fit_exponential_linear_regression(x, y, w=None):
     """
     if w is None:
         w = [(1 - 1/max(x)*i)**2 for i in x]
-    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), np.log(y), 1,  w=w, full=True)
+    log_y = np.log(y, out=np.zeros_like(y, dtype=np.float64), where=(y!=0))
+    fit, residuals, rank, singular_values, rcond = np.polyfit(np.array(x), log_y, 1,  w=w, full=True)
     exp_values = [np.exp(fit[1]), -fit[0], 0]
     error = normalized_mse(exp_values, x, y)
     return exp_values, error
@@ -253,7 +254,8 @@ def fit_exponential_piecewise_linear_regression(x, y):
     guess_k1 = -guesses[0]
     guess_y0 = guesses[1] + guess_k1 * guess_x0
     guess_k2 = guess_k1 * 2
-    popt, pcov = curve_fit(piecewise_linear, x, np.log(y), p0=(guess_x0, guess_y0, guess_k1, guess_k2))
+    log_y = np.log(y, out=np.zeros_like(y, dtype=np.float64), where=(y!=0))
+    popt, pcov = curve_fit(piecewise_linear, x, log_y, p0=(guess_x0, guess_y0, guess_k1, guess_k2))
     a = popt[2]
     c = popt[3]
     b = popt[1] - a * popt[0]
@@ -481,7 +483,6 @@ def exponentialfit_image(echotime, image,threshold=None, lreg=True, n=1):
             fit = fit_exponential(echotime, pixel_values, p0, lreg)
             density_value = density(fit)
             t2_value = t2_star(fit, echotime[0])
-
             density_data[i] = density_value
             t2_data[i] = t2_value
         else:

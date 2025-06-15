@@ -195,8 +195,6 @@ class MainController:
         self.mouse_y = 0
         self.z = 0
 
-        self.open_image("/mnt/g/Segmentation/650/Grain2_Xyl/3D_density_aligned_manual.nii")
-
 
     def open_bruker(self):
         """
@@ -252,7 +250,7 @@ class MainController:
             answer, _ = QtWidgets.QInputDialog.getText(None, "No echotimes found", "Echotimes separated by a semi-colon", QtWidgets.QLineEdit.Normal, "")
             echostring = answer.split(";")
             echostring = filter(None, echostring)
-            echotime = [int(i) for i in echostring]
+            echotime = [float(i) for i in echostring]
             self.echotime = echotime
             self.metadata[self.filename] = None
         else:

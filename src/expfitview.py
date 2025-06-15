@@ -162,7 +162,7 @@ class Ui_ExpFit_View(object):
         self.pushButton.setText(_translate("ExpFit_View", "?"))
         self.label_3.setText(_translate("ExpFit_View", "Threshold residuals"))
         self.label_4.setText(_translate("ExpFit_View", "Threshold exp. factor"))
-        self.lineEdit_3.setText(_translate("ExpFit_View", "0.05"))
+        self.lineEdit_3.setText(_translate("ExpFit_View", "0"))
         self.pushButton_4.setToolTip(_translate("ExpFit_View", "Threshold on exponential factor to discard wrong fits. \n"
 "When exp factor is very small, the fit is a line. \n"
 "Pixels with exponential factor below this threshold are discarded. \n"

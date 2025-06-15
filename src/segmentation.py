@@ -1,7 +1,7 @@
 import numpy as np
 from skimage.transform import hough_circle, hough_circle_peaks
 from skimage.filters import threshold_otsu, rank
-from skimage.draw import circle
+from skimage.draw import disk
 from skimage.feature import canny
 from skimage import measure
 from skimage.util import img_as_ubyte
@@ -53,7 +53,7 @@ def closest_circle_to_median_circle(image, min_radius=10, max_radius=20):
     return coordinates_circle
 
 def remove_circle(image, cx, cy, r):
-    circx, circy = circle(cx, cy, r, shape=image[0,...].shape)
+    circx, circy = disk(cx, cy, r, shape=image[0,...].shape)
     image[..., circy, circx] = 0
     return image
 
@@ -62,7 +62,7 @@ def remove_circle_3D(image, coordinates_circle):
     length = image.shape[0]
     for i in range(length):
         cx, cy, r = coordinates_circle[i]
-        circx, circy = circle(cx, cy, r+1, shape=image[0,...].shape)
+        circx, circy = disk(cx, cy, r+1, shape=image[0,...].shape)
         image[i, circy, circx] = 0
     return image
 

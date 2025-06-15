@@ -34,10 +34,10 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
 
 [Files]
-Source: "C:\Users\fgrelard\src\ProcessMRI\dist\ProcessMRI\ProcessMRI.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\fgrelard\src\ProcessMRI\dist\ProcessMRI\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Users\fgrelard\src\ProcessMRI\docs\tex\manual.pdf"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\fgrelard\src\ProcessMRI\ProcessMRI.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Florent\ProcessMRI\dist\ProcessMRI\ProcessMRI.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Florent\ProcessMRI\dist\ProcessMRI\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\Users\Florent\ProcessMRI\docs\tex\manual.pdf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\Florent\ProcessMRI\ProcessMRI.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
