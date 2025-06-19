@@ -603,7 +603,7 @@ class ImageViewExtended(pg.ImageView):
         """
         Called when the "Export" button is clicked
         """
-        fileName, image_format = QtGui.QFileDialog.getSaveFileName(self.parentWidget(), "Save image as...", "", "PNG images (*.png);;Portable Document Format (*.pdf);;Scalable Vector Graphics (*.svg)")
+        fileName, image_format = QtWidgets.QFileDialog.getSaveFileName(self.parentWidget(), "Save image as...", "", "PNG images (*.png);;Portable Document Format (*.pdf);;Scalable Vector Graphics (*.svg)")
         if not fileName:
             return
         root, ext = os.path.splitext(fileName)
@@ -628,7 +628,7 @@ class ImageViewExtended(pg.ImageView):
         """
         Called when the "Export all slices" button is clicked
         """
-        path = QtGui.QFileDialog.getExistingDirectory(self.parentWidget(), "Select a directory", "")
+        path = QtWidgets.QFileDialog.getExistingDirectory(self.parentWidget(), "Select a directory", "")
         if len(self.threads) > 0:
             self.signal_abort.emit()
             for thread, worker in self.threads:
@@ -666,7 +666,7 @@ class ImageViewExtended(pg.ImageView):
         Adds the "Export all slices" option to the menu
         """
         super().buildMenu()
-        self.exportSlicesAction = QtGui.QAction("Export all slices", self.menu)
+        self.exportSlicesAction = QtWidgets.QAction("Export all slices", self.menu)
         self.exportSlicesAction.triggered.connect(self.exportSlicesClicked)
         self.menu.addAction(self.exportSlicesAction)
 
