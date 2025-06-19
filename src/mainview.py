@@ -28,7 +28,7 @@ class Ui_MainView(object):
         self.textEdit = QtWidgets.QTextEdit(self.gridLayoutWidget)
         self.textEdit.setFrameStyle(QFrame.NoFrame)
         self.labelCombo = QtWidgets.QLabel(self.gridLayoutWidget)
-        self.horizontalSpace = QtWidgets.QSpacerItem(20, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Maximum)
+        self.horizontalSpace = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Maximum)
         self.combobox = QtWidgets.QComboBox(self.gridLayoutWidget)
         fa_trash = qta.icon('fa.trash')
         fa_edit = qta.icon('fa.edit')

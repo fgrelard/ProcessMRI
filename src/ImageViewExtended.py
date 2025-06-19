@@ -11,6 +11,7 @@ import matplotlib.cm as cm
 import matplotlib.colors as colors
 from PyQt5 import QtGui
 from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QApplication
 import os
 import pyqtgraph as pg
@@ -135,31 +136,31 @@ class ImageViewExtended(pg.ImageView):
         self.ui.histogram.gradient.updateGradient()
         self.ui.histogram.gradientChanged()
 
-        self.ui.normAutoRadio = QtGui.QRadioButton(self.ui.normGroup)
+        self.ui.normAutoRadio = QtWidgets.QRadioButton(self.ui.normGroup)
         self.ui.normAutoRadio.setObjectName("normAutoRadio")
 
-        self.ui.roiGroup = QtGui.QButtonGroup(self.ui.normGroup)
-        self.ui.normRadioGroup = QtGui.QButtonGroup(self.ui.normGroup)
-        self.ui.label_roi = QtGui.QLabel(self.ui.normGroup)
+        self.ui.roiGroup = QtWidgets.QButtonGroup(self.ui.normGroup)
+        self.ui.normRadioGroup = QtWidgets.QButtonGroup(self.ui.normGroup)
+        self.ui.label_roi = QtWidgets.QLabel(self.ui.normGroup)
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
         self.ui.label_roi.setFont(font)
-        self.ui.label_roi.setText(QtGui.QApplication.translate("Form", "ROI:", None))
-        self.ui.roiSquareRadio = QtGui.QRadioButton(self.ui.normGroup)
+        self.ui.label_roi.setText(QtWidgets.QApplication.translate("Form", "ROI:", None))
+        self.ui.roiSquareRadio = QtWidgets.QRadioButton(self.ui.normGroup)
 
-        self.ui.roiSquareRadio.setText(QtGui.QApplication.translate("Form", "Square", None))
-        self.ui.roiCircleRadio = QtGui.QRadioButton(self.ui.normGroup)
-        self.ui.roiCircleRadio.setText(QtGui.QApplication.translate("Form", "Circle", None))
+        self.ui.roiSquareRadio.setText(QtWidgets.QApplication.translate("Form", "Square", None))
+        self.ui.roiCircleRadio = QtWidgets.QRadioButton(self.ui.normGroup)
+        self.ui.roiCircleRadio.setText(QtWidgets.QApplication.translate("Form", "Circle", None))
 
         self.ui.roiGroup.addButton(self.ui.roiSquareRadio)
         self.ui.roiGroup.addButton(self.ui.roiCircleRadio)
 
-        self.ui.normAutoRadio.setText(QtGui.QApplication.translate("Form", "Stack", None))
-        self.ui.normOffRadio.setText(QtGui.QApplication.translate("Form", "Manual", None))
-        self.ui.normTimeRangeCheck.setText(QtGui.QApplication.translate("Form", "Slice range", None))
-        self.ui.normDivideRadio.setText(QtGui.QApplication.translate("Form", "Auto", None))
-        self.ui.label_5.setText(QtGui.QApplication.translate("Form", "Type:", None))
+        self.ui.normAutoRadio.setText(QtWidgets.QApplication.translate("Form", "Stack", None))
+        self.ui.normOffRadio.setText(QtWidgets.QApplication.translate("Form", "Manual", None))
+        self.ui.normTimeRangeCheck.setText(QtWidgets.QApplication.translate("Form", "Slice range", None))
+        self.ui.normDivideRadio.setText(QtWidgets.QApplication.translate("Form", "Auto", None))
+        self.ui.label_5.setText(QtWidgets.QApplication.translate("Form", "Type:", None))
 
         self.ui.roiSquareRadio.clicked.connect(self.roiRadioChanged)
         self.ui.roiCircleRadio.clicked.connect(self.roiRadioChanged)
@@ -436,8 +437,23 @@ class ImageViewExtended(pg.ImageView):
             self.roiChanged()
             self.sigProcessingChanged.emit(self)
 
+    def setLevels(self, *args, **kwds):
+        """
+        Overriden method
+        Define image levels
+        """
+        if self.imageDisp is None:
+            return
+        super().setLevels(*args, **kwds)
 
-
+    def autoLevels(self):
+        """
+        Overriden method
+        Define levels automatically
+        """
+        self._imageLevels = [(self.levelMin, self.levelMax)]
+        self.ui.histogram.vb.setYRange(self.levelMin, self.levelMax)
+        self.setLevels(self.levelMin, self.levelMax)
 
     def getProcessedImage(self):
         if self.isNewImage and self.levelMin is not None:
